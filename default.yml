@@ -1,0 +1,389 @@
+# ============================================================================
+# opentenant-final.yaml
+# OpenTenant v2.3 — Canonical Blueprint
+#
+# This file defines the entire organization:
+#   - Platform infrastructure (services, dependencies)
+#   - Available application templates (Helm charts)
+#   - Product catalog (products, pricebooks, baseline pricing)
+#   - Tenants (with RBAC, subscriptions, negotiated overrides)
+#   - Vault path templates (dynamic secrets)
+#   - Supabase schemas (tables, RLS policies)
+#   - Validation rules (graph, business rules)
+#   - GitOps configuration (Argo CD)
+#
+# The transpiler compiles this into Kubernetes manifests,
+# Vault policies, Supabase migrations, Terraform code, and
+# Argo CD Applications.
+# ============================================================================
+---
+version: "opentenant.org/v2.3"
+
+# ----------------------------------------------------------------------------
+# 1. ORGANIZATION — Identity and Context
+# ----------------------------------------------------------------------------
+organization:
+  id: "logifleet"
+  name: "LogiFleet Inc."
+  domain: "logifleet.internal"
+  cluster: "k3s-prod"
+  region: "us-east-1"
+
+# ----------------------------------------------------------------------------
+# 2. PLATFORM — Shared Infrastructure Services
+# ----------------------------------------------------------------------------
+platform:
+  services:
+    - id: "postgres"
+      engine: "helm"
+      chart: "oci://registry-1.docker.io/bitnamicharts/postgresql-ha"
+      version: "14.2.0"
+      vault_path: "secret/data/platform/postgres"
+
+    - id: "redis"
+      engine: "helm"
+      chart: "oci://registry-1.docker.io/bitnamicharts/redis"
+      version: "19.6.0"
+      vault_path: "secret/data/platform/redis"
+
+    - id: "temporal"
+      engine: "helm"
+      chart: "oci://registry-1.docker.io/temporalio/temporal"
+      version: "1.22.0"
+      vault_path: "secret/data/platform/temporal"
+
+    - id: "minio"
+      engine: "helm"
+      chart: "oci://registry-1.docker.io/bitnamicharts/minio"
+      version: "14.7.0"
+      vault_path: "secret/data/platform/minio"
+
+    - id: "ingress"
+      engine: "helm"
+      chart: "oci://registry-1.docker.io/bitnamicharts/nginx-ingress-controller"
+      version: "15.5.0"
+      vault_path: "secret/data/platform/ingress"
+
+    - id: "keycloak"
+      engine: "helm"
+      chart: "oci://registry-1.docker.io/bitnamicharts/keycloak"
+      version: "20.0.0"
+      vault_path: "secret/data/platform/keycloak"
+
+# ----------------------------------------------------------------------------
+# 3. TEMPLATE REGISTRY — Available B2B SaaS Applications
+# ----------------------------------------------------------------------------
+template_registry:
+  - id: "route-optimization"
+    name: "Route Optimization System"
+    description: "Real-time route optimization with traffic and weather"
+    engine: "helm"
+    chart: "oci://registry.logifleet.internal/route-optimization"
+    version: "2.2.0"
+    category: "logistics"
+    dependencies: ["postgres", "redis", "temporal"]
+
+  - id: "fleet-maintenance"
+    name: "Fleet Maintenance System"
+    description: "Vehicle maintenance tracking, scheduling, and compliance"
+    engine: "helm"
+    chart: "oci://registry.logifleet.internal/fleet-maintenance"
+    version: "1.9.0"
+    category: "logistics"
+    dependencies: ["postgres", "temporal"]
+
+  - id: "driver-app"
+    name: "Driver Mobile Backend"
+    description: "Backend API for driver mobile applications"
+    engine: "helm"
+    chart: "oci://registry.logifleet.internal/driver-api"
+    version: "1.3.0"
+    category: "mobile"
+    dependencies: ["postgres", "redis"]
+
+# ----------------------------------------------------------------------------
+# 4. PRODUCT CATALOG — Baseline Product Definitions and Pricing
+#     Prices are baseline; dynamic prices are stored in the database.
+#     Only permanent tenant‑specific overrides are defined here.
+# ----------------------------------------------------------------------------
+products:
+  # Standard Pricebook (the default list prices)
+  standard_pricebook:
+    id: "standard"
+    name: "Standard Price Book"
+    currency: "USD"
+    is_active: true
+
+  # Additional pricebooks (regions, partner programs)
+  pricebooks:
+    - id: "north-america"
+      name: "North America Pricing"
+      currency: "USD"
+    - id: "europe"
+      name: "EMEA Pricing"
+      currency: "EUR"
+    - id: "partner"
+      name: "Partner Pricing"
+      currency: "USD"
+
+  # Product Catalog
+  catalog:
+    - id: "route-optimizer-pro"
+      name: "Route Optimizer Pro"
+      product_code: "RO-1000"
+      family: "Software"
+      description: "Advanced route optimization with real-time traffic and weather"
+      is_active: true
+      standard_price: 299.00
+      # Permanent overrides for specific tenants (negotiated deals)
+      overrides:
+        - tenant: "carrier"
+          pricebook: "partner"
+          unit_price: 179.00
+
+    - id: "fleet-manager"
+      name: "Fleet Manager"
+      product_code: "FM-2000"
+      family: "Software"
+      description: "Comprehensive fleet maintenance and tracking"
+      is_active: true
+      standard_price: 499.00
+      overrides: []
+
+    - id: "driver-app"
+      name: "Driver Mobile App"
+      product_code: "DA-3000"
+      family: "Mobile"
+      description: "Mobile app for drivers with turn-by-turn navigation"
+      is_active: true
+      standard_price: 9.99
+      overrides:
+        - tenant: "carrier"
+          pricebook: "partner"
+          unit_price: 4.99
+
+    - id: "hardware-gps"
+      name: "GPS Tracking Device"
+      product_code: "HW-4000"
+      family: "Hardware"
+      description: "Hardware GPS tracker with 4G LTE"
+      is_active: true
+      standard_price: 149.00
+      overrides: []
+
+# ----------------------------------------------------------------------------
+# 5. TENANTS — Each with Subscriptions, RBAC, and Price Overrides
+# ----------------------------------------------------------------------------
+tenants:
+  # --- Tenant 1: Carrier (Premium Tier) ---
+  - id: "carrier"
+    enabled: true
+    tier: "premium"
+    namespace: "tenant-carrier"
+    domain: "carrier.logifleet.internal"
+    subscriptions:
+      - template: "route-optimization"
+      - template: "fleet-maintenance"
+      - template: "driver-app"
+
+    # Organizational Chart for RBAC
+    org_chart:
+      - id: "executive"
+        name: "Executive"
+        roles:
+          - id: "ceo"
+            name: "CEO"
+            members: ["ceo@carrier.logifleet.com"]
+          - id: "cto"
+            name: "CTO"
+            members: ["cto@carrier.logifleet.com"]
+      - id: "operations"
+        name: "Operations"
+        roles:
+          - id: "director"
+            name: "Director of Ops"
+            members: ["opsdirector@carrier.logifleet.com"]
+        teams:
+          - id: "dispatchers"
+            name: "Dispatch Team"
+            members: ["disp1@carrier.logifleet.com", "disp2@carrier.logifleet.com"]
+          - id: "maintenance"
+            name: "Maintenance Team"
+            members: ["maint1@carrier.logifleet.com", "maint2@carrier.logifleet.com"]
+      - id: "fleet"
+        name: "Fleet"
+        teams:
+          - id: "drivers"
+            name: "Driver Team"
+            members: ["driver1@carrier.logifleet.com", "driver2@carrier.logifleet.com"]
+
+  # --- Tenant 2: Logistics Co (Standard Tier) ---
+  - id: "logistics-co"
+    enabled: true
+    tier: "standard"
+    namespace: "tenant-logistics"
+    domain: "logistics.logifleet.internal"
+    subscriptions:
+      - template: "route-optimization"
+    org_chart:
+      - id: "fleet"
+        name: "Fleet"
+        roles:
+          - id: "manager"
+            name: "Fleet Manager"
+            members: ["fleetmanager@logistics.logifleet.com"]
+        teams:
+          - id: "drivers"
+            name: "Drivers"
+            members: ["driver1@logistics.logifleet.com"]
+
+# ----------------------------------------------------------------------------
+# 6. VAULT — Dynamic Path Templates for Secrets
+#     The transpiler generates policies that allow access to these paths.
+# ----------------------------------------------------------------------------
+vault:
+  namespace: "logifleet-platform"
+  path_templates:
+    # Tenant‑specific configuration (per tenant, per application)
+    - pattern: "secret/data/tenants/{tenantId}/*"
+    - pattern: "secret/data/tenants/{tenantId}/route-optimization/*"
+    - pattern: "secret/data/tenants/{tenantId}/fleet-maintenance/*"
+    - pattern: "secret/data/tenants/{tenantId}/driver-app/*"
+    # Product prices (global, but can be overridden per tenant)
+    - pattern: "secret/data/products/*"
+    # User‑specific secrets (resolved from JWT claims)
+    - pattern: "secret/data/tenants/{tenantId}/users/{userId}/*"
+
+# ----------------------------------------------------------------------------
+# 7. SUPABASE — Database Schemas and RLS Policies
+#     The transpiler generates migration SQL from these definitions.
+# ----------------------------------------------------------------------------
+supabase:
+  project_ref: "logifleet-012"
+  region: "us-east-1"
+  schemas:
+    # Product Catalog Schema (includes products, pricebooks, entries)
+    - schema: "product_catalog"
+      owner_role: "product_admin"
+      tables:
+        - name: "products"
+          rls_enabled: true
+          columns:
+            - { name: "id", type: "uuid", primary: true }
+            - { name: "tenant_id", type: "uuid", nullable: false }
+            - { name: "name", type: "text", nullable: false }
+            - { name: "product_code", type: "text", unique: true }
+            - { name: "family", type: "text" }
+            - { name: "description", type: "text" }
+            - { name: "is_active", type: "boolean", default: true }
+            - { name: "standard_price", type: "numeric(12,2)" }
+          policies:
+            - name: "tenant_isolation"
+              operation: "ALL"
+              using: "(auth.jwt()->>'tenant_id') = tenant_id::text"
+
+        - name: "pricebooks"
+          rls_enabled: true
+          columns:
+            - { name: "id", type: "uuid", primary: true }
+            - { name: "tenant_id", type: "uuid", nullable: false }
+            - { name: "name", type: "text", nullable: false }
+            - { name: "currency", type: "text", default: "USD" }
+            - { name: "is_active", type: "boolean", default: true }
+            - { name: "is_standard", type: "boolean", default: false }
+          policies:
+            - name: "tenant_isolation"
+              operation: "ALL"
+              using: "(auth.jwt()->>'tenant_id') = tenant_id::text"
+
+        - name: "pricebook_entries"
+          rls_enabled: true
+          columns:
+            - { name: "id", type: "uuid", primary: true }
+            - { name: "tenant_id", type: "uuid", nullable: false }
+            - { name: "product_id", type: "uuid", references: "product_catalog.products(id)" }
+            - { name: "pricebook_id", type: "uuid", references: "product_catalog.pricebooks(id)" }
+            - { name: "unit_price", type: "numeric(12,2)" }
+            - { name: "is_active", type: "boolean", default: true }
+          policies:
+            - name: "tenant_isolation"
+              operation: "ALL"
+              using: "(auth.jwt()->>'tenant_id') = tenant_id::text"
+
+    # Fleet Management Schema
+    - schema: "fleet_management"
+      owner_role: "fleet_admin"
+      tables:
+        - name: "vehicles"
+          rls_enabled: true
+          columns:
+            - { name: "id", type: "uuid", primary: true }
+            - { name: "tenant_id", type: "uuid", nullable: false }
+            - { name: "vin", type: "text", unique: true }
+            - { name: "make", type: "text" }
+            - { name: "model", type: "text" }
+            - { name: "year", type: "integer" }
+            - { name: "status", type: "text", default: "active" }
+          policies:
+            - name: "tenant_isolation"
+              operation: "ALL"
+              using: "(auth.jwt()->>'tenant_id') = tenant_id::text"
+
+        - name: "routes"
+          rls_enabled: true
+          columns:
+            - { name: "id", type: "uuid", primary: true }
+            - { name: "tenant_id", type: "uuid", nullable: false }
+            - { name: "vehicle_id", type: "uuid", references: "fleet_management.vehicles(id)" }
+            - { name: "start_location", type: "text" }
+            - { name: "end_location", type: "text" }
+            - { name: "distance", type: "numeric(10,2)" }
+            - { name: "status", type: "text", default: "planned" }
+          policies:
+            - name: "tenant_isolation"
+              operation: "ALL"
+              using: "(auth.jwt()->>'tenant_id') = tenant_id::text"
+            - name: "dispatcher_access"
+              operation: "UPDATE"
+              using: "(auth.jwt()->>'role') IN ('dispatcher', 'admin')"
+
+# ----------------------------------------------------------------------------
+# 8. VALIDATION RULES — Infrastructure and Business Rules
+# ----------------------------------------------------------------------------
+validation:
+  rules:
+    # Dependency graph validation
+    - id: "no_cross_tenant_deps"
+      enforcement: "strict"
+      expression: "NOT (depends_on matches /tenant-/ AND target matches /tenant-/ AND depends_on != target)"
+
+    - id: "template_exists"
+      enforcement: "strict"
+      expression: "template in template_registry[*].id OR engine is defined"
+
+    # Business rules
+    - id: "product_prices_valid"
+      enforcement: "warning"
+      expression: "catalog[*].standard_price IS NOT NULL AND catalog[*].overrides[*].unit_price > 0"
+
+    - id: "tenant_tier_valid"
+      enforcement: "strict"
+      expression: "tier IN ('basic', 'standard', 'premium', 'platinum')"
+
+# ----------------------------------------------------------------------------
+# 9. GITOPS — Continuous Delivery Configuration
+# ----------------------------------------------------------------------------
+gitops:
+  enabled: true
+  repo: "https://github.com/logifleet/opentenant-manifests"
+  branch: "main"
+  sync_strategy: "auto"
+  argo_application:
+    namespace: "argocd"
+    source_repo_url: "https://github.com/logifleet/opentenant-manifests"
+    target_revision: "HEAD"
+    path: "environments/production"
+
+# ============================================================================
+# END OF BLUEPRINT
+# ============================================================================

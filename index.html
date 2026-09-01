@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenTenant — Turn Any Helm Chart Into a SaaS</title>
+<meta name="description" content="OpenTenant is the open-source orchestrator that turns any Helm chart, Docker Compose, or PM2 app into a multi-tenant whitelabel SaaS. The Airbnb of commercial real estate. The operating system of vertical farms.">
+<style>
+  :root {
+    --bg: #0a0e14;
+    --bg-alt: #10161f;
+    --card: #151d29;
+    --border: #223047;
+    --text: #e6edf3;
+    --muted: #8b98a9;
+    --accent: #2dd4a7;
+    --accent2: #4a9eff;
+    --accent-dim: rgba(45, 212, 167, 0.12);
+    --code-bg: #0d1420;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.6;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10, 14, 20, 0.85); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .logo { font-weight: 700; font-size: 1.15rem; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; }
+  .logo .glyph {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; color: #05110d; font-weight: 800;
+  }
+  .nav-links { display: flex; gap: 24px; align-items: center; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.92rem; }
+  .nav-links a:hover { color: var(--text); }
+  .btn {
+    display: inline-block; padding: 10px 22px; border-radius: 8px;
+    font-weight: 600; font-size: 0.95rem; text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .btn-primary { background: var(--accent); color: #05110d; }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(45,212,167,0.3); }
+  .btn-ghost { border: 1px solid var(--border); color: var(--text); }
+  .btn-ghost:hover { border-color: var(--accent); }
+
+  .hero { padding: 100px 0 80px; text-align: center; position: relative; overflow: hidden; }
+  .hero::before {
+    content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 50% 0%, rgba(45,212,167,0.09), transparent),
+      radial-gradient(ellipse 40% 35% at 70% 20%, rgba(74,158,255,0.07), transparent);
+    pointer-events: none;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 1px solid var(--border); border-radius: 999px;
+    padding: 6px 16px; font-size: 0.82rem; color: var(--muted);
+    background: var(--bg-alt); margin-bottom: 28px;
+  }
+  .badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+  @keyframes pulse { 50% { opacity: 0.4; } }
+  .hero h1 {
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 800; letter-spacing: -0.03em; line-height: 1.12;
+    max-width: 900px; margin: 0 auto 24px;
+  }
+  .hero h1 .grad {
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero p { font-size: 1.2rem; color: var(--muted); max-width: 680px; margin: 0 auto 40px; }
+  .hero-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+  .demo { padding: 20px 0 90px; }
+  .terminal {
+    max-width: 780px; margin: 0 auto;
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+    text-align: left;
+  }
+  .terminal-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 16px; background: var(--bg-alt);
+    border-bottom: 1px solid var(--border);
+  }
+  .terminal-bar .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .terminal-bar .r { background: #ff5f57; } .terminal-bar .y { background: #febc2e; } .terminal-bar .g { background: #28c840; }
+  .terminal-bar .fname { margin-left: 10px; color: var(--muted); font-size: 0.8rem; font-family: monospace; }
+  pre {
+    padding: 24px 26px; overflow-x: auto;
+    font-family: "SF Mono", "Fira Code", monospace; font-size: 0.83rem;
+    line-height: 1.65;
+  }
+  .c-key { color: var(--accent2); } .c-str { color: var(--accent); }
+  .c-com { color: #5b6b80; } .c-num { color: #f0a868; }
+
+  section { padding: 80px 0; }
+  section.alt { background: var(--bg-alt); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .kicker { color: var(--accent); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 12px; }
+  h2 { font-size: clamp(1.7rem, 3.5vw, 2.4rem); font-weight: 750; letter-spacing: -0.02em; margin-bottom: 16px; }
+  .section-sub { color: var(--muted); font-size: 1.08rem; max-width: 700px; margin-bottom: 48px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 28px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .card:hover { border-color: var(--accent); transform: translateY(-3px); }
+  .card .icon { font-size: 1.7rem; margin-bottom: 14px; }
+  .card h3 { font-size: 1.08rem; margin-bottom: 8px; }
+  .card p { color: var(--muted); font-size: 0.93rem; }
+  .card .map { font-size: 0.8rem; color: var(--accent2); margin-top: 12px; font-family: monospace; }
+
+  .flow { display: flex; flex-direction: column; max-width: 620px; margin: 0 auto; }
+  .flow-step {
+    display: flex; gap: 20px; padding: 22px 0;
+    border-left: 2px solid var(--border); padding-left: 28px;
+    position: relative; margin-left: 8px;
+  }
+  .flow-step::before {
+    content: ""; position: absolute; left: -7px; top: 30px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 0 4px var(--accent-dim);
+  }
+  .flow-num { color: var(--accent); font-weight: 700; font-size: 0.85rem; }
+  .flow-step h3 { font-size: 1.05rem; margin-bottom: 6px; }
+  .flow-step p { color: var(--muted); font-size: 0.93rem; }
+
+  .safety-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .safety-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px 20px;
+  }
+  .safety-item .check { color: var(--accent); font-weight: 800; }
+  .safety-item span { font-size: 0.93rem; color: var(--muted); }
+  .safety-item strong { color: var(--text); }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  th, td { text-align: left; padding: 13px 18px; border-bottom: 1px solid var(--border); font-size: 0.93rem; }
+  th { color: var(--accent); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; }
+  td:first-child { font-family: monospace; color: var(--accent2); white-space: nowrap; }
+  td:last-child { color: var(--muted); }
+
+  /* STACK PILLS */
+  .stack { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 1px solid var(--border); background: var(--card);
+    border-radius: 999px; padding: 8px 18px; font-size: 0.88rem;
+    color: var(--text); transition: border-color 0.2s;
+  }
+  .pill:hover { border-color: var(--accent); }
+  .pill .p-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent2); }
+  .pill small { color: var(--muted); }
+
+  /* CASE STUDIES */
+  .case { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+  .case-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 36px; position: relative; overflow: hidden;
+  }
+  .case-card::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+  .case-card .tag {
+    display: inline-block; font-size: 0.72rem; text-transform: uppercase;
+    letter-spacing: 0.12em; color: var(--accent); margin-bottom: 14px; font-weight: 700;
+  }
+  .case-card h3 { font-size: 1.4rem; margin-bottom: 10px; letter-spacing: -0.01em; }
+  .case-card p { color: var(--muted); font-size: 0.95rem; margin-bottom: 16px; }
+  .case-card ul { list-style: none; }
+  .case-card li { color: var(--muted); font-size: 0.9rem; padding: 5px 0 5px 24px; position: relative; }
+  .case-card li::before { content: "→"; position: absolute; left: 0; color: var(--accent); }
+  @media (max-width: 860px) { .case { grid-template-columns: 1fr; } }
+
+  .cta {
+    text-align: center; padding: 100px 0;
+    background: radial-gradient(ellipse 55% 60% at 50% 100%, rgba(45,212,167,0.1), transparent), var(--bg);
+  }
+  .cta h2 { margin-bottom: 16px; }
+  .cta p { color: var(--muted); margin-bottom: 40px; font-size: 1.1rem; }
+
+  footer { border-top: 1px solid var(--border); padding: 36px 0; color: var(--muted); font-size: 0.88rem; }
+  .footer-inner { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  footer a { color: var(--muted); text-decoration: none; margin-left: 22px; }
+  footer a:hover { color: var(--text); }
+
+  @media (max-width: 640px) {
+    .nav-links a:not(.btn) { display: none; }
+    pre { font-size: 0.72rem; padding: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container nav-inner">
+    <div class="logo"><span class="glyph">OT</span> OpenTenant</div>
+    <div class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#stack">Stack</a>
+      <a href="#cases">Use Cases</a>
+      <a href="#" class="btn btn-ghost">GitHub</a>
+      <a href="#start" class="btn btn-primary">Get Started</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="container">
+    <div class="badge"><span class="dot"></span> Open source · GitOps-native · Vault-integrated · MIT</div>
+    <h1>Turn any Helm chart<br>into a <span class="grad">multi-tenant SaaS.</span></h1>
+    <p>OpenTenant is the open-source orchestrator that turns any Docker Compose, PM2, or Helm deployment into a whitelabel, multi-tenant platform — declaratively, securely, and without vendor lock-in. One file. Every tenant. Their space, their processes, your platform.</p>
+    <div class="hero-ctas">
+      <a href="#start" class="btn btn-primary">Get Started</a>
+      <a href="#how" class="btn btn-ghost">See How It Works</a>
+    </div>
+  </div>
+</header>
+
+<!-- CODE DEMO -->
+<div class="demo">
+  <div class="container">
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span class="fname">opentenant.yaml</span>
+      </div>
+<pre><span class="c-com"># The whole SaaS — one manifest. One Helm release per tenant.</span>
+<span class="c-key">platform</span>:
+  <span class="c-key">cluster_domain</span>: <span class="c-str">"opentenant.cloud"</span>
+  <span class="c-key">vault_root_path</span>: <span class="c-str">"secret/data/opentenant/core"</span>
+  <span class="c-key">services</span>:
+    - <span class="c-key">id</span>: <span class="c-str">"platform-routing-mesh"</span>
+      <span class="c-key">engine</span>: <span class="c-str">docker-compose</span>
+      <span class="c-key">template_ref</span>: <span class="c-str">git::github.com/org/routing-mesh</span>
+
+<span class="c-key">tenants</span>:
+  - <span class="c-key">id</span>: <span class="c-str">"tenant-acme"</span>
+    <span class="c-key">vault_tenant_path</span>: <span class="c-str">"secret/data/tenants/acme"</span>
+    <span class="c-key">userspace</span>:
+      <span class="c-key">kube_namespace</span>: <span class="c-str">tenant-acme-prod</span>
+      <span class="c-key">domain</span>: <span class="c-str">acme.opentenant.cloud</span>
+    <span class="c-key">deployments</span>:
+      - <span class="c-key">id</span>: <span class="c-str">"acme-app"</span>
+        <span class="c-key">engine</span>: <span class="c-str">helm</span>                    <span class="c-com"># your chart, unchanged</span>
+        <span class="c-key">template_ref</span>: <span class="c-str">oci://registry.org/your-chart</span>
+        <span class="c-key">config_patches</span>:
+          <span class="c-key">replica_count</span>: <span class="c-num">3</span>
+        <span class="c-key">dependencies</span>:
+          - <span class="c-str">"platform-routing-mesh"</span></pre>
+    </div>
+  </div>
+</div>
+
+<!-- MENTAL MODEL -->
+<section class="alt" id="model">
+  <div class="container">
+    <div class="kicker">The Mental Model</div>
+    <h2>Take the chart you already have. Multiply it by every customer.</h2>
+    <p class="section-sub">You don't rewrite your app. You don't fork your chart. OpenTenant wraps it: each tenant becomes an isolated userspace running their own release of your template, with their own secrets, their own domain, their own branding.</p>
+    <div class="grid">
+      <div class="card">
+        <div class="icon">📦</div>
+        <h3>Templates, Not Forks</h3>
+        <p>Deployments reference versioned blueprints — any Helm chart from any OCI registry, any Docker Compose file, any PM2 ecosystem config. Your existing artifacts become SaaS-ready as-is.</p>
+        <div class="map">template_ref → git:: / oci:// / registry://</div>
+      </div>
+      <div class="card">
+        <div class="icon">🎨</div>
+        <h3>Config Patches</h3>
+        <p>Tenants customize a template without owning it. Whitelabel domains, themes, replica counts, feature flags — all patched declaratively, per tenant, over the same base chart.</p>
+        <div class="map">config_patches → { replica_count: 3, domain: "…" }</div>
+      </div>
+      <div class="card">
+        <div class="icon">🔑</div>
+        <h3>Isolated Userspaces</h3>
+        <p>Every tenant gets a dedicated Kubernetes namespace, unix user, and PM2 home. They can move freely inside their suite — and are physically locked out of everyone else's.</p>
+        <div class="map">userspace → kube_namespace + unix_user + pm2_home</div>
+      </div>
+      <div class="card">
+        <div class="icon">🔒</div>
+        <h3>Vault-Native Secrets</h3>
+        <p>All credentials live in HashiCorp Vault, scoped per tenant. The platform orchestrates keys it can never read — the tenant record in Vault is the single contract between provisioning and deployment.</p>
+        <div class="map">vault_tenant_path → secret/data/tenants/&lt;id&gt;</div>
+      </div>
+      <div class="card">
+        <div class="icon">💡</div>
+        <h3>Platform Utilities</h3>
+        <p>Core services are the building's water and power — routing mesh, shared databases. Tenants hook their pipes into the central supply but never manage the main pump.</p>
+        <div class="map">platform.services → shared infra, consumed safely</div>
+      </div>
+      <div class="card">
+        <div class="icon">📋</div>
+        <h3>The Building Inspector</h3>
+        <p>A static validation engine audits the entire dependency graph before anything runs. No cycles, no missing links, no tenant depending on another tenant's internals.</p>
+        <div class="map">dependencies → validated pre-deploy</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="container">
+    <div class="kicker">Architecture</div>
+    <h2>From a git push to a running tenant.</h2>
+    <p class="section-sub">The manifest is a composition and bindings engine — raw execution lives in templates, secrets live in Vault, and the engine compiles it all. One Helm release per tenant, always.</p>
+    <div class="flow">
+      <div class="flow-step">
+        <div>
+          <div class="flow-num">STEP 01 — DECLARE</div>
+          <h3>Write the manifest</h3>
+          <p>Define platform services, tenant userspaces, and their deployments in one YAML file. Commit it to your GitOps repo — GitHub or GitLab.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div>
+          <div class="flow-num">STEP 02 — VALIDATE</div>
+          <h3>Static topology audit</h3>
+          <p>The engine detects dependency cycles, missing links, and unsafe cross-tenant boundaries — before anything touches runtime.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div>
+          <div class="flow-num">STEP 03 — PROVISION</div>
+          <h3>Hydrate via Vault</h3>
+          <p>Templates are fetched, config patches applied, and every tenant record written to Vault. The Vault Secrets Operator turns records into Kubernetes Secrets; Reloader rolls pods on credential rotation — automatically.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div>
+          <div class="flow-num">STEP 04 — DEPLOY</div>
+          <h3>One release, one tenant</h3>
+          <p>Each tenant gets their own Helm release, namespace, Ingress, and subdomain — routed through Cloudflare with wildcard DNS and TLS. Zero manual steps per tenant.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- IMPLEMENTATION STACK -->
+<section class="alt" id="stack">
+  <div class="container">
+    <div class="kicker">Implementation Stack</div>
+    <h2>Proven parts. No NIH required.</h2>
+    <p class="section-sub">OpenTenant is the orchestration layer — underneath, it's built entirely on battle-tested infrastructure you already know.</p>
+
+    <table>
+      <tr><th>System</th><th>Role in OpenTenant</th></tr>
+      <tr><td>HashiCorp Vault</td><td>The single source of truth for every secret. Per-tenant records are the contract between provisioning and deployment. Rotation flows through automatically.</td></tr>
+      <tr><td>Supabase</td><td>Platform auth (Supabase Auth + JWT guards), Management API for orgs/projects, Postgres per tenant, Storage, and OAuth2 "bring your own project" via Supabase Connect.</td></tr>
+      <tr><td>NestJS + TypeScript</td><td>The platform service — idempotent REST API for organizations, projects, tenant lifecycle, and the OAuth2 flow. Stateful secrets? Never. Everything in Vault.</td></tr>
+      <tr><td>Kubernetes</td><td>One Helm release per tenant. Namespaces as tenant boundaries. NetworkPolicies for pod-level isolation. Gateway API / Ingress for host-per-tenant routing.</td></tr>
+      <tr><td>Vault Secrets Operator</td><td>Reads tenant records from Vault and materializes them as Kubernetes Secrets inside the cluster.</td></tr>
+      <tr><td>Reloader</td><td>Watches tenant Secrets and rolls the exact pods affected by a credential rotation. Zero manual restarts, blast radius contained to one tenant.</td></tr>
+      <tr><td>External Secrets Operator</td><td>ClusterSecretStore backed by Vault — flat tenant registry where every key under <code>secret/metadata/tenants/</code> is one deployable tenant.</td></tr>
+      <tr><td>Terraform</td><td>Declarative tenant registry: one Vault entry → namespace + ExternalSecret + Helm release. Remove the entry, tear down all three.</td></tr>
+      <tr><td>Cloudflare</td><td>Edge SSL with Full (Strict), wildcard DNS <code>*.yourdomain.com</code>, WAF, WebSockets on, Origin CA certs on nginx-ingress, real client IPs via CF-Connecting-IP.</td></tr>
+      <tr><td>nginx / ingress-nginx</td><td>The egress controller — single entry point, path-routed single domain, streaming uploads, WebSocket-friendly, COOP/COEP headers.</td></tr>
+      <tr><td>GitHub / GitLab</td><td>GitOps source of truth for manifests and templates (<code>git::</code> refs), CI-driven reconciliation, and container registries for OCI charts.</td></tr>
+      <tr><td>Docker Compose / PM2</td><td>First-class alternative engines for lighter workloads — same manifest, same validation, same Vault hydration.</td></tr>
+    </table>
+
+    <div class="stack">
+      <span class="pill"><span class="p-dot"></span> HashiCorp Vault <small>· secrets</small></span>
+      <span class="pill"><span class="p-dot"></span> Supabase <small>· auth &amp; data</small></span>
+      <span class="pill"><span class="p-dot"></span> NestJS <small>· platform API</small></span>
+      <span class="pill"><span class="p-dot"></span> TypeScript <small>· end to end</small></span>
+      <span class="pill"><span class="p-dot"></span> Kubernetes <small>· runtime</small></span>
+      <span class="pill"><span class="p-dot"></span> Helm <small>· one release per tenant</small></span>
+      <span class="pill"><span class="p-dot"></span> VSO <small>· Vault → K8s Secrets</small></span>
+      <span class="pill"><span class="p-dot"></span> External Secrets <small>· flat registry</small></span>
+      <span class="pill"><span class="p-dot"></span> Reloader <small>· auto-roll on rotation</small></span>
+      <span class="pill"><span class="p-dot"></span> Terraform <small>· tenant IaC</small></span>
+      <span class="pill"><span class="p-dot"></span> Cloudflare <small>· edge &amp; SSL</small></span>
+      <span class="pill"><span class="p-dot"></span> nginx <small>· egress controller</small></span>
+      <span class="pill"><span class="p-dot"></span> GitHub / GitLab <small>· GitOps</small></span>
+      <span class="pill"><span class="p-dot"></span> Docker / PM2 <small>· alt engines</small></span>
+    </div>
+  </div>
+</section>
+
+<!-- USE CASES -->
+<section id="cases">
+  <div class="container">
+    <div class="kicker">Use Cases</div>
+    <h2>One orchestrator. Wildly different buildings.</h2>
+    <p class="section-sub">The manifest doesn't care what it manages — processes, properties, or crops. If it can be declared, it can be tenanted.</p>
+
+    <div class="case">
+      <div class="case-card">
+        <div class="tag">The Main Case — SaaS</div>
+        <h3>Any Helm Chart → SaaS</h3>
+        <p>You built a great open-source app. Now ten thousand people want it "as a service." OpenTenant wraps your existing chart: each customer gets their own release, namespace, secrets, subdomain, and branding — from one manifest.</p>
+        <ul>
+          <li>Your chart stays untouched — OpenTenant composes around it</li>
+          <li>Self-serve onboarding: user connects their project → tenant record in Vault → VSO + Reloader deploy it</li>
+          <li>Credential rotation rolls only that tenant's pods</li>
+          <li>Whitelabel: their domain, their theme, their data — your platform</li>
+        </ul>
+      </div>
+      <div class="case-card">
+        <div class="tag">Real Estate — IoT</div>
+        <h3>The Airbnb of Commercial Real Estate</h3>
+        <p>Point OpenTenant at physical space and a tenant becomes an office, retail slot, or clinic floor. Templates become device behaviors. Vault holds the cryptographic keys to the actual door locks.</p>
+        <ul>
+          <li>Lease = userspace: locks, HVAC, badges, sensors scoped to one suite</li>
+          <li>Hosts list space like an Airbnb listing; guests get time-scoped access via the same dependency graph</li>
+          <li>Vault-native secret rotation = physical key rotation, automatically</li>
+          <li>Static validation means no tenant's automation can touch another's</li>
+        </ul>
+      </div>
+      <div class="case-card">
+        <div class="tag">Agriculture — AgTech</div>
+        <h3>The Operating System of Vertical Farms</h3>
+        <p>Every grow rack is a tenant. Each farm runs its own "release" of the cultivation stack — irrigation schedules, lighting curves, climate recipes — declared as versioned templates and patched per crop.</p>
+        <ul>
+          <li>Rack = tenant: its own sensors, actuators, and namespace</li>
+          <li>Light recipe for basil is a template; the basil farm patches the photoperiod</li>
+          <li>Secrets to irrigation controllers live in Vault, rotated automatically</li>
+          <li>A failed pump in rack 7 triggers a rollout of exactly one release — not the whole farm</li>
+        </ul>
+      </div>
+      <div class="case-card">
+        <div class="tag">Whitelabel Platforms</div>
+        <h3>Your Software, Their Logo</h3>
+        <p>Agencies and OEMs resell software under their own brand. OpenTenant gives each reseller a fully isolated userspace with custom domain, theme, and service mix — while you operate one platform.</p>
+        <ul>
+          <li>Onboarding a reseller = one YAML block</li>
+          <li>Offboarding = <code>enabled: false</code></li>
+          <li>Rebranding = one field in their userspace</li>
+          <li>All secrets scoped per reseller — they can't see each other, ever</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SAFETY -->
+<section class="alt" id="safety">
+  <div class="container">
+    <div class="kicker">Built-in Safety</div>
+    <h2>Audited before anything runs.</h2>
+    <p class="section-sub">No deployment runs without passing the static validation engine — and isolation is enforced below the application layer.</p>
+    <div class="safety-list">
+      <div class="safety-item"><span class="check">✓</span><span><strong>Cycle detection.</strong> Circular dependencies are flagged statically — construction stops before the cement is poured.</span></div>
+      <div class="safety-item"><span class="check">✓</span><span><strong>Missing-link checks.</strong> Every dependency must resolve to a defined node. No dangling references, ever.</span></div>
+      <div class="safety-item"><span class="check">✓</span><span><strong>Cross-boundary validation.</strong> Tenants may depend on platform services — never on each other's internals.</span></div>
+      <div class="safety-item"><span class="check">✓</span><span><strong>Vault scoping.</strong> Secrets resolve per-tenant. The platform orchestrates keys it can never read.</span></div>
+      <div class="safety-item"><span class="check">✓</span><span><strong>Idempotent everywhere.</strong> Tenant creation checks Vault first; migrations are safe to retry; keys are get-or-create.</span></div>
+      <div class="safety-item"><span class="check">✓</span><span><strong>Network isolation.</strong> NetworkPolicies enforce that tenant A's pods can never reach tenant B's — below the app layer.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta" id="start">
+  <div class="container">
+    <h2>Stop managing servers.<br>Start managing tenants.</h2>
+    <p>Onboarding a tenant is one block of YAML. Offboarding is <code style="color:var(--accent); font-family:monospace;">enabled: false</code>. Rebranding is one field. That's the whole job.</p>
+    <div class="hero-ctas">
+      <a href="#" class="btn btn-primary">Get Started on GitHub</a>
+      <a href="#" class="btn btn-ghost">Read the Docs</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container footer-inner">
+    <div>© 2025 OpenTenant — open source under MIT</div>
+    <div>
+      <a href="#">GitHub</a>
+      <a href="#">Discord</a>
+      <a href="#">Docs</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
