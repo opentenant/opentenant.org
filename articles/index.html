@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html data-live-login="https://opentenant.org/login" lang="en" class="text-black dark" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml"
+        href="/favicon.svg">
+    <meta name="ploy-astro-starter-version" content="1.0.0">
+    <title>Helm Chart SaaS Deployment Guides — OpenTenant |  </title>
+    <meta name="description"
+        content="Technical blueprints for turning popular Helm charts into isolated, operable SaaS environments with explicit secrets, routing, upgrade, and lifecycle boundaries." />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="canonical" href="https://www.opentenant.org/articles" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Helm Chart SaaS Deployment Guides — OpenTenant |  " />
+    <meta property="og:site_name" content=" " />
+    <meta property="og:description"
+        content="Technical blueprints for turning popular Helm charts into isolated, operable SaaS environments with explicit secrets, routing, upgrade, and lifecycle boundaries." />
+    <meta property="og:url" content="https://www.opentenant.org/articles" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Helm Chart SaaS Deployment Guides — OpenTenant |  " />
+    <meta name="twitter:description"
+        content="Technical blueprints for turning popular Helm charts into isolated, operable SaaS environments with explicit secrets, routing, upgrade, and lifecycle boundaries." />
+    <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body class="bg-ploy-background-primary text-ploy-text-primary leading-[1.6] decoration-[rgb(230,237,243)] m-0"
+    style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+    <nav
+        class="border-solid border-ploy-border-primary bg-ploy-background-primary/80 min-w-0 min-h-0 sticky z-[100] backdrop-blur-md border-b top-0">
+        <div
+            class="h-16 min-w-0 min-h-0 max-w-[68.75rem] flex justify-between items-center mx-auto px-6 nav-inner w-full">
+            <a href="/" aria-label="OpenTenant home" class="logo"><span
+                        class="brand-logo inline-flex items-center gap-2 "><img src="/favicon.svg" width="34"/><span
+                            class="brand-logo__wordmark text-lg font-bold tracking-[-0.02em] text-ploy-text-primary">OpenTenant</span></span></a>
+            <div class="flex items-center gap-6 nav-links"><a
+                    href="/index.html"
+                    class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Use
+                    Cases</a><a href="https://github.com/opentenant/platform"
+                    class="border-solid border-ploy-border-primary text-ploy-text-secondary font-semibold text-sm block transition-[transform,translate,scale,rotate,box-shadow] px-[1.375rem] py-2.5 rounded-lg hover:text-ploy-text-primary border">GitHub</a><a
+                    href="/login"
+                    class="bg-ploy-button-primary-background text-ploy-button-primary-text font-semibold text-sm block transition-shadow px-[1.375rem] py-2.5 rounded-lg hover:shadow-lg">Login</a></div>
+        </div>
+    </nav>
+    <header
+        class="hero relative overflow-hidden pb-16 pt-[6.25rem] text-center before:pointer-events-none before:absolute before:inset-0 before:content-[&#x27;&#x27;] before:[background-image:radial-gradient(60%_40%_at_50%_0%,_rgba(45,_212,_167,_0.09),_rgba(0,_0,_0,_0)),_radial-gradient(40%_35%_at_70%_20%,_rgba(74,_158,_255,_0.07),_rgba(0,_0,_0,_0))]">
+        <div class="hero__inner relative mx-auto max-w-[68.75rem] px-6">
+            <p class="hero__context mb-7 font-mono text-xs uppercase tracking-[0.14em] text-ploy-accent-primary-500">
+                Technical library / Verified sources / Production trade-offs</p>
+            <h1
+                class="hero__title mx-auto mb-6 max-w-[56.25rem] text-balance text-[3rem] font-extrabold leading-[1.08] tracking-[-0.03em] md:text-[4rem]">
+                Helm charts are the starting point. Tenancy is the product.</h1>
+            <p
+                class="hero__summary mx-auto mb-9 max-w-[46rem] text-lg leading-relaxed text-ploy-text-secondary md:text-xl">
+                Practical deployment blueprints for platform teams turning open-source applications into isolated,
+                operable SaaS environments—without hiding the hard decisions.</p>
+            <div class="hero__actions flex flex-wrap justify-center gap-3.5"><a href="#guides"
+                    class="hero__cta hero__cta--primary block rounded-lg bg-ploy-button-primary-background px-[1.375rem] py-2.5 text-base font-semibold text-ploy-button-primary-text transition-shadow hover:shadow-lg">Browse
+                    Guides</a><a href="../index.html#evaluation"
+                    class="hero__cta hero__cta--secondary block rounded-lg border border-ploy-button-secondary-border px-[1.375rem] py-2.5 text-base font-semibold text-ploy-button-secondary-text transition-colors hover:border-ploy-accent-primary-500">Review
+                    Architecture</a></div>
+            <div
+                class="hero__proof mx-auto mt-10 grid max-w-[52rem] gap-px overflow-hidden rounded-lg border border-ploy-border-primary bg-ploy-border-primary text-left sm:grid-cols-3">
+                <div class="bg-ploy-background-secondary px-5 py-4">
+                    <div class="font-mono text-[0.65rem] tracking-[0.14em] text-ploy-accent-primary-500">BLUEPRINTS
+                    </div>
+                    <div class="mt-1 text-sm font-semibold text-ploy-text-primary">6 priority Helm charts</div>
+                </div>
+                <div class="bg-ploy-background-secondary px-5 py-4">
+                    <div class="font-mono text-[0.65rem] tracking-[0.14em] text-ploy-accent-primary-500">BOUNDARIES
+                    </div>
+                    <div class="mt-1 text-sm font-semibold text-ploy-text-primary">Architecture and security</div>
+                </div>
+                <div class="bg-ploy-background-secondary px-5 py-4">
+                    <div class="font-mono text-[0.65rem] tracking-[0.14em] text-ploy-accent-primary-500">STANDARD</div>
+                    <div class="mt-1 text-sm font-semibold text-ploy-text-primary">Verified before publish</div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main id="guides" class="articles-index border-t border-ploy-border-primary bg-ploy-background-secondary py-20">
+        <div class="articles-index__inner mx-auto max-w-[68.75rem] px-6">
+            <div class="mb-12 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                    <p class="mb-3 font-mono text-xs uppercase tracking-[0.14em] text-ploy-accent-primary-500">
+                        Deployment blueprints</p>
+                    <h2
+                        class="max-w-[42rem] text-balance text-[2.4rem] font-extrabold leading-tight tracking-[-0.02em]">
+                        Start with the chart your team already trusts.</h2>
+                </div>
+                <p class="max-w-[31rem] text-sm leading-relaxed text-ploy-text-secondary">Each guide separates what the
+                    upstream chart handles from the tenant lifecycle, isolation, secrets, routing, and upgrade controls
+                    a managed service still needs.</p>
+            </div>
+            <!-- <nav class="mb-10 flex flex-wrap gap-2" aria-label="Article topics"><a href="./index.html"
+                    class="rounded-full border px-4 py-2 text-sm transition-colors border-ploy-accent-primary-500 bg-ploy-accent-primary/10 text-ploy-text-primary">All</a><a
+                    href="/articles?tag=Helm%20Chart%20Guides"
+                    class="rounded-full border px-4 py-2 text-sm transition-colors border-ploy-border-primary text-ploy-text-secondary hover:text-ploy-text-primary">Helm
+                    Chart Guides</a><a href="/articles?tag=Architecture"
+                    class="rounded-full border px-4 py-2 text-sm transition-colors border-ploy-border-primary text-ploy-text-secondary hover:text-ploy-text-primary">Architecture</a><a
+                    href="/articles?tag=Security"
+                    class="rounded-full border px-4 py-2 text-sm transition-colors border-ploy-border-primary text-ploy-text-secondary hover:text-ploy-text-primary">Security</a><a
+                    href="/articles?tag=Comparisons"
+                    class="rounded-full border px-4 py-2 text-sm transition-colors border-ploy-border-primary text-ploy-text-secondary hover:text-ploy-text-primary">Comparisons</a>
+            </nav> -->
+            <!-- <article
+                class="mb-8 grid gap-px overflow-hidden rounded-xl border border-ploy-border-primary bg-ploy-border-primary lg:grid-cols-[0.72fr_1.28fr]">
+                <div class="flex min-h-64 flex-col justify-between bg-ploy-neutral-primary-s3 p-7">
+                    <div>
+                        <div
+                            class="mb-4 font-mono text-[0.65rem] uppercase tracking-[0.14em] text-ploy-accent-primary-500">
+                            Featured blueprint</div>
+                        <div class="text-sm text-ploy-text-secondary">Platform architecture</div>
+                    </div>
+                    <div class="font-mono text-xs text-ploy-text-secondary">namespace per tenant kubernetes</div>
+                </div>
+                <div class="bg-ploy-background-primary p-7 md:p-10">
+                    <div class="mb-4 flex flex-wrap gap-2"><span
+                            class="font-mono text-[0.65rem] uppercase tracking-[0.1em] text-ploy-accent-primary-500">architecture</span><span
+                            class="font-mono text-[0.65rem] uppercase tracking-[0.1em] text-ploy-accent-primary-500">comparisons</span><span
+                            class="font-mono text-[0.65rem] uppercase tracking-[0.1em] text-ploy-accent-primary-500">security</span><span
+                            class="font-mono text-[0.65rem] uppercase tracking-[0.1em] text-ploy-text-secondary">planned</span>
+                    </div>
+                    <h3 class="mb-4 max-w-[42rem] text-balance text-2xl font-bold md:text-3xl">Namespace per Tenant vs
+                        Shared Namespace: Kubernetes SaaS Isolation</h3>
+                    <p class="mb-7 max-w-[45rem] leading-relaxed text-ploy-text-secondary">A decision framework for
+                        choosing workload, network, secrets, and operational boundaries in Kubernetes-based SaaS
+                        platforms.</p><a href="./namespace-per-tenant-vs-shared-namespace/index.html"
+                        class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-button font-button text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ploy-accent-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ploy-background-primary disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-ploy-button-primary-border bg-ploy-button-primary-background text-ploy-button-primary-text hover:bg-ploy-button-primary-background/90 h-10 px-4">Read
+                        Blueprint</a>
+                </div>
+            </article> -->
+            <div class="grid gap-4 md:grid-cols-2">
+                <article
+                    class="flex min-h-72 flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-7">
+                    <div>
+                        <div
+                            class="mb-5 flex flex-wrap justify-between gap-3 font-mono text-[0.65rem] uppercase tracking-[0.1em] text-ploy-accent-primary-500">
+                            <span>Kubernetes NetworkPolicy</span><span class="text-ploy-text-secondary">KUBERNETES</span>
+                        </div>
+                        <h3 class="mb-3 text-balance text-xl font-bold">Kubernetes NetworkPolicy per Tenant: Building a
+                            Default-Deny Release Boundary</h3>
+                        <p class="text-sm leading-relaxed text-ploy-text-secondary">How to generate default-deny
+                            NetworkPolicy for every tenant release while preserving only the DNS, secrets,
+                            observability, and edge paths each workload actually needs.</p>
+                    </div><a href="./kubernetes-networkpolicy-per-tenant-default-deny/index.html"
+                        class="mt-7 border-b border-ploy-accent-primary-500 pb-1 text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Open
+                        guide →</a>
+                </article>
+                <article
+                    class="flex min-h-72 flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-7">
+                    <div>
+                        <div
+                            class="mb-5 flex flex-wrap justify-between gap-3 font-mono text-[0.65rem] uppercase tracking-[0.1em] text-ploy-accent-primary-500">
+                            <span>Kubernetes + Vault</span><span class="text-ploy-text-secondary">VAULT</span></div>
+                        <h3 class="mb-3 text-balance text-xl font-bold">Kubernetes + Vault for Tenant Isolation: From
+                            Ubuntu Cluster to Automated Releases</h3>
+                        <p class="text-sm leading-relaxed text-ploy-text-secondary">A production-minded guide to
+                            installing Canonical Kubernetes, integrating an external HashiCorp Vault, and compiling
+                            those primitives into isolated tenant releases with OpenTenant.</p>
+                    </div><a href="./kubernetes-vault-tenant-isolation-opentenant/index.html"
+                        class="mt-7 border-b border-ploy-accent-primary-500 pb-1 text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Open
+                        guide →</a>
+                </article>
+                <article
+                    class="flex min-h-72 flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-7">
+                    <div>
+                        <div
+                            class="mb-5 flex flex-wrap justify-between gap-3 font-mono text-[0.65rem] uppercase tracking-[0.1em] text-ploy-accent-primary-500">
+                            <span>Cloudflare Tunnel</span><span class="text-ploy-text-secondary">CLOUDFLARE</span></div>
+                        <h3 class="mb-3 text-balance text-xl font-bold">Cloudflare Zero Trust for Every Tenant:
+                            Automating Edge Access on Kubernetes</h3>
+                        <p class="text-sm leading-relaxed text-ploy-text-secondary">How Cloudflare Tunnel, Access
+                            policies, Kubernetes, and OpenTenant fit together to give every tenant a private origin,
+                            explicit hostname, and reviewable access policy.</p>
+                    </div><a href="./cloudflare-zero-trust-per-tenant-kubernetes/index.html"
+                        class="mt-7 border-b border-ploy-accent-primary-500 pb-1 text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Open
+                        guide →</a>
+                </article>
+                <article
+                    class="flex min-h-72 flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-7">
+                    <div>
+                        <div
+                            class="mb-5 flex flex-wrap justify-between gap-3 font-mono text-[0.65rem] uppercase tracking-[0.1em] text-ploy-accent-primary-500">
+                            <span>GitOps architecture</span><span class="text-ploy-text-secondary">GITOPS</span></div>
+                        <h3 class="mb-3 text-balance text-xl font-bold">GitOps Supply-Chain Security for Tenant
+                            Releases: From Commit to Rollback</h3>
+                        <p class="text-sm leading-relaxed text-ploy-text-secondary">How signed source, immutable
+                            artifacts, policy admission, and tenant-scoped rollback provenance create a reviewable
+                            deployment chain.</p>
+                    </div><a href="./gitops-supply-chain-security-tenant-releases/index.html"
+                        class="mt-7 border-b border-ploy-accent-primary-500 pb-1 text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Open
+                        guide →</a>
+                </article>
+                <article
+                    class="flex min-h-72 flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-7">
+                    <div>
+                        <div
+                            class="mb-5 flex flex-wrap justify-between gap-3 font-mono text-[0.65rem] uppercase tracking-[0.1em] text-ploy-accent-primary-500">
+                            <span>Vault Secrets Operator</span><span class="text-ploy-text-secondary">VAULT</span></div>
+                        <h3 class="mb-3 text-balance text-xl font-bold">Vault Secret Rotation per Tenant: Updating
+                            Credentials Without a Platform-Wide Restart</h3>
+                        <p class="text-sm leading-relaxed text-ploy-text-secondary">How Vault Secrets Operator and
+                            External Secrets Operator synchronize tenant credentials—and how OpenTenant limits the
+                            resulting rollout to the workloads that actually depend on them.</p>
+                    </div><a href="./vault-secret-rotation-per-tenant-kubernetes/index.html"
+                        class="mt-7 border-b border-ploy-accent-primary-500 pb-1 text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Open
+                        guide →</a>
+                </article>
+                <article
+                    class="flex min-h-72 flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-7">
+                    <div>
+                        <div
+                            class="mb-5 flex flex-wrap justify-between gap-3 font-mono text-[0.65rem] uppercase tracking-[0.1em] text-ploy-accent-primary-500">
+                            <span>Cloudflare + Gateway API</span><span class="text-ploy-text-secondary">CLOUDFLARE</span>
+                        </div>
+                        <h3 class="mb-3 text-balance text-xl font-bold">Tenant TLS and Custom Domains: Automating DNS,
+                            Certificates, and Ownership Checks</h3>
+                        <p class="text-sm leading-relaxed text-ploy-text-secondary">A secure tenant-domain workflow
+                            spanning hostname ownership, Cloudflare DNS, Gateway API routing, cert-manager issuance,
+                            readiness, renewal, and offboarding.</p>
+                    </div><a href="./tenant-tls-custom-domain-automation/index.html"
+                        class="mt-7 border-b border-ploy-accent-primary-500 pb-1 text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Open
+                        guide →</a>
+                </article>
+            </div>
+        </div>
+    </main>
+    <section class="articles-cta border-t border-ploy-border-primary py-20 text-center">
+        <div class="mx-auto max-w-[46rem] px-6">
+            <h2 class="mb-4 text-balance text-[2.4rem] font-extrabold leading-tight tracking-[-0.02em]">The chart
+                deploys the app. OpenTenant operates the customer boundary.</h2>
+            <p class="mb-8 text-lg text-ploy-text-secondary">Review the control-plane model behind every blueprint.</p>
+            <a href="../index.html#evaluation"
+                class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-button font-button font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ploy-accent-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ploy-background-primary disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-ploy-button-primary-border bg-ploy-button-primary-background text-ploy-button-primary-text hover:bg-ploy-button-primary-background/90 h-12 px-6 text-base">Inspect
+                Architecture</a>
+        </div>
+    </section>
+    <footer
+        class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm min-w-0 min-h-0 py-9 border-t">
+        <div
+            class="min-w-0 min-h-0 max-w-[68.75rem] flex flex-wrap justify-between gap-4 mx-auto px-6 footer-inner w-full">
+            <div>© 2026 OpenTenant — open source under MIT</div>
+            <div><a href="https://github.com/opentenant/platform"
+                    class="text-ploy-text-secondary min-w-0 min-h-0 ml-[1.375rem] hover:text-ploy-text-primary">GitHub</a>
+            </div>
+        </div>
+    </footer>
+    <meta name="ploy-ploydb-reads"
+        content="[{&quot;ployDbId&quot;:&quot;pdb_d8e097e350704072a94c&quot;,&quot;tableId&quot;:&quot;tbl_096668abfd1e4613b96a&quot;,&quot;filters&quot;:[],&quot;rowCount&quot;:14,&quot;servedSample&quot;:false}]">
+    <script>(function () { var els = document.querySelectorAll("main section,main article,body>section"); els.forEach(function (el) { el.classList.add("portable-reveal") }); if ("IntersectionObserver" in window) { var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("is-visible"); io.unobserve(e.target) } }) }, { rootMargin: "0px 0px -12% 0px" }); els.forEach(function (el) { io.observe(el) }) } else { els.forEach(function (el) { el.classList.add("is-visible") }) } var f = document.querySelector("form"); if (f) f.addEventListener("submit", function (e) { e.preventDefault(); location.href = document.documentElement.dataset.liveLogin }); Array.from(document.querySelectorAll("button")).filter(function (b) { return ["GitHub", "GitLab"].includes(b.textContent.trim()) }).forEach(function (b) { b.addEventListener("click", function () { location.href = document.documentElement.dataset.liveLogin }) }) })();</script>
+</body>
+
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html data-live-login="https://opentenant.org/login" lang="en" class="text-black dark" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml"
+        href="/favicon.svg">
+    <meta name="ploy-astro-starter-version" content="1.0.0">
+    <title>Harbor Helm Chart: Building Isolated Registries for Customers — OpenTenant | </title>
+    <meta name="description"
+        content="A deployment blueprint for customer-specific Harbor registries with dedicated domains, credentials, storage policies, and release lifecycles." />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="canonical" href="https://www.opentenant.org/articles/harbor-helm-chart-isolated-registries" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title"
+        content="Harbor Helm Chart: Building Isolated Registries for Customers — OpenTenant |  " />
+    <meta property="og:site_name" content=" " />
+    <meta property="og:description"
+        content="A deployment blueprint for customer-specific Harbor registries with dedicated domains, credentials, storage policies, and release lifecycles." />
+    <meta property="og:url" content="https://www.opentenant.org/articles/harbor-helm-chart-isolated-registries" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title"
+        content="Harbor Helm Chart: Building Isolated Registries for Customers — OpenTenant |  " />
+    <meta name="twitter:description"
+        content="A deployment blueprint for customer-specific Harbor registries with dedicated domains, credentials, storage policies, and release lifecycles." />
+    <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body class="bg-ploy-background-primary text-ploy-text-primary leading-[1.6] decoration-[rgb(230,237,243)] m-0"
+    style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+    <nav
+        class="border-solid border-ploy-border-primary bg-ploy-background-primary/80 min-w-0 min-h-0 sticky z-[100] backdrop-blur-md border-b top-0">
+        <div
+            class="h-16 min-w-0 min-h-0 max-w-[68.75rem] flex justify-between items-center mx-auto px-6 nav-inner w-full">
+            
+                <a href="/" aria-label="OpenTenant home" class="logo"><span
+                        class="brand-logo inline-flex items-center gap-2 "><img src="/favicon.svg" width="34"/><span
+                            class="brand-logo__wordmark text-lg font-bold tracking-[-0.02em] text-ploy-text-primary">OpenTenant</span></span></a>
+            <div class="flex items-center gap-6 nav-links"><a href="../index.html"
+                    class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Articles</a><a
+                    href="#cases"
+                    class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Use
+                    Cases</a><a href="https://github.com/opentenant/platform"
+                    class="border-solid border-ploy-border-primary text-ploy-text-secondary font-semibold text-sm block transition-[transform,translate,scale,rotate,box-shadow] px-[1.375rem] py-2.5 rounded-lg hover:text-ploy-text-primary border">GitHub</a><a
+                    href="/login"
+                    class="bg-ploy-button-primary-background text-ploy-button-primary-text font-semibold text-sm block transition-shadow px-[1.375rem] py-2.5 rounded-lg hover:shadow-lg">Login</a>
+            </div>
+        </div>
+    </nav>
+    <main class="article-page">
+        <header class="border-b border-ploy-border-primary pb-16 pt-[6.25rem]">
+            <div class="mx-auto max-w-[68.75rem] px-6"><a href="../index.html"
+                    class="mb-8 inline-block font-mono text-xs uppercase tracking-[0.14em] text-ploy-accent-primary-500">←
+                    Technical library</a>
+                <div class="grid gap-10 lg:grid-cols-[1fr_18rem] lg:items-end">
+                    <div>
+                        <div
+                            class="mb-5 flex flex-wrap gap-3 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
+                            <span>helm-chart-guides</span><span>security</span><span
+                                class="text-ploy-text-secondary">planned</span></div>
+                        <h1
+                            class="max-w-[52rem] text-balance text-[2.7rem] font-extrabold leading-[1.08] tracking-[-0.03em] md:text-[4rem]">
+                            Harbor Helm Chart: Building Isolated Registries for Customers</h1>
+                    </div>
+                    <dl class="divide-y divide-ploy-border-primary border-y border-ploy-border-primary text-sm">
+                        <div class="flex justify-between gap-4 py-3">
+                            <dt class="text-ploy-text-secondary">Chart</dt>
+                            <dd>Harbor</dd>
+                        </div>
+                        <div class="flex justify-between gap-4 py-3">
+                            <dt class="text-ploy-text-secondary">Intent</dt>
+                            <dd>mofu</dd>
+                        </div>
+                        <div class="flex justify-between gap-4 py-3">
+                            <dt class="text-ploy-text-secondary">Author</dt>
+                            <dd>OpenTenant</dd>
+                        </div>
+                    </dl>
+                </div>
+                <p class="mt-8 max-w-[48rem] text-lg leading-relaxed text-ploy-text-secondary">A deployment blueprint
+                    for customer-specific Harbor registries with dedicated domains, credentials, storage policies, and
+                    release lifecycles.</p>
+            </div>
+        </header>
+        <div class="mx-auto grid max-w-[68.75rem] gap-12 px-6 py-16 lg:grid-cols-[13rem_minmax(0,1fr)_12rem]">
+            <aside class="hidden lg:block">
+                <div class="sticky top-28">
+                    <div class="mb-4 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
+                        On this page</div>
+                    <nav class="space-y-3 text-sm text-ploy-text-secondary"></nav>
+                </div>
+            </aside>
+            <article class="min-w-0">
+                <div class="prose prose-invert ploy-richtext max-w-none prose-headings:text-balance">
+                    <h1 id="editorial-brief">Editorial brief</h1>
+                    <p>Cover registry domains, TLS, storage, database and Redis dependencies, robot credentials,
+                        retention, upgrades, and tenant offboarding.</p>
+                </div>
+            </article>
+            <aside>
+                <div class="sticky top-28 rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+                    <div class="mb-2 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
+                        Source check</div>
+                    <p class="mb-5 text-sm leading-relaxed text-ploy-text-secondary">Every published guide must cite
+                        upstream documentation and use a tested deployment example.</p><a
+                        href="https://github.com/goharbor/harbor-helm"
+                        class="text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Upstream
+                        source →</a>
+                </div>
+            </aside>
+        </div>
+        <section class="border-y border-ploy-border-primary bg-ploy-background-secondary py-16 text-center">
+            <div class="mx-auto max-w-[42rem] px-6">
+                <h2 class="mb-4 text-balance text-3xl font-extrabold">From chart installation to tenant operations.</h2>
+                <p class="mb-7 text-ploy-text-secondary">See how OpenTenant models release, secrets, domain, and
+                    lifecycle boundaries.</p><a href="../../index.html#evaluation"
+                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-button font-button text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ploy-accent-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ploy-background-primary disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-ploy-button-primary-border bg-ploy-button-primary-background text-ploy-button-primary-text hover:bg-ploy-button-primary-background/90 h-10 px-4">Inspect
+                    Architecture</a>
+            </div>
+        </section>
+    </main>
+    <footer
+        class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm min-w-0 min-h-0 py-9 border-t">
+        <div
+            class="min-w-0 min-h-0 max-w-[68.75rem] flex flex-wrap justify-between gap-4 mx-auto px-6 footer-inner w-full">
+            <div>© 2026 OpenTenant — open source under MIT</div>
+            <div><a href="https://github.com/opentenant/platform"
+                    class="text-ploy-text-secondary min-w-0 min-h-0 ml-[1.375rem] hover:text-ploy-text-primary">GitHub</a>
+            </div>
+        </div>
+    </footer>
+    <meta name="ploy-ploydb-reads"
+        content="[{&quot;ployDbId&quot;:&quot;pdb_d8e097e350704072a94c&quot;,&quot;tableId&quot;:&quot;tbl_096668abfd1e4613b96a&quot;,&quot;filters&quot;:[{&quot;field&quot;:&quot;fld_f6d93c32653d4e42&quot;,&quot;value&quot;:&quot;harbor-helm-chart-isolated-registries&quot;}],&quot;rowCount&quot;:1,&quot;servedSample&quot;:false}]">
+    <script>(function () { var els = document.querySelectorAll("main section,main article,body>section"); els.forEach(function (el) { el.classList.add("portable-reveal") }); if ("IntersectionObserver" in window) { var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("is-visible"); io.unobserve(e.target) } }) }, { rootMargin: "0px 0px -12% 0px" }); els.forEach(function (el) { io.observe(el) }) } else { els.forEach(function (el) { el.classList.add("is-visible") }) } var f = document.querySelector("form"); if (f) f.addEventListener("submit", function (e) { e.preventDefault(); location.href = document.documentElement.dataset.liveLogin }); Array.from(document.querySelectorAll("button")).filter(function (b) { return ["GitHub", "GitLab"].includes(b.textContent.trim()) }).forEach(function (b) { b.addEventListener("click", function () { location.href = document.documentElement.dataset.liveLogin }) }) })();</script>
+</body>
+
+</html>

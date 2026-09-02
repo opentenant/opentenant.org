@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html data-live-login="https://opentenant.org/login" lang="en" class="text-black dark" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml"
+        href="/favicon.svg">
+  <title>Tenant TLS and Custom Domains: Automating DNS, Certificates, and Ownership Checks — OpenTenant | </title>
+  <meta name="description"
+    content="A secure tenant-domain workflow spanning hostname ownership, Cloudflare DNS, Gateway API routing, cert-manager issuance, readiness, renewal, and offboarding." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="canonical" href="https://www.opentenant.org/articles/tenant-tls-custom-domain-automation" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title"
+    content="Tenant TLS and Custom Domains: Automating DNS, Certificates, and Ownership Checks — OpenTenant |  " />
+  <meta property="og:site_name" content=" " />
+  <meta property="og:description"
+    content="A secure tenant-domain workflow spanning hostname ownership, Cloudflare DNS, Gateway API routing, cert-manager issuance, readiness, renewal, and offboarding." />
+  <meta property="og:url" content="https://www.opentenant.org/articles/tenant-tls-custom-domain-automation" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title"
+    content="Tenant TLS and Custom Domains: Automating DNS, Certificates, and Ownership Checks — OpenTenant |  " />
+  <meta name="twitter:description"
+    content="A secure tenant-domain workflow spanning hostname ownership, Cloudflare DNS, Gateway API routing, cert-manager issuance, readiness, renewal, and offboarding." />
+  <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body class="bg-ploy-background-primary text-ploy-text-primary leading-[1.6] decoration-[rgb(230,237,243)] m-0"
+  style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+  <nav
+    class="border-solid border-ploy-border-primary bg-ploy-background-primary/80 min-w-0 min-h-0 sticky z-[100] backdrop-blur-md border-b top-0">
+    <div class="h-16 min-w-0 min-h-0 max-w-[68.75rem] flex justify-between items-center mx-auto px-6 nav-inner w-full">
+      <a href="/" aria-label="OpenTenant home" class="logo"><span
+                        class="brand-logo inline-flex items-center gap-2 "><img src="/favicon.svg" width="34"/><span
+                            class="brand-logo__wordmark text-lg font-bold tracking-[-0.02em] text-ploy-text-primary">OpenTenant</span></span></a>
+      <div class="flex items-center gap-6 nav-links"><a
+          href="/articles/"
+          class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Articles</a><a
+          href="#cases"
+          class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Use
+          Cases</a><a href="https://github.com/opentenant/platform"
+          class="border-solid border-ploy-border-primary text-ploy-text-secondary font-semibold text-sm block transition-[transform,translate,scale,rotate,box-shadow] px-[1.375rem] py-2.5 rounded-lg hover:text-ploy-text-primary border">GitHub</a><a
+          href="/login"
+          class="bg-ploy-button-primary-background text-ploy-button-primary-text font-semibold text-sm block transition-shadow px-[1.375rem] py-2.5 rounded-lg hover:shadow-lg">Login</a></div>
+    </div>
+  </nav>
+  <main class="article-page">
+    <header class="border-b border-ploy-border-primary pb-16 pt-[6.25rem]">
+      <div class="mx-auto max-w-[68.75rem] px-6"><a href="../index.html"
+          class="mb-8 inline-block font-mono text-xs uppercase tracking-[0.14em] text-ploy-accent-primary-500">←
+          Technical library</a>
+        <div class="grid gap-10 lg:grid-cols-[1fr_18rem] lg:items-end">
+          <div>
+            <div
+              class="mb-5 flex flex-wrap gap-3 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
+              <span>architecture</span><span>security</span><span class="text-ploy-text-secondary">draft</span></div>
+            <h1
+              class="max-w-[52rem] text-balance text-[2.7rem] font-extrabold leading-[1.08] tracking-[-0.03em] md:text-[4rem]">
+              Tenant TLS and Custom Domains: Automating DNS, Certificates, and Ownership Checks</h1>
+          </div>
+          <dl class="divide-y divide-ploy-border-primary border-y border-ploy-border-primary text-sm">
+            <div class="flex justify-between gap-4 py-3">
+              <dt class="text-ploy-text-secondary">Chart</dt>
+              <dd>Cloudflare + Gateway API</dd>
+            </div>
+            <div class="flex justify-between gap-4 py-3">
+              <dt class="text-ploy-text-secondary">Intent</dt>
+              <dd>mofu</dd>
+            </div>
+            <div class="flex justify-between gap-4 py-3">
+              <dt class="text-ploy-text-secondary">Author</dt>
+              <dd>OpenTenant</dd>
+            </div>
+          </dl>
+        </div>
+        <p class="mt-8 max-w-[48rem] text-lg leading-relaxed text-ploy-text-secondary">A secure tenant-domain workflow
+          spanning hostname ownership, Cloudflare DNS, Gateway API routing, cert-manager issuance, readiness, renewal,
+          and offboarding.</p>
+      </div>
+    </header>
+    <section class="border-b border-ploy-border-primary bg-ploy-background-secondary py-14 md:py-16"
+      aria-labelledby="tenant-tls-custom-domain-automation-diagram-title">
+      <div class="mx-auto max-w-[68.75rem] px-6">
+        <div class="mb-8 grid gap-5 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
+          <div>
+            <p class="mb-3 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ploy-accent-primary-500">Hostname
+              to trusted endpoint</p>
+            <h2 id="tenant-tls-custom-domain-automation-diagram-title"
+              class="max-w-[34rem] text-balance text-3xl font-extrabold leading-tight tracking-[-0.025em] md:text-[2.35rem]">
+              A domain is active only when the whole path agrees.</h2>
+          </div>
+          <p class="max-w-[38rem] text-base leading-relaxed text-ploy-text-secondary md:text-lg">Ownership, DNS, route
+            attachment, certificate coverage, and tenant identity are verified as one lifecycle.</p>
+        </div>
+        <div
+          class="article-architecture__flow grid gap-3 lg:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr_auto_1fr] lg:items-stretch">
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-primary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-fingerprint-pattern size-5" aria-hidden="true">
+                  <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"></path>
+                  <path d="M14 13.12c0 2.38 0 6.38-1 8.88"></path>
+                  <path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"></path>
+                  <path d="M2 12a10 10 0 0 1 18-6"></path>
+                  <path d="M2 16h.01"></path>
+                  <path d="M21.8 16c.2-2 .131-5.354 0-6"></path>
+                  <path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"></path>
+                  <path d="M8.65 22c.21-.66.45-1.32.57-2"></path>
+                  <path d="M9 6.8a6 6 0 0 1 9 5.2v2"></path>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">Ownership
+                </div>
+                <h3 class="mt-2 text-base font-bold leading-snug">Unique hostname claim</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">A tenant-bound challenge proves control
+                </p>
+              </div>
+            </div>
+            <div class="article-architecture__connector flex items-center justify-center text-ploy-text-secondary"
+              aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-down size-4 lg:hidden" aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="m19 12-7 7-7-7"></path>
+              </svg><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-right hidden size-4 lg:block" aria-hidden="true">
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg></div>
+          </div>
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-secondary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-cloud size-5" aria-hidden="true">
+                  <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-secondary-500">
+                  Cloudflare DNS</div>
+                <h3 class="mt-2 text-base font-bold leading-snug">Edge record</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">Proxy mode and record type match the
+                  domain purpose</p>
+              </div>
+            </div>
+            <div class="article-architecture__connector flex items-center justify-center text-ploy-text-secondary"
+              aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-down size-4 lg:hidden" aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="m19 12-7 7-7-7"></path>
+              </svg><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-right hidden size-4 lg:block" aria-hidden="true">
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg></div>
+          </div>
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-primary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-route size-5" aria-hidden="true">
+                  <circle cx="6" cy="19" r="3"></circle>
+                  <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path>
+                  <circle cx="18" cy="5" r="3"></circle>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">Gateway
+                  API</div>
+                <h3 class="mt-2 text-base font-bold leading-snug">Hostname route</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">Listener intersection binds one backend
+                  service</p>
+              </div>
+            </div>
+            <div class="article-architecture__connector flex items-center justify-center text-ploy-text-secondary"
+              aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-down size-4 lg:hidden" aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="m19 12-7 7-7-7"></path>
+              </svg><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-right hidden size-4 lg:block" aria-hidden="true">
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg></div>
+          </div>
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-secondary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-lock-keyhole size-5" aria-hidden="true">
+                  <circle cx="12" cy="16" r="1"></circle>
+                  <rect x="3" y="10" width="18" height="12" rx="2"></rect>
+                  <path d="M7 10V7a5 5 0 0 1 10 0v3"></path>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-secondary-500">
+                  cert-manager</div>
+                <h3 class="mt-2 text-base font-bold leading-snug">Certificate lifecycle</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">SAN coverage, renewal, and Secret
+                  readiness converge</p>
+              </div>
+            </div>
+            <div class="article-architecture__connector flex items-center justify-center text-ploy-text-secondary"
+              aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-down size-4 lg:hidden" aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="m19 12-7 7-7-7"></path>
+              </svg><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-right hidden size-4 lg:block" aria-hidden="true">
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg></div>
+          </div>
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-primary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-shield-check size-5" aria-hidden="true">
+                  <path
+                    d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z">
+                  </path>
+                  <path d="m9 12 2 2 4-4"></path>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">External
+                  probe</div>
+                <h3 class="mt-2 text-base font-bold leading-snug">SNI + tenant proof</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">The served certificate and response
+                  match the claim</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="mt-7 flex flex-col gap-2 border-t border-ploy-border-primary pt-5 font-mono text-[0.68rem] text-ploy-text-secondary md:flex-row md:flex-wrap md:gap-x-7">
+          <span>hostname → durable unique owner</span><span>SNI → certificate SAN</span><span>public response → expected
+            tenant release</span></div>
+      </div>
+    </section>
+    <div class="mx-auto grid max-w-[68.75rem] gap-12 px-6 py-16 lg:grid-cols-[13rem_minmax(0,1fr)_12rem]">
+      <aside class="hidden lg:block">
+        <div class="sticky top-28">
+          <div class="mb-4 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">On this
+            page</div>
+          <nav class="space-y-3 text-sm text-ploy-text-secondary"><a href="#direct-answer"
+              class="block hover:text-ploy-text-primary">Direct answer</a><a
+              href="#model-domain-ownership-before-provisioning" class="block hover:text-ploy-text-primary">Model domain
+              ownership before provisioning</a><a href="#cloudflare-dns-proxied-versus-dns-only"
+              class="block hover:text-ploy-text-primary">Cloudflare DNS: proxied versus DNS-only</a><a
+              href="#gateway-api-binds-hostnames-to-services" class="block hover:text-ploy-text-primary">Gateway API
+              binds hostnames to services</a><a href="#cert-manager-turns-listeners-into-certificates"
+              class="block hover:text-ploy-text-primary">cert-manager turns listeners into certificates</a><a
+              href="#platform-subdomains-versus-custom-domains" class="block hover:text-ploy-text-primary">Platform
+              subdomains versus custom domains</a><a href="#how-opentenant-reconciles-the-domain-lifecycle"
+              class="block hover:text-ploy-text-primary">How OpenTenant reconciles the domain lifecycle</a><a
+              href="#renewal-suspension-and-deletion" class="block hover:text-ploy-text-primary">Renewal, suspension,
+              and deletion</a><a href="#security-guardrails" class="block hover:text-ploy-text-primary">Security
+              guardrails</a><a href="#verification-checklist" class="block hover:text-ploy-text-primary">Verification
+              checklist</a><a href="#sources" class="block hover:text-ploy-text-primary">Sources</a></nav>
+        </div>
+      </aside>
+      <article class="min-w-0">
+        <div class="prose prose-invert ploy-richtext max-w-none prose-headings:text-balance">
+          <h1 id="tenant-tls-and-domain-automation">Tenant TLS and domain automation</h1>
+          <h2 id="direct-answer">Direct answer</h2>
+          <p>A tenant domain is not complete when a DNS record exists. The platform must prove hostname ownership,
+            prevent duplicate claims, create the correct edge record, bind the hostname to exactly one Kubernetes route,
+            issue a matching certificate, verify readiness, and remove access safely during suspension or deletion.
+            OpenTenant automates that lifecycle with Cloudflare, Gateway API, and cert-manager while keeping every step
+            tied to the tenant record.</p>
+          <p>Wildcard DNS can simplify routing for platform-owned subdomains. It must not be used as authorization for
+            customer-owned domains.</p>
+          <h2 id="model-domain-ownership-before-provisioning">Model domain ownership before provisioning</h2>
+          <p>OpenTenant treats a hostname as a unique resource with an owner and a state machine:</p>
+          <pre><code class="language-text">requested → verification pending → verified → provisioning
+→ certificate pending → route ready → active
+→ suspended → released
+</code></pre>
+          <p>A database-level uniqueness rule should prevent two tenants from claiming the same normalized hostname.
+            Normalize case and trailing dots, reject public-suffix claims, and distinguish a platform subdomain such as
+            <code>acme.example.com</code> from a customer domain such as <code>app.customer.com</code>.</p>
+          <p>For customer-owned domains, require a DNS challenge that contains a random, tenant-bound value. Recheck
+            ownership before activation and periodically where the threat model requires it. A CNAME pointing at the
+            platform proves routing intent only when the expected verification process defines it that way.</p>
+          <h2 id="cloudflare-dns-proxied-versus-dns-only">Cloudflare DNS: proxied versus DNS-only</h2>
+          <p>Cloudflare documents two relevant modes for A, AAAA, and CNAME records. A <strong>proxied</strong> record
+            returns Cloudflare anycast addresses and sends HTTP traffic through Cloudflare, enabling edge controls and
+            hiding the origin address. A <strong>DNS-only</strong> record returns the actual origin and does not receive
+            Cloudflare HTTP protection or analytics.</p>
+          <p>Cloudflare notes that verification, email, and some non-HTTP records should remain DNS-only. OpenTenant
+            therefore compiles record type and proxy status from the domain purpose instead of enabling the proxy
+            indiscriminately.</p>
+          <p>For platform subdomains, a wildcard record can reduce per-tenant DNS operations. The application layer
+            still needs an explicit tenant hostname registry. For custom domains, OpenTenant creates or validates the
+            required record without assuming control of the customer's entire zone.</p>
+          <h2 id="gateway-api-binds-hostnames-to-services">Gateway API binds hostnames to services</h2>
+          <p>Gateway API separates infrastructure-owned Gateways from application-owned Routes. An
+            <code>HTTPRoute</code> names its hostnames and attaches to a compatible Gateway listener.</p>
+          <p><a href="https://gateway-api.sigs.k8s.io/docs/concepts/hostnames/"
+              rel="noopener noreferrer nofollow">Gateway API hostname rules</a> use hostname intersection between
+            listeners and routes. A wildcard listener such as <code>*.example.com</code> can accept matching tenant
+            routes, while a specific hostname gets the more specific match. For TLS termination, the intersected
+            hostname must appear on the certificate and the client's SNI must match.</p>
+          <p>A tenant route can be rendered as:</p>
+          <pre><code class="language-yaml">apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: tenant-acme
+  namespace: tenant-acme
+spec:
+  parentRefs:
+    - name: public-gateway
+      namespace: gateway-system
+  hostnames:
+    - acme.example.com
+  rules:
+    - backendRefs:
+        - name: web
+          port: 8080
+</code></pre>
+          <p>Cross-namespace attachment requires deliberate Gateway <code>allowedRoutes</code> behavior and may require
+            a <code>ReferenceGrant</code> for some references. OpenTenant generates route ownership from trusted tenant
+            identity and does not allow an arbitrary values file to attach itself to another tenant's service.</p>
+          <h2 id="cert-manager-turns-listeners-into-certificates">cert-manager turns listeners into certificates</h2>
+          <p><a href="https://cert-manager.io/docs/usage/gateway/" rel="noopener noreferrer nofollow">cert-manager's
+              Gateway integration</a> can create Certificate resources from annotated Gateway listeners. The listener
+            must include a hostname, use TLS termination, and reference a Secret in the same namespace as the Gateway
+            for the documented automatic flow.</p>
+          <p>That namespace rule affects architecture. A central Gateway may keep certificates in the gateway namespace,
+            while tenant HTTPRoutes live in tenant namespaces. The platform should choose that topology explicitly
+            rather than copying an Ingress pattern into Gateway API.</p>
+          <p>Gateway API also warns integrations not to infer wildcard certificate issuance merely from a wildcard
+            hostname. Wildcard certificates should be deliberate Certificate resources, normally using DNS-01
+            validation, with tightly controlled access to the resulting private key.</p>
+          <h2 id="platform-subdomains-versus-custom-domains">Platform subdomains versus custom domains</h2>
+          <h3 id="platform-owned-subdomains">Platform-owned subdomains</h3>
+          <p>For <code>tenant.platform.example</code>, OpenTenant can validate the tenant slug, reserve the hostname,
+            attach an HTTPRoute, and use a platform-managed wildcard or specific certificate strategy. Wildcard
+            certificates reduce issuance volume but increase the impact of key compromise.</p>
+          <h3 id="customer-owned-domains">Customer-owned domains</h3>
+          <p>For <code>app.customer.com</code>, OpenTenant records a verification challenge, waits for DNS proof,
+            provisions the Cloudflare/SaaS or external DNS binding supported by the deployment profile, and requests a
+            certificate containing that exact hostname. The route does not become active until DNS, certificate, and
+            backend readiness agree.</p>
+          <h3 id="administrative-hostnames">Administrative hostnames</h3>
+          <p>Separate customer traffic from operator and tenant-admin traffic. <code>admin.tenant.example</code> should
+            have its own Access policy and, where practical, its own route and certificate reference. A wildcard
+            certificate does not imply a wildcard authorization policy.</p>
+          <h2 id="how-opentenant-reconciles-the-domain-lifecycle">How OpenTenant reconciles the domain lifecycle</h2>
+          <pre><code class="language-text">tenant requests hostname
+  → normalize and reserve unique claim
+  → issue ownership challenge when external
+  → verify DNS control
+  → create or validate Cloudflare record
+  → render Gateway listener/route relationship
+  → request or attach certificate
+  → verify DNS, SNI, certificate chain, and backend
+  → activate tenant route
+</code></pre>
+          <p>The tenant status remains pending until every required controller reports readiness. A successful DNS API
+            response is not enough; OpenTenant probes the public hostname, validates the certificate SAN and expiry, and
+            confirms the response belongs to the expected tenant release.</p>
+          <h2 id="renewal-suspension-and-deletion">Renewal, suspension, and deletion</h2>
+          <p>Certificate issuance is only the first event. cert-manager renews certificates according to issuer and
+            Certificate configuration, but the platform must monitor Certificate conditions and public expiry. Alert
+            before the certificate enters a risky window, and test that a renewed Secret is actually served by the
+            Gateway implementation.</p>
+          <p>Suspension should block edge access before stopping the application. Deletion should remove routes and
+            Access policy, then DNS, then certificates and release resources according to retention policy. Keeping a
+            DNS record pointed at a deleted or reassigned backend creates takeover risk.</p>
+          <p>Releasing a custom-domain claim should require proof that no active route, certificate, or edge binding
+            remains. Consider a quarantine period before another tenant can claim the same hostname.</p>
+          <h2 id="security-guardrails">Security guardrails</h2>
+          <ul>
+            <li>Scope Cloudflare API tokens to the required account, zone, and operations.</li>
+            <li>Separate hostname verification records from proxied application records.</li>
+            <li>Store DNS and issuer credentials in Vault, not tenant chart values.</li>
+            <li>Reserve platform labels and Route attachment fields through admission policy.</li>
+            <li>Prevent duplicate normalized hostnames with durable uniqueness enforcement.</li>
+            <li>Limit access to wildcard private keys and prefer specific certificates for higher-risk boundaries.</li>
+            <li>Verify the served certificate and tenant identity from outside the cluster.</li>
+            <li>Record every ownership, DNS, route, and certificate transition in the tenant audit trail.</li>
+          </ul>
+          <h2 id="verification-checklist">Verification checklist</h2>
+          <ul>
+            <li>Duplicate and mixed-case hostname claims are rejected.</li>
+            <li>Customer domains cannot activate before ownership verification.</li>
+            <li>DNS records use the intended proxied or DNS-only mode.</li>
+            <li>Gateway and HTTPRoute hostnames intersect as expected.</li>
+            <li>The served certificate contains the exact hostname and valid chain.</li>
+            <li>Tenant A cannot attach a route to tenant B's service.</li>
+            <li>Suspension removes access before workloads stop.</li>
+            <li>Renewal updates the certificate served at the edge.</li>
+            <li>Deletion leaves no dangling DNS or reusable route.</li>
+          </ul>
+          <h2 id="sources">Sources</h2>
+          <ul>
+            <li><a href="https://cert-manager.io/docs/usage/gateway/" rel="noopener noreferrer nofollow">Annotated
+                Gateway resources — cert-manager</a></li>
+            <li><a href="https://gateway-api.sigs.k8s.io/docs/concepts/hostnames/"
+                rel="noopener noreferrer nofollow">Hostnames in Gateway API</a></li>
+            <li><a href="https://gateway-api.sigs.k8s.io/guides/user-guides/tls/" rel="noopener noreferrer nofollow">TLS
+                configuration — Gateway API</a></li>
+            <li><a href="https://developers.cloudflare.com/dns/manage-dns-records/reference/proxied-dns-records/"
+                rel="noopener noreferrer nofollow">Proxied DNS records — Cloudflare</a></li>
+          </ul>
+          <p>OpenTenant makes the domain, route, certificate, and tenant release one reconciled object—so “active” means
+            the public security path is actually ready, not merely that an API call succeeded.</p>
+        </div>
+      </article>
+      <aside>
+        <div class="sticky top-28 rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+          <div class="mb-2 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">Source
+            check</div>
+          <p class="mb-5 text-sm leading-relaxed text-ploy-text-secondary">Every published guide must cite upstream
+            documentation and use a tested deployment example.</p><a href="https://developers.cloudflare.com/ssl/"
+            class="text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Upstream source
+            →</a>
+        </div>
+      </aside>
+    </div>
+    <section class="border-y border-ploy-border-primary bg-ploy-background-secondary py-16 text-center">
+      <div class="mx-auto max-w-[42rem] px-6">
+        <h2 class="mb-4 text-balance text-3xl font-extrabold">From chart installation to tenant operations.</h2>
+        <p class="mb-7 text-ploy-text-secondary">See how OpenTenant models release, secrets, domain, and lifecycle
+          boundaries.</p><a href="../../index.html#evaluation"
+          class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-button font-button text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ploy-accent-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ploy-background-primary disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-ploy-button-primary-border bg-ploy-button-primary-background text-ploy-button-primary-text hover:bg-ploy-button-primary-background/90 h-10 px-4">Inspect
+          Architecture</a>
+      </div>
+    </section>
+  </main>
+  <footer
+    class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm min-w-0 min-h-0 py-9 border-t">
+    <div class="min-w-0 min-h-0 max-w-[68.75rem] flex flex-wrap justify-between gap-4 mx-auto px-6 footer-inner w-full">
+      <div>© 2026 OpenTenant — open source under MIT</div>
+      <div><a href="https://github.com/opentenant/platform"
+          class="text-ploy-text-secondary min-w-0 min-h-0 ml-[1.375rem] hover:text-ploy-text-primary">GitHub</a></div>
+    </div>
+  </footer>
+  <meta name="ploy-ploydb-reads"
+    content="[{&quot;ployDbId&quot;:&quot;pdb_d8e097e350704072a94c&quot;,&quot;tableId&quot;:&quot;tbl_096668abfd1e4613b96a&quot;,&quot;filters&quot;:[{&quot;field&quot;:&quot;fld_f6d93c32653d4e42&quot;,&quot;value&quot;:&quot;tenant-tls-custom-domain-automation&quot;}],&quot;rowCount&quot;:1,&quot;servedSample&quot;:false}]">
+  <script>(function () { var els = document.querySelectorAll("main section,main article,body>section"); els.forEach(function (el) { el.classList.add("portable-reveal") }); if ("IntersectionObserver" in window) { var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("is-visible"); io.unobserve(e.target) } }) }, { rootMargin: "0px 0px -12% 0px" }); els.forEach(function (el) { io.observe(el) }) } else { els.forEach(function (el) { el.classList.add("is-visible") }) } var f = document.querySelector("form"); if (f) f.addEventListener("submit", function (e) { e.preventDefault(); location.href = document.documentElement.dataset.liveLogin }); Array.from(document.querySelectorAll("button")).filter(function (b) { return ["GitHub", "GitLab"].includes(b.textContent.trim()) }).forEach(function (b) { b.addEventListener("click", function () { location.href = document.documentElement.dataset.liveLogin }) }) })();</script>
+</body>
+
+</html>

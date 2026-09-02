@@ -1,495 +1,1357 @@
 <!DOCTYPE html>
-<html lang="en">
+<html data-live-login="https://opentenant.org/login" lang="en" class="text-black dark" data-theme="dark">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OpenTenant — Turn Any Helm Chart Into a SaaS</title>
-<meta name="description" content="OpenTenant is the open-source orchestrator that turns any Helm chart, Docker Compose, or PM2 app into a multi-tenant whitelabel SaaS. The Airbnb of commercial real estate. The operating system of vertical farms.">
-<style>
-  :root {
-    --bg: #0a0e14;
-    --bg-alt: #10161f;
-    --card: #151d29;
-    --border: #223047;
-    --text: #e6edf3;
-    --muted: #8b98a9;
-    --accent: #2dd4a7;
-    --accent2: #4a9eff;
-    --accent-dim: rgba(45, 212, 167, 0.12);
-    --code-bg: #0d1420;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: var(--bg); color: var(--text); line-height: 1.6;
-  }
-  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
-
-  nav {
-    position: sticky; top: 0; z-index: 100;
-    background: rgba(10, 14, 20, 0.85); backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-  }
-  .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; }
-  .logo { font-weight: 700; font-size: 1.15rem; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; }
-  .logo .glyph {
-    width: 28px; height: 28px; border-radius: 7px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    display: inline-flex; align-items: center; justify-content: center;
-    font-size: 0.85rem; color: #05110d; font-weight: 800;
-  }
-  .nav-links { display: flex; gap: 24px; align-items: center; }
-  .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.92rem; }
-  .nav-links a:hover { color: var(--text); }
-  .btn {
-    display: inline-block; padding: 10px 22px; border-radius: 8px;
-    font-weight: 600; font-size: 0.95rem; text-decoration: none;
-    transition: transform 0.15s, box-shadow 0.15s;
-  }
-  .btn-primary { background: var(--accent); color: #05110d; }
-  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(45,212,167,0.3); }
-  .btn-ghost { border: 1px solid var(--border); color: var(--text); }
-  .btn-ghost:hover { border-color: var(--accent); }
-
-  .hero { padding: 100px 0 80px; text-align: center; position: relative; overflow: hidden; }
-  .hero::before {
-    content: ""; position: absolute; inset: 0;
-    background:
-      radial-gradient(ellipse 60% 40% at 50% 0%, rgba(45,212,167,0.09), transparent),
-      radial-gradient(ellipse 40% 35% at 70% 20%, rgba(74,158,255,0.07), transparent);
-    pointer-events: none;
-  }
-  .badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    border: 1px solid var(--border); border-radius: 999px;
-    padding: 6px 16px; font-size: 0.82rem; color: var(--muted);
-    background: var(--bg-alt); margin-bottom: 28px;
-  }
-  .badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
-  @keyframes pulse { 50% { opacity: 0.4; } }
-  .hero h1 {
-    font-size: clamp(2.4rem, 6vw, 4rem);
-    font-weight: 800; letter-spacing: -0.03em; line-height: 1.12;
-    max-width: 900px; margin: 0 auto 24px;
-  }
-  .hero h1 .grad {
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-  }
-  .hero p { font-size: 1.2rem; color: var(--muted); max-width: 680px; margin: 0 auto 40px; }
-  .hero-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
-
-  .demo { padding: 20px 0 90px; }
-  .terminal {
-    max-width: 780px; margin: 0 auto;
-    background: var(--code-bg); border: 1px solid var(--border);
-    border-radius: 14px; overflow: hidden;
-    box-shadow: 0 24px 60px rgba(0,0,0,0.45);
-    text-align: left;
-  }
-  .terminal-bar {
-    display: flex; align-items: center; gap: 8px;
-    padding: 12px 16px; background: var(--bg-alt);
-    border-bottom: 1px solid var(--border);
-  }
-  .terminal-bar .dot { width: 11px; height: 11px; border-radius: 50%; }
-  .terminal-bar .r { background: #ff5f57; } .terminal-bar .y { background: #febc2e; } .terminal-bar .g { background: #28c840; }
-  .terminal-bar .fname { margin-left: 10px; color: var(--muted); font-size: 0.8rem; font-family: monospace; }
-  pre {
-    padding: 24px 26px; overflow-x: auto;
-    font-family: "SF Mono", "Fira Code", monospace; font-size: 0.83rem;
-    line-height: 1.65;
-  }
-  .c-key { color: var(--accent2); } .c-str { color: var(--accent); }
-  .c-com { color: #5b6b80; } .c-num { color: #f0a868; }
-
-  section { padding: 80px 0; }
-  section.alt { background: var(--bg-alt); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-  .kicker { color: var(--accent); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 12px; }
-  h2 { font-size: clamp(1.7rem, 3.5vw, 2.4rem); font-weight: 750; letter-spacing: -0.02em; margin-bottom: 16px; }
-  .section-sub { color: var(--muted); font-size: 1.08rem; max-width: 700px; margin-bottom: 48px; }
-
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-  .card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 12px; padding: 28px;
-    transition: border-color 0.2s, transform 0.2s;
-  }
-  .card:hover { border-color: var(--accent); transform: translateY(-3px); }
-  .card .icon { font-size: 1.7rem; margin-bottom: 14px; }
-  .card h3 { font-size: 1.08rem; margin-bottom: 8px; }
-  .card p { color: var(--muted); font-size: 0.93rem; }
-  .card .map { font-size: 0.8rem; color: var(--accent2); margin-top: 12px; font-family: monospace; }
-
-  .flow { display: flex; flex-direction: column; max-width: 620px; margin: 0 auto; }
-  .flow-step {
-    display: flex; gap: 20px; padding: 22px 0;
-    border-left: 2px solid var(--border); padding-left: 28px;
-    position: relative; margin-left: 8px;
-  }
-  .flow-step::before {
-    content: ""; position: absolute; left: -7px; top: 30px;
-    width: 12px; height: 12px; border-radius: 50%;
-    background: var(--accent); box-shadow: 0 0 0 4px var(--accent-dim);
-  }
-  .flow-num { color: var(--accent); font-weight: 700; font-size: 0.85rem; }
-  .flow-step h3 { font-size: 1.05rem; margin-bottom: 6px; }
-  .flow-step p { color: var(--muted); font-size: 0.93rem; }
-
-  .safety-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
-  .safety-item {
-    display: flex; gap: 12px; align-items: flex-start;
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 10px; padding: 18px 20px;
-  }
-  .safety-item .check { color: var(--accent); font-weight: 800; }
-  .safety-item span { font-size: 0.93rem; color: var(--muted); }
-  .safety-item strong { color: var(--text); }
-
-  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-  th, td { text-align: left; padding: 13px 18px; border-bottom: 1px solid var(--border); font-size: 0.93rem; }
-  th { color: var(--accent); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; }
-  td:first-child { font-family: monospace; color: var(--accent2); white-space: nowrap; }
-  td:last-child { color: var(--muted); }
-
-  /* STACK PILLS */
-  .stack { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
-  .pill {
-    display: inline-flex; align-items: center; gap: 8px;
-    border: 1px solid var(--border); background: var(--card);
-    border-radius: 999px; padding: 8px 18px; font-size: 0.88rem;
-    color: var(--text); transition: border-color 0.2s;
-  }
-  .pill:hover { border-color: var(--accent); }
-  .pill .p-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent2); }
-  .pill small { color: var(--muted); }
-
-  /* CASE STUDIES */
-  .case { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
-  .case-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 14px; padding: 36px; position: relative; overflow: hidden;
-  }
-  .case-card::before {
-    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-  }
-  .case-card .tag {
-    display: inline-block; font-size: 0.72rem; text-transform: uppercase;
-    letter-spacing: 0.12em; color: var(--accent); margin-bottom: 14px; font-weight: 700;
-  }
-  .case-card h3 { font-size: 1.4rem; margin-bottom: 10px; letter-spacing: -0.01em; }
-  .case-card p { color: var(--muted); font-size: 0.95rem; margin-bottom: 16px; }
-  .case-card ul { list-style: none; }
-  .case-card li { color: var(--muted); font-size: 0.9rem; padding: 5px 0 5px 24px; position: relative; }
-  .case-card li::before { content: "→"; position: absolute; left: 0; color: var(--accent); }
-  @media (max-width: 860px) { .case { grid-template-columns: 1fr; } }
-
-  .cta {
-    text-align: center; padding: 100px 0;
-    background: radial-gradient(ellipse 55% 60% at 50% 100%, rgba(45,212,167,0.1), transparent), var(--bg);
-  }
-  .cta h2 { margin-bottom: 16px; }
-  .cta p { color: var(--muted); margin-bottom: 40px; font-size: 1.1rem; }
-
-  footer { border-top: 1px solid var(--border); padding: 36px 0; color: var(--muted); font-size: 0.88rem; }
-  .footer-inner { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
-  footer a { color: var(--muted); text-decoration: none; margin-left: 22px; }
-  footer a:hover { color: var(--text); }
-
-  @media (max-width: 640px) {
-    .nav-links a:not(.btn) { display: none; }
-    pre { font-size: 0.72rem; padding: 18px; }
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml"
+        href="favicon.svg">
+    
+    <link rel="stylesheet" href="/styles.css">
+    <title>OpenTenant — Isolated Tenant Releases from Helm Charts</title>
+    <meta name="description"
+        content="OpenTenant turns Helm charts and other deployment templates into isolated, white-label SaaS environments with per-tenant releases, secrets, domains, and configuration.">
+    <meta name="robots" content="index, follow">
+    <meta name="googlebot" content="index, follow">
+    <link rel="canonical" href="https://opentenant.org/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="OpenTenant">
+    <meta property="og:title" content="OpenTenant — Isolated Tenant Releases from Helm Charts">
+    <meta property="og:description"
+        content="OpenTenant turns Helm charts and other deployment templates into isolated, white-label SaaS environments with per-tenant releases, secrets, domains, and configuration.">
+    <meta property="og:url" content="https://opentenant.org/">
+    <meta property="og:image" content="https://opentenant.org/og-opentenant.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="OpenTenant — isolated tenant infrastructure">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OpenTenant — Isolated Tenant Releases from Helm Charts">
+    <meta name="twitter:description"
+        content="OpenTenant turns Helm charts and other deployment templates into isolated, white-label SaaS environments with per-tenant releases, secrets, domains, and configuration.">
+    <meta name="twitter:image" content="https://opentenant.org/og-opentenant.png">
+    <script
+        type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://opentenant.org/#organization","name":"OpenTenant","url":"https://opentenant.org/","logo":{"@type":"ImageObject","url":"https://opentenant.org/opentenant-mark.svg"},"description":"OpenTenant turns Helm charts and other deployment templates into isolated, white-label SaaS environments with per-tenant releases, secrets, domains, and configuration."},{"@type":"WebSite","@id":"https://opentenant.org/#website","name":"OpenTenant","url":"https://opentenant.org/","publisher":{"@id":"https://opentenant.org/#organization"}}]}</script>
 </head>
-<body>
 
-<nav>
-  <div class="container nav-inner">
-    <div class="logo"><span class="glyph">OT</span> OpenTenant</div>
-    <div class="nav-links">
-      <a href="#how">How it works</a>
-      <a href="#stack">Stack</a>
-      <a href="#cases">Use Cases</a>
-      <a href="#" class="btn btn-ghost">GitHub</a>
-      <a href="#start" class="btn btn-primary">Get Started</a>
-    </div>
-  </div>
-</nav>
-
-<!-- HERO -->
-<header class="hero">
-  <div class="container">
-    <div class="badge"><span class="dot"></span> Open source · GitOps-native · Vault-integrated · MIT</div>
-    <h1>Turn any Helm chart<br>into a <span class="grad">multi-tenant SaaS.</span></h1>
-    <p>OpenTenant is the open-source orchestrator that turns any Docker Compose, PM2, or Helm deployment into a whitelabel, multi-tenant platform — declaratively, securely, and without vendor lock-in. One file. Every tenant. Their space, their processes, your platform.</p>
-    <div class="hero-ctas">
-      <a href="#start" class="btn btn-primary">Get Started</a>
-      <a href="#how" class="btn btn-ghost">See How It Works</a>
-    </div>
-  </div>
-</header>
-
-<!-- CODE DEMO -->
-<div class="demo">
-  <div class="container">
-    <div class="terminal">
-      <div class="terminal-bar">
-        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-        <span class="fname">opentenant.yaml</span>
-      </div>
-<pre><span class="c-com"># The whole SaaS — one manifest. One Helm release per tenant.</span>
-<span class="c-key">platform</span>:
-  <span class="c-key">cluster_domain</span>: <span class="c-str">"opentenant.cloud"</span>
-  <span class="c-key">vault_root_path</span>: <span class="c-str">"secret/data/opentenant/core"</span>
-  <span class="c-key">services</span>:
-    - <span class="c-key">id</span>: <span class="c-str">"platform-routing-mesh"</span>
-      <span class="c-key">engine</span>: <span class="c-str">docker-compose</span>
-      <span class="c-key">template_ref</span>: <span class="c-str">git::github.com/org/routing-mesh</span>
-
-<span class="c-key">tenants</span>:
-  - <span class="c-key">id</span>: <span class="c-str">"tenant-acme"</span>
-    <span class="c-key">vault_tenant_path</span>: <span class="c-str">"secret/data/tenants/acme"</span>
-    <span class="c-key">userspace</span>:
-      <span class="c-key">kube_namespace</span>: <span class="c-str">tenant-acme-prod</span>
-      <span class="c-key">domain</span>: <span class="c-str">acme.opentenant.cloud</span>
-    <span class="c-key">deployments</span>:
-      - <span class="c-key">id</span>: <span class="c-str">"acme-app"</span>
-        <span class="c-key">engine</span>: <span class="c-str">helm</span>                    <span class="c-com"># your chart, unchanged</span>
-        <span class="c-key">template_ref</span>: <span class="c-str">oci://registry.org/your-chart</span>
-        <span class="c-key">config_patches</span>:
-          <span class="c-key">replica_count</span>: <span class="c-num">3</span>
-        <span class="c-key">dependencies</span>:
-          - <span class="c-str">"platform-routing-mesh"</span></pre>
-    </div>
-  </div>
-</div>
-
-<!-- MENTAL MODEL -->
-<section class="alt" id="model">
-  <div class="container">
-    <div class="kicker">The Mental Model</div>
-    <h2>Take the chart you already have. Multiply it by every customer.</h2>
-    <p class="section-sub">You don't rewrite your app. You don't fork your chart. OpenTenant wraps it: each tenant becomes an isolated userspace running their own release of your template, with their own secrets, their own domain, their own branding.</p>
-    <div class="grid">
-      <div class="card">
-        <div class="icon">📦</div>
-        <h3>Templates, Not Forks</h3>
-        <p>Deployments reference versioned blueprints — any Helm chart from any OCI registry, any Docker Compose file, any PM2 ecosystem config. Your existing artifacts become SaaS-ready as-is.</p>
-        <div class="map">template_ref → git:: / oci:// / registry://</div>
-      </div>
-      <div class="card">
-        <div class="icon">🎨</div>
-        <h3>Config Patches</h3>
-        <p>Tenants customize a template without owning it. Whitelabel domains, themes, replica counts, feature flags — all patched declaratively, per tenant, over the same base chart.</p>
-        <div class="map">config_patches → { replica_count: 3, domain: "…" }</div>
-      </div>
-      <div class="card">
-        <div class="icon">🔑</div>
-        <h3>Isolated Userspaces</h3>
-        <p>Every tenant gets a dedicated Kubernetes namespace, unix user, and PM2 home. They can move freely inside their suite — and are physically locked out of everyone else's.</p>
-        <div class="map">userspace → kube_namespace + unix_user + pm2_home</div>
-      </div>
-      <div class="card">
-        <div class="icon">🔒</div>
-        <h3>Vault-Native Secrets</h3>
-        <p>All credentials live in HashiCorp Vault, scoped per tenant. The platform orchestrates keys it can never read — the tenant record in Vault is the single contract between provisioning and deployment.</p>
-        <div class="map">vault_tenant_path → secret/data/tenants/&lt;id&gt;</div>
-      </div>
-      <div class="card">
-        <div class="icon">💡</div>
-        <h3>Platform Utilities</h3>
-        <p>Core services are the building's water and power — routing mesh, shared databases. Tenants hook their pipes into the central supply but never manage the main pump.</p>
-        <div class="map">platform.services → shared infra, consumed safely</div>
-      </div>
-      <div class="card">
-        <div class="icon">📋</div>
-        <h3>The Building Inspector</h3>
-        <p>A static validation engine audits the entire dependency graph before anything runs. No cycles, no missing links, no tenant depending on another tenant's internals.</p>
-        <div class="map">dependencies → validated pre-deploy</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- HOW IT WORKS -->
-<section id="how">
-  <div class="container">
-    <div class="kicker">Architecture</div>
-    <h2>From a git push to a running tenant.</h2>
-    <p class="section-sub">The manifest is a composition and bindings engine — raw execution lives in templates, secrets live in Vault, and the engine compiles it all. One Helm release per tenant, always.</p>
-    <div class="flow">
-      <div class="flow-step">
-        <div>
-          <div class="flow-num">STEP 01 — DECLARE</div>
-          <h3>Write the manifest</h3>
-          <p>Define platform services, tenant userspaces, and their deployments in one YAML file. Commit it to your GitOps repo — GitHub or GitLab.</p>
+<body class="bg-ploy-background-primary text-ploy-text-primary leading-[1.6] decoration-[rgb(230,237,243)] m-0"
+    style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+    <div class="portable-island">
+        <nav
+            class="border-solid border-ploy-border-primary bg-ploy-background-primary/80 min-w-0 min-h-0 sticky z-[100] backdrop-blur-md border-b top-0">
+            <div
+                class="h-16 min-w-0 min-h-0 max-w-[68.75rem] flex justify-between items-center mx-auto px-6 nav-inner w-full">
+                <a href="/" aria-label="OpenTenant home" class="logo"><span
+                        class="brand-logo inline-flex items-center gap-2 "><img src="/favicon.svg" width="34"/><span
+                            class="brand-logo__wordmark text-lg font-bold tracking-[-0.02em] text-ploy-text-primary">OpenTenant</span></span></a>
+                <div class="flex items-center gap-6 nav-links"><a
+                        href="./articles/index.html"
+                        class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Articles</a><a
+                        href="#cases"
+                        class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Use
+                        Cases</a><a href="https://github.com/opentenant/platform"
+                        class="border-solid border-ploy-border-primary text-ploy-text-secondary font-semibold text-sm block transition-[transform,translate,scale,rotate,box-shadow] px-[1.375rem] py-2.5 rounded-lg hover:text-ploy-text-primary border">GitHub</a><a
+                        href="/login"
+                        class="bg-ploy-button-primary-background text-ploy-button-primary-text font-semibold text-sm block transition-shadow px-[1.375rem] py-2.5 rounded-lg hover:shadow-lg">Login</a></div>
+            </div>
+        </nav>
+        <header
+            class="hero relative overflow-hidden pb-16 pt-[6.25rem] text-center before:pointer-events-none before:absolute before:inset-0 before:content-[&#x27;&#x27;] before:[background-image:radial-gradient(60%_40%_at_50%_0%,_rgba(45,_212,_167,_0.09),_rgba(0,_0,_0,_0)),_radial-gradient(40%_35%_at_70%_20%,_rgba(74,_158,_255,_0.07),_rgba(0,_0,_0,_0))]">
+            <div class="hero__inner relative mx-auto max-w-[68.75rem] px-6">
+                <p
+                    class="hero__context mb-7 font-mono text-xs uppercase tracking-[0.14em] text-ploy-accent-primary-500">
+                    Open source / GitOps-native / Vault-integrated / MIT</p>
+                <h1
+                    class="hero__title mx-auto mb-6 max-w-[56.25rem] text-balance text-[3rem] font-extrabold leading-[1.08] tracking-[-0.03em] md:text-[4rem]">
+                    Turn your apps into templates for whitelabel products.</h1>
+                <p
+                    class="hero__summary mx-auto mb-9 max-w-[46rem] text-lg leading-relaxed text-ploy-text-secondary md:text-xl">
+                    OpenTenant composes the Helm charts you already run into a
+                    declarative multi-tenant control plane. Each tenant gets its own release, secrets scope, domain, and
+                    configuration.</p>
+                <div class="hero__actions flex flex-wrap justify-center gap-3.5"><a href="/login"
+                        class="hero__cta hero__cta--primary block rounded-lg bg-ploy-button-primary-background px-[1.375rem] py-2.5 text-base font-semibold text-ploy-button-primary-text transition-shadow hover:shadow-lg">Start</a><a href="https://github.com/opentenant/platform"
+                        class="hero__cta hero__cta--secondary block rounded-lg border border-ploy-button-secondary-border px-[1.375rem] py-2.5 text-base font-semibold text-ploy-button-secondary-text transition-colors hover:border-ploy-accent-primary-500">View
+                        Source</a></div>
+                <div
+                    class="hero__proof mx-auto mt-10 grid max-w-[52rem] gap-px overflow-hidden rounded-lg border border-ploy-border-primary bg-ploy-border-primary text-left sm:grid-cols-3">
+                    <div class="bg-ploy-background-secondary px-5 py-4">
+                        <div class="font-mono text-[0.65rem] tracking-[0.14em] text-ploy-accent-primary-500">TENANCY
+                        </div>
+                        <div class="mt-1 text-sm font-semibold text-ploy-text-primary">One release per tenant</div>
+                    </div>
+                    <div class="bg-ploy-background-secondary px-5 py-4">
+                        <div class="font-mono text-[0.65rem] tracking-[0.14em] text-ploy-accent-primary-500">SECRETS
+                        </div>
+                        <div class="mt-1 text-sm font-semibold text-ploy-text-primary">Scoped in Vault</div>
+                    </div>
+                    <div class="bg-ploy-background-secondary px-5 py-4">
+                        <div class="font-mono text-[0.65rem] tracking-[0.14em] text-ploy-accent-primary-500">VALIDATION
+                        </div>
+                        <div class="mt-1 text-sm font-semibold text-ploy-text-primary">Audited before runtime</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <section class="control-plane border-y border-ploy-border-primary bg-ploy-background-secondary py-20">
+            <div class="mx-auto max-w-[75rem] px-6">
+                <div class="mb-10 grid gap-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+                    <div>
+                        <p class="mb-3 font-mono text-xs uppercase tracking-[0.14em] text-ploy-accent-primary-500">Live
+                            control-plane model</p>
+                        <h2
+                            class="max-w-[34rem] text-balance text-[2.4rem] font-extrabold leading-tight tracking-[-0.02em]">
+                            See the platform coordinate every tenant boundary.</h2>
+                    </div>
+                    <p class="max-w-[42rem] text-lg leading-relaxed text-ploy-text-secondary">Git events enter through
+                        one reviewable manifest. Vault authorizes the exact secrets each release needs. OpenTenant
+                        compiles the graph, routes workloads to connected premium providers, and keeps every tenant in
+                        its own operational space.</p>
+                </div>
+                <div
+                    class="control-plane__frame relative overflow-hidden rounded-2xl border border-ploy-border-primary bg-ploy-background-primary shadow-2xl">
+                    <div
+                        class="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between border-b border-ploy-border-primary bg-ploy-background-primary/85 px-5 py-3 backdrop-blur-sm">
+                        <div
+                            class="flex items-center gap-2 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-text-secondary">
+                            <span class="size-2 rounded-full bg-ploy-accent-primary"></span>Topology synchronized</div>
+                        <div class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-text-secondary">7
+                            providers / 4 tenant releases</div>
+                    </div><svg viewBox="0 0 1200 680" role="img"
+                        aria-labelledby="control-plane-title control-plane-desc"
+                        class="block h-auto w-full min-w-[760px] -translate-x-[16%] sm:min-w-[900px] sm:-translate-x-[10%] md:min-w-0 md:translate-x-0">
+                        <title id="control-plane-title">Animated OpenTenant control plane</title>
+                        <desc id="control-plane-desc">Source events flow through Vault and the OpenTenant core to cloud
+                            providers and isolated tenant releases.</desc>
+                        <defs>
+                            <radialGradient id="core-halo">
+                                <stop offset="0" stop-color="var(--ploy-accent-primary)" stop-opacity="0.2"></stop>
+                                <stop offset="1" stop-color="var(--ploy-accent-primary)" stop-opacity="0"></stop>
+                            </radialGradient>
+                            <linearGradient id="flow-line">
+                                <stop offset="0" stop-color="var(--ploy-accent-secondary)" stop-opacity="0.25"></stop>
+                                <stop offset="0.5" stop-color="var(--ploy-accent-primary)" stop-opacity="0.9"></stop>
+                                <stop offset="1" stop-color="var(--ploy-accent-secondary)" stop-opacity="0.25"></stop>
+                            </linearGradient>
+                            <filter id="soft-glow">
+                                <feGaussianBlur stdDeviation="5" result="blur"></feGaussianBlur>
+                                <feMerge>
+                                    <feMergeNode in="blur"></feMergeNode>
+                                    <feMergeNode in="SourceGraphic"></feMergeNode>
+                                </feMerge>
+                            </filter>
+                        </defs>
+                        <circle cx="600" cy="330" r="250" fill="url(#core-halo)"></circle>
+                        <circle cx="600" cy="330" r="238" fill="none" stroke="var(--ploy-border-primary)"
+                            stroke-width="1" stroke-dasharray="4 12"
+                            class="control-plane__orbit control-plane__orbit--slow"></circle>
+                        <circle cx="600" cy="330" r="185" fill="none" stroke="var(--ploy-accent-secondary)"
+                            stroke-opacity="0.28" stroke-width="1.5" stroke-dasharray="32 18 5 18"
+                            class="control-plane__orbit control-plane__orbit--reverse"></circle>
+                        <circle cx="600" cy="330" r="126" fill="none" stroke="var(--ploy-accent-primary)"
+                            stroke-opacity="0.42" stroke-width="2" stroke-dasharray="72 26"
+                            class="control-plane__orbit"></circle>
+                        <path d="M600 74A256 256 0 0 1 856 330" fill="none" stroke="var(--ploy-accent-primary)"
+                            stroke-opacity="0.7" stroke-width="3" stroke-linecap="round" class="control-plane__scan">
+                        </path>
+                        <g>
+                            <path id="provider-path-0" d="M228 146 C340 146, 400 284.24, 472 284.24" fill="none"
+                                stroke="url(#flow-line)" stroke-opacity="0.36" stroke-width="1.5"></path>
+                            <circle r="4" fill="var(--ploy-accent-primary)" filter="url(#soft-glow)"
+                                class="control-plane__packet">
+                                <animateMotion dur="4.2s" repeatCount="indefinite" begin="0s">
+                                    <mpath href="#provider-path-0"></mpath>
+                                </animateMotion>
+                            </circle>
+                            <rect x="94" y="122" width="160" height="48" rx="8" fill="var(--ploy-neutral-primary-s3)"
+                                stroke="var(--ploy-border-primary)"></rect>
+                            <circle cx="114" cy="146" r="5" fill="var(--ploy-accent-primary)" fill-opacity="0.85">
+                            </circle><text x="130" y="150" fill="var(--ploy-text-primary)" font-family="monospace"
+                                font-size="12" letter-spacing="1.5">GITHUB</text>
+                        </g>
+                        <g>
+                            <path id="provider-path-1" d="M228 254 C340 254, 400 308, 472 308" fill="none"
+                                stroke="url(#flow-line)" stroke-opacity="0.36" stroke-width="1.5"></path>
+                            <circle r="4" fill="var(--ploy-accent-primary)" filter="url(#soft-glow)"
+                                class="control-plane__packet">
+                                <animateMotion dur="4.55s" repeatCount="indefinite" begin="-0.6s">
+                                    <mpath href="#provider-path-1"></mpath>
+                                </animateMotion>
+                            </circle>
+                            <rect x="94" y="230" width="160" height="48" rx="8" fill="var(--ploy-neutral-primary-s3)"
+                                stroke="var(--ploy-border-primary)"></rect>
+                            <circle cx="114" cy="254" r="5" fill="var(--ploy-accent-primary)" fill-opacity="0.85">
+                            </circle><text x="130" y="258" fill="var(--ploy-text-primary)" font-family="monospace"
+                                font-size="12" letter-spacing="1.5">GITLAB</text>
+                        </g>
+                        <g>
+                            <path id="provider-path-2" d="M228 362 C340 362, 400 331.76, 472 331.76" fill="none"
+                                stroke="url(#flow-line)" stroke-opacity="0.36" stroke-width="1.5"></path>
+                            <circle r="4" fill="var(--ploy-accent-primary)" filter="url(#soft-glow)"
+                                class="control-plane__packet">
+                                <animateMotion dur="4.9s" repeatCount="indefinite" begin="-1.2s">
+                                    <mpath href="#provider-path-2"></mpath>
+                                </animateMotion>
+                            </circle>
+                            <rect x="94" y="338" width="160" height="48" rx="8" fill="var(--ploy-neutral-primary-s3)"
+                                stroke="var(--ploy-border-primary)"></rect>
+                            <circle cx="114" cy="362" r="5" fill="var(--ploy-accent-primary)" fill-opacity="0.85">
+                            </circle><text x="130" y="366" fill="var(--ploy-text-primary)" font-family="monospace"
+                                font-size="12" letter-spacing="1.5">VAULT</text>
+                        </g>
+                        <g>
+                            <path id="provider-path-3" d="M946 120 C860 120, 800 278.52, 728 278.52" fill="none"
+                                stroke="url(#flow-line)" stroke-opacity="0.36" stroke-width="1.5"></path>
+                            <circle r="4" fill="var(--ploy-accent-primary)" filter="url(#soft-glow)"
+                                class="control-plane__packet">
+                                <animateMotion dur="5.25s" repeatCount="indefinite" begin="-1.7999999999999998s">
+                                    <mpath href="#provider-path-3"></mpath>
+                                </animateMotion>
+                            </circle>
+                            <rect x="946" y="96" width="160" height="48" rx="8" fill="var(--ploy-neutral-primary-s3)"
+                                stroke="var(--ploy-border-primary)"></rect>
+                            <circle cx="966" cy="120" r="5" fill="var(--ploy-accent-primary)" fill-opacity="0.85">
+                            </circle><text x="982" y="124" fill="var(--ploy-text-primary)" font-family="monospace"
+                                font-size="12" letter-spacing="1.5">GCP</text>
+                        </g>
+                        <g>
+                            <path id="provider-path-4" d="M946 228 C860 228, 800 302.28, 728 302.28" fill="none"
+                                stroke="url(#flow-line)" stroke-opacity="0.36" stroke-width="1.5"></path>
+                            <circle r="4" fill="var(--ploy-accent-primary)" filter="url(#soft-glow)"
+                                class="control-plane__packet">
+                                <animateMotion dur="5.6s" repeatCount="indefinite" begin="-2.4s">
+                                    <mpath href="#provider-path-4"></mpath>
+                                </animateMotion>
+                            </circle>
+                            <rect x="946" y="204" width="160" height="48" rx="8" fill="var(--ploy-neutral-primary-s3)"
+                                stroke="var(--ploy-border-primary)"></rect>
+                            <circle cx="966" cy="228" r="5" fill="var(--ploy-accent-primary)" fill-opacity="0.85">
+                            </circle><text x="982" y="232" fill="var(--ploy-text-primary)" font-family="monospace"
+                                font-size="12" letter-spacing="1.5">AWS</text>
+                        </g>
+                        <g>
+                            <path id="provider-path-5" d="M946 336 C860 336, 800 326.04, 728 326.04" fill="none"
+                                stroke="url(#flow-line)" stroke-opacity="0.36" stroke-width="1.5"></path>
+                            <circle r="4" fill="var(--ploy-accent-primary)" filter="url(#soft-glow)"
+                                class="control-plane__packet">
+                                <animateMotion dur="5.95s" repeatCount="indefinite" begin="-3s">
+                                    <mpath href="#provider-path-5"></mpath>
+                                </animateMotion>
+                            </circle>
+                            <rect x="946" y="312" width="160" height="48" rx="8" fill="var(--ploy-neutral-primary-s3)"
+                                stroke="var(--ploy-border-primary)"></rect>
+                            <circle cx="966" cy="336" r="5" fill="var(--ploy-accent-primary)" fill-opacity="0.85">
+                            </circle><text x="982" y="340" fill="var(--ploy-text-primary)" font-family="monospace"
+                                font-size="12" letter-spacing="1.5">SUPABASE</text>
+                        </g>
+                        <g>
+                            <path id="provider-path-6" d="M946 444 C860 444, 800 349.8, 728 349.8" fill="none"
+                                stroke="url(#flow-line)" stroke-opacity="0.36" stroke-width="1.5"></path>
+                            <circle r="4" fill="var(--ploy-accent-primary)" filter="url(#soft-glow)"
+                                class="control-plane__packet">
+                                <animateMotion dur="6.3s" repeatCount="indefinite" begin="-3.5999999999999996s">
+                                    <mpath href="#provider-path-6"></mpath>
+                                </animateMotion>
+                            </circle>
+                            <rect x="946" y="420" width="160" height="48" rx="8" fill="var(--ploy-neutral-primary-s3)"
+                                stroke="var(--ploy-border-primary)"></rect>
+                            <circle cx="966" cy="444" r="5" fill="var(--ploy-accent-primary)" fill-opacity="0.85">
+                            </circle><text x="982" y="448" fill="var(--ploy-text-primary)" font-family="monospace"
+                                font-size="12" letter-spacing="1.5">CLOUDFLARE</text>
+                        </g>
+                        <g class="control-plane__core">
+                            <circle cx="600" cy="330" r="96" fill="var(--ploy-neutral-primary-s3)"
+                                stroke="var(--ploy-accent-primary)" stroke-opacity="0.55" stroke-width="2"></circle>
+                            <circle cx="600" cy="330" r="78" fill="var(--ploy-background-primary)"
+                                stroke="var(--ploy-border-primary)"></circle>
+                            <rect x="578" y="270" width="44" height="44" rx="10" fill="var(--ploy-accent-primary)">
+                            </rect>
+                            <path d="M589 303V281h8v22M603 303v-22h8v22M585 307h30" fill="none"
+                                stroke="var(--ploy-accent-primary-950)" stroke-width="3" stroke-linecap="round"
+                                stroke-linejoin="round"></path><text x="600" y="338" text-anchor="middle"
+                                fill="var(--ploy-text-primary)" font-family="sans-serif" font-weight="700"
+                                font-size="18">OpenTenant</text><text x="600" y="362" text-anchor="middle"
+                                fill="var(--ploy-text-secondary)" font-family="monospace" font-size="10"
+                                letter-spacing="2">CONTROL PLANE</text>
+                            <circle cx="600" cy="389" r="4" fill="var(--ploy-accent-primary)"
+                                class="control-plane__pulse"></circle>
+                        </g>
+                        <g>
+                            <path d="M600 428V492" stroke="var(--ploy-accent-primary)" stroke-opacity="0.58"
+                                stroke-width="2"></path>
+                            <path d="M300 548C420 494 520 492 600 492C680 492 780 494 900 548" fill="none"
+                                stroke="var(--ploy-border-primary)" stroke-width="1.5"></path>
+                            <g>
+                                <path d="M600 492 C457.79999999999995 500, 284 516, 284 548" fill="none"
+                                    stroke="url(#flow-line)" stroke-opacity="0.5" stroke-width="1.5"></path>
+                                <circle r="4" fill="var(--ploy-accent-secondary)" class="control-plane__packet">
+                                    <animateMotion dur="4.4s" repeatCount="indefinite" begin="0s"
+                                        path="M600 492 C457.79999999999995 500, 284 516, 284 548"></animateMotion>
+                                </circle>
+                                <rect x="212" y="548" width="144" height="62" rx="9"
+                                    fill="var(--ploy-neutral-primary-s3)" stroke="var(--ploy-border-primary)"></rect>
+                                <text x="284" y="575" text-anchor="middle" fill="var(--ploy-text-primary)"
+                                    font-family="monospace" font-size="11" letter-spacing="1.2">TENANT A</text><text
+                                    x="284" y="595" text-anchor="middle" fill="var(--ploy-text-secondary)"
+                                    font-family="monospace" font-size="9">release / secrets / domain</text>
+                            </g>
+                            <g>
+                                <path d="M600 492 C543.3 500, 474 516, 474 548" fill="none" stroke="url(#flow-line)"
+                                    stroke-opacity="0.5" stroke-width="1.5"></path>
+                                <circle r="4" fill="var(--ploy-accent-secondary)" class="control-plane__packet">
+                                    <animateMotion dur="4.800000000000001s" repeatCount="indefinite" begin="-0.8s"
+                                        path="M600 492 C543.3 500, 474 516, 474 548"></animateMotion>
+                                </circle>
+                                <rect x="402" y="548" width="144" height="62" rx="9"
+                                    fill="var(--ploy-neutral-primary-s3)" stroke="var(--ploy-border-primary)"></rect>
+                                <text x="474" y="575" text-anchor="middle" fill="var(--ploy-text-primary)"
+                                    font-family="monospace" font-size="11" letter-spacing="1.2">TENANT B</text><text
+                                    x="474" y="595" text-anchor="middle" fill="var(--ploy-text-secondary)"
+                                    font-family="monospace" font-size="9">release / secrets / domain</text>
+                            </g>
+                            <g>
+                                <path d="M600 492 C628.8 500, 664 516, 664 548" fill="none" stroke="url(#flow-line)"
+                                    stroke-opacity="0.5" stroke-width="1.5"></path>
+                                <circle r="4" fill="var(--ploy-accent-secondary)" class="control-plane__packet">
+                                    <animateMotion dur="5.2s" repeatCount="indefinite" begin="-1.6s"
+                                        path="M600 492 C628.8 500, 664 516, 664 548"></animateMotion>
+                                </circle>
+                                <rect x="592" y="548" width="144" height="62" rx="9"
+                                    fill="var(--ploy-neutral-primary-s3)" stroke="var(--ploy-border-primary)"></rect>
+                                <text x="664" y="575" text-anchor="middle" fill="var(--ploy-text-primary)"
+                                    font-family="monospace" font-size="11" letter-spacing="1.2">TENANT C</text><text
+                                    x="664" y="595" text-anchor="middle" fill="var(--ploy-text-secondary)"
+                                    font-family="monospace" font-size="9">release / secrets / domain</text>
+                            </g>
+                            <g>
+                                <path d="M600 492 C714.3 500, 854 516, 854 548" fill="none" stroke="url(#flow-line)"
+                                    stroke-opacity="0.5" stroke-width="1.5"></path>
+                                <circle r="4" fill="var(--ploy-accent-secondary)" class="control-plane__packet">
+                                    <animateMotion dur="5.6000000000000005s" repeatCount="indefinite"
+                                        begin="-2.4000000000000004s" path="M600 492 C714.3 500, 854 516, 854 548">
+                                    </animateMotion>
+                                </circle>
+                                <rect x="782" y="548" width="144" height="62" rx="9"
+                                    fill="var(--ploy-neutral-primary-s3)" stroke="var(--ploy-border-primary)"></rect>
+                                <text x="854" y="575" text-anchor="middle" fill="var(--ploy-text-primary)"
+                                    font-family="monospace" font-size="11" letter-spacing="1.2">TENANT N</text><text
+                                    x="854" y="595" text-anchor="middle" fill="var(--ploy-text-secondary)"
+                                    font-family="monospace" font-size="9">release / secrets / domain</text>
+                            </g>
+                        </g>
+                    </svg>
+                    <div
+                        class="absolute bottom-5 left-5 hidden items-center gap-3 rounded-lg border border-ploy-border-primary bg-ploy-background-primary/90 px-4 py-3 backdrop-blur md:flex">
+                        <span class="brand-logo inline-flex items-center gap-2 "><svg aria-hidden="true"
+                                viewBox="0 0 32 32" class="brand-logo__mark size-7 shrink-0">
+                                <rect width="32" height="32" rx="7" class="fill-ploy-accent-primary"></rect>
+                                <path d="M8 23V9h6v14M18 23V9h6v14" fill="none" class="stroke-ploy-accent-primary-950"
+                                    stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                                <path d="M5.5 25.5h21" fill="none" class="stroke-ploy-accent-primary-950"
+                                    stroke-width="2.6" stroke-linecap="round"></path>
+                                <circle cx="11" cy="16" r="1.25" class="fill-ploy-accent-primary-950"></circle>
+                                <circle cx="21" cy="16" r="1.25" class="fill-ploy-accent-primary-950"></circle>
+                            </svg></span>
+                        <div>
+                            <div class="text-xs font-semibold">Graph valid</div>
+                            <div class="font-mono text-[0.6rem] text-ploy-text-secondary">0 cycles / 0 boundary
+                                violations</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <div class="min-w-0 min-h-0 pt-5 pb-[5.625rem]">
+            <div class="min-w-0 min-h-0 max-w-[68.75rem] mx-auto px-6">
+                <div
+                    class="border-solid border-ploy-border-primary bg-ploy-background-secondary text-left min-w-0 min-h-0 max-w-[48.75rem] shadow-[0px_24px_60px_0px_rgba(0,0,0,0.45)] mx-auto rounded-[0.875rem] overflow-hidden border">
+                    <div
+                        class="border-solid border-ploy-border-primary bg-ploy-background-secondary min-w-0 min-h-0 flex items-center gap-2 px-4 py-3 border-b terminal-bar">
+                        <span class="bg-red-400 w-2.5 h-2.5 block rounded-full"> </span><span
+                            class="bg-amber-400 w-2.5 h-2.5 block rounded-full"> </span><span
+                            class="bg-green-500 w-2.5 h-2.5 block rounded-full"> </span><span
+                            style="font-family:monospace"
+                            class="text-ploy-text-secondary text-xs block ml-2.5">opentenant.yaml</span></div>
+                    <pre style="font-family:&#x27;SF Mono&#x27;, &#x27;Fira Code&#x27;, monospace"
+                        class="text-nowrap leading-relaxed whitespace-pre min-w-0 min-h-0 overflow-x-auto max-md:text-xs max-md:p-[1.125rem] max-md:leading-relaxed md:text-sm md:px-[1.625rem] md:py-6 md:leading-relaxed"><span class="text-nowrap text-gray-500 min-w-0 min-h-0"># The whole SaaS — one manifest. One Helm release per tenant.</span>
+<span class="text-nowrap text-ploy-accent-secondary-500 min-w-0 min-h-0">platform</span>:<!-- -->
+  <span class="text-nowrap text-ploy-accent-secondary-500 min-w-0 min-h-0">cluster_domain</span>: <span class="text-nowrap text-ploy-accent-primary-500 min-w-0 min-h-0">&quot;opentenant.cloud&quot;</span>
+  <span class="text-nowrap text-ploy-accent-secondary-500 min-w-0 min-h-0">vault_root_path</span>: <span class="text-nowrap text-ploy-accent-primary-500 min-w-0 min-h-0">&quot;secret/data/opentenant/core&quot;</span>
+  <span class="text-nowrap text-ploy-accent-secondary-500 min-w-0 min-h-0">services</span>:<!-- -->
+    <!-- -->- <span class="text-nowrap text-ploy-accent-secondary-500 min-w-0 min-h-0">id</span>: <span class="text-nowrap text-ploy-accent-primary-500 min-w-0 min-h-0">&quot;platform-routing-mesh&quot;</span>
+      <span class="text-nowrap text-ploy-accent-secondary-500 min-w-0 min-h-0">engine</span>: <span class="text-nowrap text-ploy-accent-primary-500 min-w-0 min-h-0">docker-compose</span>
+      <span class="text-nowrap text-ploy-accent-secondary-500 min-w-0 min-h-0">template_ref</span>: <span class="text-nowrap text-ploy-accent-primary-500 min-w-0 min-h-0">git::github.com/org/routing-mesh</span>
+<!-- -->
+<span class="text-nowrap text-ploy-accent-secondary-500 min-w-0 min-h-0">tenants</span>:<!-- -->
+  <!-- -->- <span class="text-nowrap text-ploy-accent-secondary-500 min-w-0 min-h-0">id</span>: <span class="text-nowrap text-ploy-accent-primary-500 min-w-0 min-h-0">&quot;tenant-acme&quot;</span>
+    <span class="text-nowrap text-ploy-accent-secondary-500 min-w-0 min-h-0">vault_tenant_path</span>: <span class="text-nowrap text-ploy-accent-primary-500 min-w-0 min-h-0">&quot;secret/data/tenants/acme&quot;</span>
+    <span class="text-nowrap text-ploy-accent-secondary-500 min-w-0 min-h-0">userspace</span>:<!-- -->
+      <span class="text-nowrap text-ploy-accent-secondary-500 min-w-0 min-h-0">kube_namespace</span>: <span class="text-nowrap text-ploy-accent-primary-500 min-w-0 min-h-0">tenant-acme-prod</span>
+      <span class="text-nowrap text-ploy-accent-secondary-500 min-w-0 min-h-0">domain</span>: <span class="text-nowrap text-ploy-accent-primary-500 min-w-0 min-h-0">acme.opentenant.cloud</span>
+    <span class="text-nowrap text-ploy-accent-secondary-500 min-w-0 min-h-0">deployments</span>:<!-- -->
+      <!-- -->- <span class="text-nowrap text-ploy-accent-secondary-500 min-w-0 min-h-0">id</span>: <span class="text-nowrap text-ploy-accent-primary-500 min-w-0 min-h-0">&quot;acme-app&quot;</span>
+        <span class="text-nowrap text-ploy-accent-secondary-500 min-w-0 min-h-0">engine</span>: <span class="text-nowrap text-ploy-accent-primary-500 min-w-0 min-h-0">helm</span>                    <span class="text-nowrap text-gray-500 min-w-0 min-h-0"># your chart, unchanged</span>
+        <span class="text-nowrap text-ploy-accent-secondary-500 min-w-0 min-h-0">template_ref</span>: <span class="text-nowrap text-ploy-accent-primary-500 min-w-0 min-h-0">oci://registry.org/your-chart</span>
+        <span class="text-nowrap text-ploy-accent-secondary-500 min-w-0 min-h-0">config_patches</span>:<!-- -->
+          <span class="text-nowrap text-ploy-accent-secondary-500 min-w-0 min-h-0">replica_count</span>: <span class="text-nowrap text-[rgb(240,168,104)] min-w-0 min-h-0">3</span>
+        <span class="text-nowrap text-ploy-accent-secondary-500 min-w-0 min-h-0">dependencies</span>:<!-- -->
+          <!-- -->- <span class="text-nowrap text-ploy-accent-primary-500 min-w-0 min-h-0">&quot;platform-routing-mesh&quot;</span></pre>
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="flow-step">
-        <div>
-          <div class="flow-num">STEP 02 — VALIDATE</div>
-          <h3>Static topology audit</h3>
-          <p>The engine detects dependency cycles, missing links, and unsafe cross-tenant boundaries — before anything touches runtime.</p>
-        </div>
-      </div>
-      <div class="flow-step">
-        <div>
-          <div class="flow-num">STEP 03 — PROVISION</div>
-          <h3>Hydrate via Vault</h3>
-          <p>Templates are fetched, config patches applied, and every tenant record written to Vault. The Vault Secrets Operator turns records into Kubernetes Secrets; Reloader rolls pods on credential rotation — automatically.</p>
-        </div>
-      </div>
-      <div class="flow-step">
-        <div>
-          <div class="flow-num">STEP 04 — DEPLOY</div>
-          <h3>One release, one tenant</h3>
-          <p>Each tenant gets their own Helm release, namespace, Ingress, and subdomain — routed through Cloudflare with wildcard DNS and TLS. Zero manual steps per tenant.</p>
-        </div>
-      </div>
+        
+        <section id="stack"
+            class="border-solid border-ploy-border-primary bg-ploy-background-secondary min-w-0 min-h-0 py-20 border-t border-b">
+            <div class="min-w-0 min-h-0 max-w-[68.75rem] mx-auto px-6">
+                <div
+                    class="text-ploy-accent-primary-500 font-bold text-xs tracking-[0.14em] uppercase min-w-0 min-h-0 mb-3">
+                    Implementation Stack</div>
+                <h2 class="font-extrabold text-[2.4rem] tracking-[-0.02em] min-w-0 min-h-0 mb-4">Proven parts. No NIH
+                    required.</h2>
+                <p class="text-ploy-text-secondary text-lg min-w-0 min-h-0 max-w-[43.75rem] mb-12 section-sub">
+                    OpenTenant is the orchestration layer — underneath, it&#x27;s built entirely on battle-tested
+                    infrastructure you already know.</p>
+                <table class="w-full min-w-0 min-h-0 mt-2">
+                    <tbody class="min-w-0 min-h-0 table-row-group">
+                        <tr class="min-w-0 min-h-0">
+                            <th
+                                class="border-solid border-ploy-border-primary text-ploy-accent-primary-500 text-xs tracking-widest uppercase text-left min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                System</th>
+                            <th
+                                class="border-solid border-ploy-border-primary text-ploy-accent-primary-500 text-xs tracking-widest uppercase text-left min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                Role in OpenTenant</th>
+                        </tr>
+                        <tr class="min-w-0 min-h-0">
+                            <td style="font-family:monospace"
+                                class="text-nowrap border-solid border-ploy-border-primary text-ploy-accent-secondary-500 text-sm text-left whitespace-nowrap min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                HashiCorp Vault</td>
+                            <td
+                                class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm text-left min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                The single source of truth for every secret. Per-tenant records are the contract between
+                                provisioning and deployment. Rotation flows through automatically.</td>
+                        </tr>
+                        <tr class="min-w-0 min-h-0">
+                            <td style="font-family:monospace"
+                                class="text-nowrap border-solid border-ploy-border-primary text-ploy-accent-secondary-500 text-sm text-left whitespace-nowrap min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                Supabase</td>
+                            <td
+                                class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm text-left min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                Platform auth (Supabase Auth + JWT guards), Management API for orgs/projects, Postgres
+                                per tenant, Storage, and OAuth2 &quot;bring your own project&quot; via Supabase Connect.
+                            </td>
+                        </tr>
+                        <tr class="min-w-0 min-h-0">
+                            <td style="font-family:monospace"
+                                class="text-nowrap border-solid border-ploy-border-primary text-ploy-accent-secondary-500 text-sm text-left whitespace-nowrap min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                NestJS + TypeScript</td>
+                            <td
+                                class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm text-left min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                The platform service — idempotent REST API for organizations, projects, tenant
+                                lifecycle, and the OAuth2 flow. Stateful secrets? Never. Everything in Vault.</td>
+                        </tr>
+                        <tr class="min-w-0 min-h-0">
+                            <td style="font-family:monospace"
+                                class="text-nowrap border-solid border-ploy-border-primary text-ploy-accent-secondary-500 text-sm text-left whitespace-nowrap min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                Kubernetes</td>
+                            <td
+                                class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm text-left min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                One Helm release per tenant. Namespaces as tenant boundaries. NetworkPolicies for
+                                pod-level isolation. Gateway API / Ingress for host-per-tenant routing.</td>
+                        </tr>
+                        <tr class="min-w-0 min-h-0">
+                            <td style="font-family:monospace"
+                                class="text-nowrap border-solid border-ploy-border-primary text-ploy-accent-secondary-500 text-sm text-left whitespace-nowrap min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                Vault Secrets Operator</td>
+                            <td
+                                class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm text-left min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                Reads tenant records from Vault and materializes them as Kubernetes Secrets inside the
+                                cluster.</td>
+                        </tr>
+                        <tr class="min-w-0 min-h-0">
+                            <td style="font-family:monospace"
+                                class="text-nowrap border-solid border-ploy-border-primary text-ploy-accent-secondary-500 text-sm text-left whitespace-nowrap min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                Reloader</td>
+                            <td
+                                class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm text-left min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                Watches tenant Secrets and rolls the exact pods affected by a credential rotation. Zero
+                                manual restarts, blast radius contained to one tenant.</td>
+                        </tr>
+                        <tr class="min-w-0 min-h-0">
+                            <td style="font-family:monospace"
+                                class="text-nowrap border-solid border-ploy-border-primary text-ploy-accent-secondary-500 text-sm text-left whitespace-nowrap min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                External Secrets Operator</td>
+                            <td
+                                class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm text-left min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                ClusterSecretStore backed by Vault — flat tenant registry where every key under <code
+                                    class="min-w-0 min-h-0"> secret/metadata/tenants/</code> <!-- -->is one deployable
+                                tenant.</td>
+                        </tr>
+                        <tr class="min-w-0 min-h-0">
+                            <td style="font-family:monospace"
+                                class="text-nowrap border-solid border-ploy-border-primary text-ploy-accent-secondary-500 text-sm text-left whitespace-nowrap min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                Terraform</td>
+                            <td
+                                class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm text-left min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                Declarative tenant registry: one Vault entry → namespace + ExternalSecret + Helm
+                                release. Remove the entry, tear down all three.</td>
+                        </tr>
+                        <tr class="min-w-0 min-h-0">
+                            <td style="font-family:monospace"
+                                class="text-nowrap border-solid border-ploy-border-primary text-ploy-accent-secondary-500 text-sm text-left whitespace-nowrap min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                Cloudflare</td>
+                            <td
+                                class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm text-left min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                Edge SSL with Full (Strict), wildcard DNS <code
+                                    class="min-w-0 min-h-0"> *.yourdomain.com</code>, WAF, WebSockets on, Origin CA
+                                certs on nginx-ingress, real client IPs via CF-Connecting-IP.</td>
+                        </tr>
+                        <tr class="min-w-0 min-h-0">
+                            <td style="font-family:monospace"
+                                class="text-nowrap border-solid border-ploy-border-primary text-ploy-accent-secondary-500 text-sm text-left whitespace-nowrap min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                nginx / ingress-nginx</td>
+                            <td
+                                class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm text-left min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                The egress controller — single entry point, path-routed single domain, streaming
+                                uploads, WebSocket-friendly, COOP/COEP headers.</td>
+                        </tr>
+                        <tr class="min-w-0 min-h-0">
+                            <td style="font-family:monospace"
+                                class="text-nowrap border-solid border-ploy-border-primary text-ploy-accent-secondary-500 text-sm text-left whitespace-nowrap min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                GitHub / GitLab</td>
+                            <td
+                                class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm text-left min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                GitOps source of truth for manifests and templates ( <code
+                                    class="min-w-0 min-h-0">git::</code> refs), CI-driven reconciliation, and container
+                                registries for OCI charts.</td>
+                        </tr>
+                        <tr class="min-w-0 min-h-0">
+                            <td style="font-family:monospace"
+                                class="text-nowrap border-solid border-ploy-border-primary text-ploy-accent-secondary-500 text-sm text-left whitespace-nowrap min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                Docker Compose / PM2</td>
+                            <td
+                                class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm text-left min-w-0 min-h-0 px-[1.125rem] py-3 border-b">
+                                First-class alternative engines for lighter workloads — same manifest, same validation,
+                                same Vault hydration.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="min-w-0 min-h-0 flex flex-wrap gap-3 mt-8"><span
+                        class="border-solid border-ploy-border-primary bg-ploy-neutral-primary-s3 text-ploy-text-primary text-sm flex items-center gap-2 transition-[border-color] duration-200 px-[1.125rem] py-2 rounded-full border"><span
+                            class="bg-ploy-background-accent-secondary w-2 h-2 block rounded-full"></span>HashiCorp
+                        Vault<small class="text-ploy-text-secondary text-xs block">· secrets</small></span> <span
+                        class="border-solid border-ploy-border-primary bg-ploy-neutral-primary-s3 text-ploy-text-primary text-sm flex items-center gap-2 transition-[border-color] duration-200 px-[1.125rem] py-2 rounded-full border"><span
+                            class="bg-ploy-background-accent-secondary w-2 h-2 block rounded-full"></span>Supabase<small
+                            class="text-ploy-text-secondary text-xs block">· auth &amp; data</small></span> <span
+                        class="border-solid border-ploy-border-primary bg-ploy-neutral-primary-s3 text-ploy-text-primary text-sm flex items-center gap-2 transition-[border-color] duration-200 px-[1.125rem] py-2 rounded-full border"><span
+                            class="bg-ploy-background-accent-secondary w-2 h-2 block rounded-full"></span>NestJS<small
+                            class="text-ploy-text-secondary text-xs block">· platform API</small></span> <span
+                        class="border-solid border-ploy-border-primary bg-ploy-neutral-primary-s3 text-ploy-text-primary text-sm flex items-center gap-2 transition-[border-color] duration-200 px-[1.125rem] py-2 rounded-full border"><span
+                            class="bg-ploy-background-accent-secondary w-2 h-2 block rounded-full"></span>TypeScript<small
+                            class="text-ploy-text-secondary text-xs block">· end to end</small></span> <span
+                        class="border-solid border-ploy-border-primary bg-ploy-neutral-primary-s3 text-ploy-text-primary text-sm flex items-center gap-2 transition-[border-color] duration-200 px-[1.125rem] py-2 rounded-full border"><span
+                            class="bg-ploy-background-accent-secondary w-2 h-2 block rounded-full"></span>Kubernetes<small
+                            class="text-ploy-text-secondary text-xs block">· runtime</small></span> <span
+                        class="border-solid border-ploy-border-primary bg-ploy-neutral-primary-s3 text-ploy-text-primary text-sm flex items-center gap-2 transition-[border-color] duration-200 px-[1.125rem] py-2 rounded-full border"><span
+                            class="bg-ploy-background-accent-secondary w-2 h-2 block rounded-full"></span>Helm<small
+                            class="text-ploy-text-secondary text-xs block">· one release per tenant</small></span> <span
+                        class="border-solid border-ploy-border-primary bg-ploy-neutral-primary-s3 text-ploy-text-primary text-sm flex items-center gap-2 transition-[border-color] duration-200 px-[1.125rem] py-2 rounded-full border"><span
+                            class="bg-ploy-background-accent-secondary w-2 h-2 block rounded-full"></span>VSO<small
+                            class="text-ploy-text-secondary text-xs block">· Vault → K8s Secrets</small></span> <span
+                        class="border-solid border-ploy-border-primary bg-ploy-neutral-primary-s3 text-ploy-text-primary text-sm flex items-center gap-2 transition-[border-color] duration-200 px-[1.125rem] py-2 rounded-full border"><span
+                            class="bg-ploy-background-accent-secondary w-2 h-2 block rounded-full"></span>External
+                        Secrets<small class="text-ploy-text-secondary text-xs block">· flat registry</small></span>
+                    <span
+                        class="border-solid border-ploy-border-primary bg-ploy-neutral-primary-s3 text-ploy-text-primary text-sm flex items-center gap-2 transition-[border-color] duration-200 px-[1.125rem] py-2 rounded-full border"><span
+                            class="bg-ploy-background-accent-secondary w-2 h-2 block rounded-full"></span>Reloader<small
+                            class="text-ploy-text-secondary text-xs block">· auto-roll on rotation</small></span> <span
+                        class="border-solid border-ploy-border-primary bg-ploy-neutral-primary-s3 text-ploy-text-primary text-sm flex items-center gap-2 transition-[border-color] duration-200 px-[1.125rem] py-2 rounded-full border"><span
+                            class="bg-ploy-background-accent-secondary w-2 h-2 block rounded-full"></span>Terraform<small
+                            class="text-ploy-text-secondary text-xs block">· tenant IaC</small></span> <span
+                        class="border-solid border-ploy-border-primary bg-ploy-neutral-primary-s3 text-ploy-text-primary text-sm flex items-center gap-2 transition-[border-color] duration-200 px-[1.125rem] py-2 rounded-full border"><span
+                            class="bg-ploy-background-accent-secondary w-2 h-2 block rounded-full"></span>Cloudflare<small
+                            class="text-ploy-text-secondary text-xs block">· edge &amp; SSL</small></span> <span
+                        class="border-solid border-ploy-border-primary bg-ploy-neutral-primary-s3 text-ploy-text-primary text-sm flex items-center gap-2 transition-[border-color] duration-200 px-[1.125rem] py-2 rounded-full border"><span
+                            class="bg-ploy-background-accent-secondary w-2 h-2 block rounded-full"></span>nginx<small
+                            class="text-ploy-text-secondary text-xs block">· egress controller</small></span> <span
+                        class="border-solid border-ploy-border-primary bg-ploy-neutral-primary-s3 text-ploy-text-primary text-sm flex items-center gap-2 transition-[border-color] duration-200 px-[1.125rem] py-2 rounded-full border"><span
+                            class="bg-ploy-background-accent-secondary w-2 h-2 block rounded-full"></span>GitHub /
+                        GitLab<small class="text-ploy-text-secondary text-xs block">· GitOps</small></span> <span
+                        class="border-solid border-ploy-border-primary bg-ploy-neutral-primary-s3 text-ploy-text-primary text-sm flex items-center gap-2 transition-[border-color] duration-200 px-[1.125rem] py-2 rounded-full border"><span
+                            class="bg-ploy-background-accent-secondary w-2 h-2 block rounded-full"></span>Docker /
+                        PM2<small class="text-ploy-text-secondary text-xs block">· alt engines</small></span></div>
+            </div>
+        </section>
+        <section id="mobile"
+            class="mobile-pipelines border-y border-ploy-border-primary bg-ploy-background-secondary py-20">
+            <div class="mx-auto max-w-[68.75rem] px-6">
+                <div class="mb-12 grid gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-end"
+                    style="transform:translateY(28px)">
+                    <div>
+                        <p class="mb-3 font-mono text-xs uppercase tracking-[0.14em] text-ploy-accent-primary-500">
+                            OpenTenant Mobile</p>
+                        <h2
+                            class="max-w-[35rem] text-balance text-[2.4rem] font-extrabold leading-tight tracking-[-0.02em]">
+                            One tenant contract. Every device your product ships to.</h2>
+                    </div>
+                    <p class="max-w-[40rem] text-lg leading-relaxed text-ploy-text-secondary">Model mobile delivery as
+                        infrastructure: GitLab starts the pipeline, Vault releases only the tenant-scoped credentials
+                        that build needs, and Expo targets mobile, TV, desktop, and connected-device experiences from
+                        one reviewable flow.</p>
+                </div>
+                <div class="grid gap-4 lg:grid-cols-[0.7fr_1fr_1.3fr] lg:items-stretch">
+                    <div class="flex flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-6"
+                        style="transform:translateX(-24px)">
+                        <div
+                            class="mb-10 flex size-12 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-primary-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="lucide lucide-git-branch" aria-hidden="true">
+                                <line x1="6" x2="6" y1="3" y2="15"></line>
+                                <circle cx="18" cy="6" r="3"></circle>
+                                <circle cx="6" cy="18" r="3"></circle>
+                                <path d="M18 9a9 9 0 0 1-9 9"></path>
+                            </svg></div>
+                        <div>
+                            <div
+                                class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
+                                GitLab pipeline</div>
+                            <h3 class="mt-2 text-xl font-bold">Commit the release definition.</h3>
+                            <p class="mt-3 text-sm leading-relaxed text-ploy-text-secondary">A reviewed pipeline
+                                identifies the tenant, target channels, Expo profile, and release version.</p>
+                        </div>
+                    </div>
+                    <div class="relative overflow-hidden rounded-xl border border-ploy-border-primary bg-ploy-background-primary p-6"
+                        style="transform:translateY(28px)">
+                        <div class="mb-10 flex items-center justify-between" style="transform:scale(0.94)">
+                            <div
+                                class="flex size-14 items-center justify-center rounded-full border border-ploy-accent-primary-500/40 bg-ploy-accent-primary/10 text-ploy-accent-primary-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" class="lucide lucide-cloud size-7" aria-hidden="true">
+                                    <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
+                                </svg></div>
+                            <div class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-text-secondary">
+                                Tenant build cloud</div>
+                        </div>
+                        <div class="space-y-3">
+                            <div
+                                class="flex items-center gap-3 rounded-lg border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    class="lucide lucide-lock-keyhole size-5 text-ploy-accent-primary-500"
+                                    aria-hidden="true">
+                                    <circle cx="12" cy="16" r="1"></circle>
+                                    <rect x="3" y="10" width="18" height="12" rx="2"></rect>
+                                    <path d="M7 10V7a5 5 0 0 1 10 0v3"></path>
+                                </svg>
+                                <div>
+                                    <div class="text-sm font-bold">Vault gate</div>
+                                    <div class="text-xs text-ploy-text-secondary">Scoped signing keys and deployment
+                                        secrets</div>
+                                </div>
+                            </div>
+                            <div class="h-7 w-px bg-ploy-border-primary ml-6"></div>
+                            <div
+                                class="flex items-center gap-3 rounded-lg border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-4">
+                                <div
+                                    class="flex size-5 items-center justify-center font-mono text-xs font-bold text-ploy-accent-secondary-500">
+                                    E</div>
+                                <div>
+                                    <div class="text-sm font-bold">Expo build profile</div>
+                                    <div class="text-xs text-ploy-text-secondary">One configuration, channel-specific
+                                        outputs</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        <div class="flex min-h-40 flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5"
+                            style="transform:translateX(24px)"><svg xmlns="http://www.w3.org/2000/svg" width="24"
+                                height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round"
+                                class="lucide lucide-smartphone size-6 text-ploy-accent-primary-500" aria-hidden="true">
+                                <rect width="14" height="20" x="5" y="2" rx="2" ry="2"></rect>
+                                <path d="M12 18h.01"></path>
+                            </svg>
+                            <div>
+                                <div class="font-bold">Mobile</div>
+                                <div class="mt-1 text-sm text-ploy-text-secondary">iOS + Android</div>
+                            </div>
+                        </div>
+                        <div class="flex min-h-40 flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5"
+                            style="transform:translateX(24px)"><svg xmlns="http://www.w3.org/2000/svg" width="24"
+                                height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round"
+                                class="lucide lucide-tv size-6 text-ploy-accent-primary-500" aria-hidden="true">
+                                <path d="m17 2-5 5-5-5"></path>
+                                <rect width="20" height="15" x="2" y="7" rx="2"></rect>
+                            </svg>
+                            <div>
+                                <div class="font-bold">TV</div>
+                                <div class="mt-1 text-sm text-ploy-text-secondary">Living-room apps</div>
+                            </div>
+                        </div>
+                        <div class="flex min-h-40 flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5"
+                            style="transform:translateX(24px)"><svg xmlns="http://www.w3.org/2000/svg" width="24"
+                                height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round"
+                                class="lucide lucide-monitor size-6 text-ploy-accent-primary-500" aria-hidden="true">
+                                <rect width="20" height="14" x="2" y="3" rx="2"></rect>
+                                <line x1="8" x2="16" y1="21" y2="21"></line>
+                                <line x1="12" x2="12" y1="17" y2="21"></line>
+                            </svg>
+                            <div>
+                                <div class="font-bold">Desktop</div>
+                                <div class="mt-1 text-sm text-ploy-text-secondary">macOS + Windows</div>
+                            </div>
+                        </div>
+                        <div class="flex min-h-40 flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5"
+                            style="transform:translateX(24px)"><svg xmlns="http://www.w3.org/2000/svg" width="24"
+                                height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round"
+                                class="lucide lucide-cpu size-6 text-ploy-accent-primary-500" aria-hidden="true">
+                                <path d="M12 20v2"></path>
+                                <path d="M12 2v2"></path>
+                                <path d="M17 20v2"></path>
+                                <path d="M17 2v2"></path>
+                                <path d="M2 12h2"></path>
+                                <path d="M2 17h2"></path>
+                                <path d="M2 7h2"></path>
+                                <path d="M20 12h2"></path>
+                                <path d="M20 17h2"></path>
+                                <path d="M20 7h2"></path>
+                                <path d="M7 20v2"></path>
+                                <path d="M7 2v2"></path>
+                                <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                                <rect x="8" y="8" width="8" height="8" rx="1"></rect>
+                            </svg>
+                            <div>
+                                <div class="font-bold">IoT</div>
+                                <div class="mt-1 text-sm text-ploy-text-secondary">Edge devices</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="mt-8 flex flex-wrap gap-x-7 gap-y-3 border-t border-ploy-border-primary pt-6 font-mono text-xs text-ploy-text-secondary">
+                    <span>tenant_id → Vault path</span><span>release_channel → Expo profile</span><span>commit_sha →
+                        build provenance</span><span>enabled: false → access revoked</span></div>
+            </div>
+        </section>
+        <section id="agent-service"
+            class="service-workflow border-y border-ploy-border-primary bg-ploy-background-primary py-20">
+            <div class="mx-auto max-w-[75rem] px-6">
+                <div class="mb-12 grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
+                    <div>
+                        <p class="mb-3 font-mono text-xs uppercase tracking-[0.14em] text-ploy-accent-primary-500">
+                            Tenant change service</p>
+                        <h2
+                            class="max-w-[38rem] text-balance text-[2.4rem] font-extrabold leading-tight tracking-[-0.02em]">
+                            Agents ship custom code without crossing tenant boundaries.</h2>
+                    </div>
+                    <p class="max-w-[42rem] text-lg leading-relaxed text-ploy-text-secondary">Every request receives an
+                        owner, an SLA clock, a scoped branch, and a review trail. Agents can change the tenant
+                        experience while validation, approval, secrets policy, and release isolation remain
+                        deterministic.</p>
+                </div>
+                <div class="overflow-hidden rounded-2xl border border-ploy-border-primary bg-ploy-background-secondary">
+                    <div
+                        class="flex flex-wrap items-center justify-between gap-4 border-b border-ploy-border-primary px-6 py-4">
+                        <div class="flex items-center gap-3"><span
+                                class="size-2 rounded-full bg-ploy-accent-primary service-workflow__status"></span><span
+                                class="font-mono text-xs uppercase tracking-[0.12em]">SLA active</span></div>
+                        <div
+                            class="flex items-center gap-5 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-text-secondary">
+                            <span>Response window by tier</span><span>Escalation thresholds enforced</span><span>Clock
+                                visible to tenant</span></div>
+                    </div>
+                    <div class="grid lg:grid-cols-[1fr_18rem]">
+                        <div class="relative p-6 lg:p-8">
+                            <div
+                                class="service-workflow__rail absolute left-12 right-12 top-[5.45rem] hidden h-px lg:block">
+                            </div>
+                            <div class="relative grid gap-4 lg:grid-cols-4">
+                                <article
+                                    class="relative flex min-h-64 flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+                                    <div>
+                                        <div class="mb-8 flex items-center justify-between">
+                                            <div
+                                                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-primary-500">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                                    class="lucide lucide-mic-vocal size-5" aria-hidden="true">
+                                                    <path
+                                                        d="m11 7.601-5.994 8.19a1 1 0 0 0 .1 1.298l.817.818a1 1 0 0 0 1.314.087L15.09 12">
+                                                    </path>
+                                                    <path
+                                                        d="M16.5 21.174C15.5 20.5 14.372 20 13 20c-2.058 0-3.928 2.356-6 2-2.072-.356-2.775-3.369-1.5-4.5">
+                                                    </path>
+                                                    <circle cx="16" cy="7" r="5"></circle>
+                                                </svg></div><span
+                                                class="font-mono text-[0.6rem] text-ploy-text-secondary">0<!-- -->1</span>
+                                        </div>
+                                        <div
+                                            class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
+                                            REQUEST</div>
+                                        <h3 class="mt-2 text-lg font-bold">Tenant asks for a change</h3>
+                                        <p class="mt-3 text-sm leading-relaxed text-ploy-text-secondary">Portal, email,
+                                            or voice intake becomes a scoped implementation brief.</p>
+                                    </div>
+                                    <div
+                                        class="mt-6 flex items-center gap-2 font-mono text-[0.6rem] uppercase tracking-[0.1em] text-ploy-text-secondary">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round"
+                                            class="lucide lucide-shield-check size-3.5 text-ploy-accent-primary-500"
+                                            aria-hidden="true">
+                                            <path
+                                                d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z">
+                                            </path>
+                                            <path d="m9 12 2 2 4-4"></path>
+                                        </svg>tenant scoped</div>
+                                </article>
+                                <article
+                                    class="relative flex min-h-64 flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+                                    <div>
+                                        <div class="mb-8 flex items-center justify-between">
+                                            <div
+                                                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-primary-500">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                                    class="lucide lucide-bot size-5" aria-hidden="true">
+                                                    <path d="M12 8V4H8"></path>
+                                                    <rect width="16" height="12" x="4" y="8" rx="2"></rect>
+                                                    <path d="M2 14h2"></path>
+                                                    <path d="M20 14h2"></path>
+                                                    <path d="M15 13v2"></path>
+                                                    <path d="M9 13v2"></path>
+                                                </svg></div><span
+                                                class="font-mono text-[0.6rem] text-ploy-text-secondary">0<!-- -->2</span>
+                                        </div>
+                                        <div
+                                            class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
+                                            AGENT WORKSPACE</div>
+                                        <h3 class="mt-2 text-lg font-bold">Custom code is edited</h3>
+                                        <p class="mt-3 text-sm leading-relaxed text-ploy-text-secondary">An agent works
+                                            against the tenant’s branch, environment, and approved service boundary.</p>
+                                    </div>
+                                    <div
+                                        class="mt-6 flex items-center gap-2 font-mono text-[0.6rem] uppercase tracking-[0.1em] text-ploy-text-secondary">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round"
+                                            class="lucide lucide-shield-check size-3.5 text-ploy-accent-primary-500"
+                                            aria-hidden="true">
+                                            <path
+                                                d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z">
+                                            </path>
+                                            <path d="m9 12 2 2 4-4"></path>
+                                        </svg>tenant scoped</div>
+                                </article>
+                                <article
+                                    class="relative flex min-h-64 flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+                                    <div>
+                                        <div class="mb-8 flex items-center justify-between">
+                                            <div
+                                                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-primary-500">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                                    class="lucide lucide-git-pull-request size-5" aria-hidden="true">
+                                                    <circle cx="18" cy="18" r="3"></circle>
+                                                    <circle cx="6" cy="6" r="3"></circle>
+                                                    <path d="M13 6h3a2 2 0 0 1 2 2v7"></path>
+                                                    <line x1="6" x2="6" y1="9" y2="21"></line>
+                                                </svg></div><span
+                                                class="font-mono text-[0.6rem] text-ploy-text-secondary">0<!-- -->3</span>
+                                        </div>
+                                        <div
+                                            class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
+                                            REVIEW GATE</div>
+                                        <h3 class="mt-2 text-lg font-bold">Checks run before merge</h3>
+                                        <p class="mt-3 text-sm leading-relaxed text-ploy-text-secondary">Diff review,
+                                            tests, security policy, and explicit approval protect the shared platform.
+                                        </p>
+                                    </div>
+                                    <div
+                                        class="mt-6 flex items-center gap-2 font-mono text-[0.6rem] uppercase tracking-[0.1em] text-ploy-text-secondary">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round"
+                                            class="lucide lucide-shield-check size-3.5 text-ploy-accent-primary-500"
+                                            aria-hidden="true">
+                                            <path
+                                                d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z">
+                                            </path>
+                                            <path d="m9 12 2 2 4-4"></path>
+                                        </svg>tenant scoped</div>
+                                </article>
+                                <article
+                                    class="relative flex min-h-64 flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+                                    <div>
+                                        <div class="mb-8 flex items-center justify-between">
+                                            <div
+                                                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-primary-500">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                                    class="lucide lucide-circle-check size-5" aria-hidden="true">
+                                                    <circle cx="12" cy="12" r="10"></circle>
+                                                    <path d="m9 12 2 2 4-4"></path>
+                                                </svg></div><span
+                                                class="font-mono text-[0.6rem] text-ploy-text-secondary">0<!-- -->4</span>
+                                        </div>
+                                        <div
+                                            class="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
+                                            RELEASE</div>
+                                        <h3 class="mt-2 text-lg font-bold">Only that tenant rolls</h3>
+                                        <p class="mt-3 text-sm leading-relaxed text-ploy-text-secondary">The approved
+                                            change deploys to the tenant release with rollback provenance intact.</p>
+                                    </div>
+                                    <div
+                                        class="mt-6 flex items-center gap-2 font-mono text-[0.6rem] uppercase tracking-[0.1em] text-ploy-text-secondary">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round"
+                                            class="lucide lucide-shield-check size-3.5 text-ploy-accent-primary-500"
+                                            aria-hidden="true">
+                                            <path
+                                                d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z">
+                                            </path>
+                                            <path d="m9 12 2 2 4-4"></path>
+                                        </svg>tenant scoped</div>
+                                </article>
+                            </div>
+                        </div>
+                        <aside
+                            class="border-t border-ploy-border-primary bg-ploy-neutral-primary-s3 p-6 lg:border-l lg:border-t-0">
+                            <div class="mb-8">
+                                <p
+                                    class="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
+                                    Notification loop</p>
+                                <h3 class="mt-2 text-xl font-bold">No silent handoffs.</h3>
+                                <p class="mt-3 text-sm leading-relaxed text-ploy-text-secondary">Operators and tenant
+                                    stakeholders receive the right signal at every SLA transition.</p>
+                            </div>
+                            <div class="space-y-3">
+                                <div
+                                    class="rounded-lg border border-ploy-border-primary bg-ploy-background-primary p-4">
+                                    <div class="flex items-center gap-3"><svg xmlns="http://www.w3.org/2000/svg"
+                                            width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                            class="lucide lucide-mail size-5 text-ploy-accent-primary-500"
+                                            aria-hidden="true">
+                                            <path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"></path>
+                                            <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                                        </svg>
+                                        <div>
+                                            <div class="text-sm font-bold">Email</div>
+                                            <div class="text-xs text-ploy-text-secondary">Accepted · review ready ·
+                                                released</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div
+                                    class="rounded-lg border border-ploy-border-primary bg-ploy-background-primary p-4">
+                                    <div class="flex items-center gap-3"><svg xmlns="http://www.w3.org/2000/svg"
+                                            width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                            class="lucide lucide-mic-vocal size-5 text-ploy-accent-secondary-500"
+                                            aria-hidden="true">
+                                            <path
+                                                d="m11 7.601-5.994 8.19a1 1 0 0 0 .1 1.298l.817.818a1 1 0 0 0 1.314.087L15.09 12">
+                                            </path>
+                                            <path
+                                                d="M16.5 21.174C15.5 20.5 14.372 20 13 20c-2.058 0-3.928 2.356-6 2-2.072-.356-2.775-3.369-1.5-4.5">
+                                            </path>
+                                            <circle cx="16" cy="7" r="5"></circle>
+                                        </svg>
+                                        <div>
+                                            <div class="text-sm font-bold">Voice</div>
+                                            <div class="text-xs text-ploy-text-secondary">P1 alert · approval ·
+                                                escalation</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div
+                                    class="rounded-lg border border-ploy-border-primary bg-ploy-background-primary p-4">
+                                    <div class="flex items-center gap-3"><svg xmlns="http://www.w3.org/2000/svg"
+                                            width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                            class="lucide lucide-clock3 lucide-clock-3 size-5 text-ploy-accent-primary-500"
+                                            aria-hidden="true">
+                                            <path d="M12 6v6h4"></path>
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                        </svg>
+                                        <div>
+                                            <div class="text-sm font-bold">SLA clock</div>
+                                            <div class="text-xs text-ploy-text-secondary">Paused only on explicit tenant
+                                                input</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </aside>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="standalone-library" id="technical-library">
+            <div class="standalone-library__inner">
+                <div class="standalone-library__head">
+                    <div>
+                        <p class="standalone-library__eyebrow">Technical library</p>
+                        <h2>Tenant infrastructure, explained end to end.</h2>
+                    </div>
+                    <p class="standalone-library__intro">Architecture and security guides for platform teams operating
+                        isolated releases, secrets, networks, domains, and edge access.</p>
+                </div>
+                <div class="standalone-library__grid">
+                        <a class="standalone-library__card"
+                        href="./articles/kubernetes-vault-tenant-isolation-opentenant/index.html"><span
+                            class="standalone-library__index">09 / GUIDE</span><span>
+                            <h3>Kubernetes + Vault Tenant Isolation</h3>
+                            <p>From an Ubuntu cluster and external Vault to automated isolated releases.</p><span
+                                class="standalone-library__arrow">Read guide →</span>
+                        </span></a><a class="standalone-library__card"
+                        href="./articles/cloudflare-zero-trust-per-tenant-kubernetes/index.html"><span
+                            class="standalone-library__index">10 / GUIDE</span><span>
+                            <h3>Cloudflare Zero Trust per Tenant</h3>
+                            <p>Private origins, explicit hostnames, and reviewable access policy on Kubernetes.</p><span
+                                class="standalone-library__arrow">Read guide →</span>
+                        </span></a><a class="standalone-library__card"
+                        href="./articles/kubernetes-networkpolicy-per-tenant-default-deny/index.html"><span
+                            class="standalone-library__index">11 / GUIDE</span><span>
+                            <h3>NetworkPolicy Default Deny</h3>
+                            <p>Compile DNS, secrets, edge, and application paths for each tenant release.</p><span
+                                class="standalone-library__arrow">Read guide →</span>
+                        </span></a><a class="standalone-library__card"
+                        href="./articles/vault-secret-rotation-per-tenant-kubernetes/index.html"><span
+                            class="standalone-library__index">12 / GUIDE</span><span>
+                            <h3>Vault Secret Rotation per Tenant</h3>
+                            <p>Synchronize credentials and roll only the workloads that actually depend on them.</p>
+                            <span class="standalone-library__arrow">Read guide →</span>
+                        </span></a><a class="standalone-library__card"
+                        href="./articles/tenant-tls-custom-domain-automation/index.html"><span
+                            class="standalone-library__index">13 / GUIDE</span><span>
+                            <h3>Tenant TLS + Domain Automation</h3>
+                            <p>Ownership, DNS, Gateway routes, certificates, renewal, and safe offboarding.</p><span
+                                class="standalone-library__arrow">Read guide →</span>
+                        </span></a></div>
+            </div>
+        </section>
+        <section id="cases" class="min-w-0 min-h-0 py-20">
+            <div class="min-w-0 min-h-0 max-w-[68.75rem] mx-auto px-6">
+                <div
+                    class="text-ploy-accent-primary-500 font-bold text-xs tracking-[0.14em] uppercase min-w-0 min-h-0 mb-3">
+                    Use Cases</div>
+                <h2 class="font-extrabold text-[2.4rem] tracking-[-0.02em] min-w-0 min-h-0 mb-4">One orchestrator.
+                    Wildly different buildings.</h2>
+                <p class="text-ploy-text-secondary text-lg min-w-0 min-h-0 max-w-[43.75rem] mb-12 section-sub">The
+                    manifest doesn&#x27;t care what it manages — processes, properties, or crops. If it can be declared,
+                    it can be tenanted.</p>
+                <div class="min-w-0 min-h-0 grid gap-6 mb-6 max-[861px]:grid-cols-[1fr] lg:grid-cols-[1fr_1fr]">
+                    <div
+                        class="border-solid border-ploy-border-primary bg-ploy-neutral-primary-s3 relative p-9 rounded-[0.875rem] case-card before:content-[&#x27;&#x27;] before:[background-image:linear-gradient(90deg,_rgb(45,_212,_167),_rgb(74,_158,_255))] before:absolute before:h-0.5 before:top-0 before:left-0 before:right-0 before:box-content overflow-hidden border">
+                        <div
+                            class="text-ploy-accent-primary-500 font-bold text-xs tracking-[0.12em] uppercase min-w-0 min-h-0 inline-block mb-3.5 tag">
+                            The Main Case — SaaS</div>
+                        <h3 class="font-bold text-2xl tracking-[-0.01em] min-w-0 min-h-0 mb-2.5">Any Helm Chart → SaaS
+                        </h3>
+                        <p class="text-ploy-text-secondary text-base min-w-0 min-h-0 mb-4">You built a great open-source
+                            app. Now ten thousand people want it &quot;as a service.&quot; OpenTenant wraps your
+                            existing chart: each customer gets their own release, namespace, secrets, subdomain, and
+                            branding — from one manifest.</p>
+                        <ul class="min-w-0 min-h-0 my-0 pl-0">
+                            <li
+                                class="text-ploy-text-secondary text-sm min-w-0 min-h-0 relative pl-6 py-1 before:content-[&#x27;→&#x27;] before:absolute before:left-0 before:box-content before:text-ploy-accent-primary-500 before:text-[0.9rem]">
+                                Your chart stays untouched — OpenTenant composes around it</li>
+                            <li
+                                class="text-ploy-text-secondary text-sm min-w-0 min-h-0 relative pl-6 py-1 before:content-[&#x27;→&#x27;] before:absolute before:left-0 before:box-content before:text-ploy-accent-primary-500 before:text-[0.9rem]">
+                                Self-serve onboarding: user connects their project → tenant record in Vault → VSO +
+                                Reloader deploy it</li>
+                            <li
+                                class="text-ploy-text-secondary text-sm min-w-0 min-h-0 relative pl-6 py-1 before:content-[&#x27;→&#x27;] before:absolute before:left-0 before:box-content before:text-ploy-accent-primary-500 before:text-[0.9rem]">
+                                Credential rotation rolls only that tenant&#x27;s pods</li>
+                            <li
+                                class="text-ploy-text-secondary text-sm min-w-0 min-h-0 relative pl-6 py-1 before:content-[&#x27;→&#x27;] before:absolute before:left-0 before:box-content before:text-ploy-accent-primary-500 before:text-[0.9rem]">
+                                Whitelabel: their domain, their theme, their data — your platform</li>
+                        </ul>
+                    </div>
+                    <div
+                        class="border-solid border-ploy-border-primary bg-ploy-neutral-primary-s3 relative p-9 rounded-[0.875rem] case-card before:content-[&#x27;&#x27;] before:[background-image:linear-gradient(90deg,_rgb(45,_212,_167),_rgb(74,_158,_255))] before:absolute before:h-0.5 before:top-0 before:left-0 before:right-0 before:box-content overflow-hidden border">
+                        <div
+                            class="text-ploy-accent-primary-500 font-bold text-xs tracking-[0.12em] uppercase min-w-0 min-h-0 inline-block mb-3.5 tag">
+                            Real Estate — IoT</div>
+                        <h3 class="font-bold text-2xl tracking-[-0.01em] min-w-0 min-h-0 mb-2.5">The Airbnb of
+                            Commercial Real Estate</h3>
+                        <p class="text-ploy-text-secondary text-base min-w-0 min-h-0 mb-4">Point OpenTenant at physical
+                            space and a tenant becomes an office, retail slot, or clinic floor. Templates become device
+                            behaviors. Vault holds the cryptographic keys to the actual door locks.</p>
+                        <ul class="min-w-0 min-h-0 my-0 pl-0">
+                            <li
+                                class="text-ploy-text-secondary text-sm min-w-0 min-h-0 relative pl-6 py-1 before:content-[&#x27;→&#x27;] before:absolute before:left-0 before:box-content before:text-ploy-accent-primary-500 before:text-[0.9rem]">
+                                Lease = userspace: locks, HVAC, badges, sensors scoped to one suite</li>
+                            <li
+                                class="text-ploy-text-secondary text-sm min-w-0 min-h-0 relative pl-6 py-1 before:content-[&#x27;→&#x27;] before:absolute before:left-0 before:box-content before:text-ploy-accent-primary-500 before:text-[0.9rem]">
+                                Hosts list space like an Airbnb listing; guests get time-scoped access via the same
+                                dependency graph</li>
+                            <li
+                                class="text-ploy-text-secondary text-sm min-w-0 min-h-0 relative pl-6 py-1 before:content-[&#x27;→&#x27;] before:absolute before:left-0 before:box-content before:text-ploy-accent-primary-500 before:text-[0.9rem]">
+                                Vault-native secret rotation = physical key rotation, automatically</li>
+                            <li
+                                class="text-ploy-text-secondary text-sm min-w-0 min-h-0 relative pl-6 py-1 before:content-[&#x27;→&#x27;] before:absolute before:left-0 before:box-content before:text-ploy-accent-primary-500 before:text-[0.9rem]">
+                                Static validation means no tenant&#x27;s automation can touch another&#x27;s</li>
+                        </ul>
+                    </div>
+                    <div
+                        class="border-solid border-ploy-border-primary bg-ploy-neutral-primary-s3 relative p-9 rounded-[0.875rem] case-card before:content-[&#x27;&#x27;] before:[background-image:linear-gradient(90deg,_rgb(45,_212,_167),_rgb(74,_158,_255))] before:absolute before:h-0.5 before:top-0 before:left-0 before:right-0 before:box-content overflow-hidden border">
+                        <div
+                            class="text-ploy-accent-primary-500 font-bold text-xs tracking-[0.12em] uppercase min-w-0 min-h-0 inline-block mb-3.5 tag">
+                            Agriculture — AgTech</div>
+                        <h3 class="font-bold text-2xl tracking-[-0.01em] min-w-0 min-h-0 mb-2.5">The Operating System of
+                            Vertical Farms</h3>
+                        <p class="text-ploy-text-secondary text-base min-w-0 min-h-0 mb-4">Every grow rack is a tenant.
+                            Each farm runs its own &quot;release&quot; of the cultivation stack — irrigation schedules,
+                            lighting curves, climate recipes — declared as versioned templates and patched per crop.</p>
+                        <ul class="min-w-0 min-h-0 my-0 pl-0">
+                            <li
+                                class="text-ploy-text-secondary text-sm min-w-0 min-h-0 relative pl-6 py-1 before:content-[&#x27;→&#x27;] before:absolute before:left-0 before:box-content before:text-ploy-accent-primary-500 before:text-[0.9rem]">
+                                Rack = tenant: its own sensors, actuators, and namespace</li>
+                            <li
+                                class="text-ploy-text-secondary text-sm min-w-0 min-h-0 relative pl-6 py-1 before:content-[&#x27;→&#x27;] before:absolute before:left-0 before:box-content before:text-ploy-accent-primary-500 before:text-[0.9rem]">
+                                Light recipe for basil is a template; the basil farm patches the photoperiod</li>
+                            <li
+                                class="text-ploy-text-secondary text-sm min-w-0 min-h-0 relative pl-6 py-1 before:content-[&#x27;→&#x27;] before:absolute before:left-0 before:box-content before:text-ploy-accent-primary-500 before:text-[0.9rem]">
+                                Secrets to irrigation controllers live in Vault, rotated automatically</li>
+                            <li
+                                class="text-ploy-text-secondary text-sm min-w-0 min-h-0 relative pl-6 py-1 before:content-[&#x27;→&#x27;] before:absolute before:left-0 before:box-content before:text-ploy-accent-primary-500 before:text-[0.9rem]">
+                                A failed pump in rack 7 triggers a rollout of exactly one release — not the whole farm
+                            </li>
+                        </ul>
+                    </div>
+                    <div
+                        class="border-solid border-ploy-border-primary bg-ploy-neutral-primary-s3 relative p-9 rounded-[0.875rem] case-card before:content-[&#x27;&#x27;] before:[background-image:linear-gradient(90deg,_rgb(45,_212,_167),_rgb(74,_158,_255))] before:absolute before:h-0.5 before:top-0 before:left-0 before:right-0 before:box-content overflow-hidden border">
+                        <div
+                            class="text-ploy-accent-primary-500 font-bold text-xs tracking-[0.12em] uppercase min-w-0 min-h-0 inline-block mb-3.5 tag">
+                            Whitelabel Platforms</div>
+                        <h3 class="font-bold text-2xl tracking-[-0.01em] min-w-0 min-h-0 mb-2.5">Your Software, Their
+                            Logo</h3>
+                        <p class="text-ploy-text-secondary text-base min-w-0 min-h-0 mb-4">Agencies and OEMs resell
+                            software under their own brand. OpenTenant gives each reseller a fully isolated userspace
+                            with custom domain, theme, and service mix — while you operate one platform.</p>
+                        <ul class="min-w-0 min-h-0 my-0 pl-0">
+                            <li
+                                class="text-ploy-text-secondary text-sm min-w-0 min-h-0 relative pl-6 py-1 before:content-[&#x27;→&#x27;] before:absolute before:left-0 before:box-content before:text-ploy-accent-primary-500 before:text-[0.9rem]">
+                                Onboarding a reseller = one YAML block</li>
+                            <li
+                                class="text-ploy-text-secondary text-sm min-w-0 min-h-0 relative pl-6 py-1 before:content-[&#x27;→&#x27;] before:absolute before:left-0 before:box-content before:text-ploy-accent-primary-500 before:text-[0.9rem]">
+                                Offboarding = <code class="min-w-0 min-h-0"> enabled: false</code></li>
+                            <li
+                                class="text-ploy-text-secondary text-sm min-w-0 min-h-0 relative pl-6 py-1 before:content-[&#x27;→&#x27;] before:absolute before:left-0 before:box-content before:text-ploy-accent-primary-500 before:text-[0.9rem]">
+                                Rebranding = one field in their userspace</li>
+                            <li
+                                class="text-ploy-text-secondary text-sm min-w-0 min-h-0 relative pl-6 py-1 before:content-[&#x27;→&#x27;] before:absolute before:left-0 before:box-content before:text-ploy-accent-primary-500 before:text-[0.9rem]">
+                                All secrets scoped per reseller — they can&#x27;t see each other, ever</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="safety"
+            class="border-solid border-ploy-border-primary bg-ploy-background-secondary min-w-0 min-h-0 py-20 border-t border-b">
+            <div class="min-w-0 min-h-0 max-w-[68.75rem] mx-auto px-6">
+                <div
+                    class="text-ploy-accent-primary-500 font-bold text-xs tracking-[0.14em] uppercase min-w-0 min-h-0 mb-3">
+                    Built-in Safety</div>
+                <h2 class="font-extrabold text-[2.4rem] tracking-[-0.02em] min-w-0 min-h-0 mb-4">Audited before anything
+                    runs.</h2>
+                <p class="text-ploy-text-secondary text-lg min-w-0 min-h-0 max-w-[43.75rem] mb-12 section-sub">No
+                    deployment runs without passing the static validation engine — and isolation is enforced below the
+                    application layer.</p>
+                <div class="min-w-0 min-h-0 grid gap-4 grid-cols-[repeat(auto-fit,minmax(240px,1fr))] safety-list">
+                    <div
+                        class="border-solid border-ploy-border-primary bg-ploy-neutral-primary-s3 flex items-start gap-3 px-5 py-[1.125rem] rounded-[0.625rem] border">
+                        <span class="text-ploy-accent-primary-500 font-extrabold text-sm block">✓</span><span
+                            class="text-ploy-text-secondary text-sm block"><strong
+                                class="text-ploy-text-primary min-w-0 min-h-0">Cycle detection.</strong>Circular
+                            dependencies are flagged statically — construction stops before the cement is poured.</span>
+                    </div>
+                    <div
+                        class="border-solid border-ploy-border-primary bg-ploy-neutral-primary-s3 flex items-start gap-3 px-5 py-[1.125rem] rounded-[0.625rem] border">
+                        <span class="text-ploy-accent-primary-500 font-extrabold text-sm block">✓</span><span
+                            class="text-ploy-text-secondary text-sm block"><strong
+                                class="text-ploy-text-primary min-w-0 min-h-0">Missing-link checks.</strong>Every
+                            dependency must resolve to a defined node. No dangling references, ever.</span></div>
+                    <div
+                        class="border-solid border-ploy-border-primary bg-ploy-neutral-primary-s3 flex items-start gap-3 px-5 py-[1.125rem] rounded-[0.625rem] border">
+                        <span class="text-ploy-accent-primary-500 font-extrabold text-sm block">✓</span><span
+                            class="text-ploy-text-secondary text-sm block"><strong
+                                class="text-ploy-text-primary min-w-0 min-h-0">Cross-boundary
+                                validation.</strong>Tenants may depend on platform services — never on each other&#x27;s
+                            internals.</span></div>
+                    <div
+                        class="border-solid border-ploy-border-primary bg-ploy-neutral-primary-s3 flex items-start gap-3 px-5 py-[1.125rem] rounded-[0.625rem] border">
+                        <span class="text-ploy-accent-primary-500 font-extrabold text-sm block">✓</span><span
+                            class="text-ploy-text-secondary text-sm block"><strong
+                                class="text-ploy-text-primary min-w-0 min-h-0">Vault scoping.</strong>Secrets resolve
+                            per-tenant. The platform orchestrates keys it can never read.</span></div>
+                    <div
+                        class="border-solid border-ploy-border-primary bg-ploy-neutral-primary-s3 flex items-start gap-3 px-5 py-[1.125rem] rounded-[0.625rem] border">
+                        <span class="text-ploy-accent-primary-500 font-extrabold text-sm block">✓</span><span
+                            class="text-ploy-text-secondary text-sm block"><strong
+                                class="text-ploy-text-primary min-w-0 min-h-0">Idempotent everywhere.</strong>Tenant
+                            creation checks Vault first; migrations are safe to retry; keys are get-or-create.</span>
+                    </div>
+                    <div
+                        class="border-solid border-ploy-border-primary bg-ploy-neutral-primary-s3 flex items-start gap-3 px-5 py-[1.125rem] rounded-[0.625rem] border">
+                        <span class="text-ploy-accent-primary-500 font-extrabold text-sm block">✓</span><span
+                            class="text-ploy-text-secondary text-sm block"><strong
+                                class="text-ploy-text-primary min-w-0 min-h-0">Network
+                                isolation.</strong>NetworkPolicies enforce that tenant A&#x27;s pods can never reach
+                            tenant B&#x27;s — below the app layer.</span></div>
+                </div>
+            </div>
+        </section>
+        <section id="evaluation"
+            class="evaluation border-y border-ploy-border-primary bg-ploy-background-secondary py-20">
+            <div
+                class="evaluation__inner mx-auto grid max-w-[68.75rem] gap-12 px-6 lg:grid-cols-[0.78fr_1.22fr] lg:gap-20">
+                <div class="evaluation__intro lg:sticky lg:top-28 lg:self-start">
+                    <p
+                        class="evaluation__label mb-3 font-mono text-xs uppercase tracking-[0.14em] text-ploy-accent-primary-500">
+                        Evaluation path</p>
+                    <h2
+                        class="evaluation__title mb-5 max-w-[30rem] text-balance text-[2.4rem] font-extrabold leading-tight tracking-[-0.02em]">
+                        Inspect the boundaries before you adopt the control plane.</h2>
+                    <p class="evaluation__summary max-w-[32rem] text-lg leading-relaxed text-ploy-text-secondary">
+                        OpenTenant separates declarations, execution, and secrets so your team can review each concern
+                        independently. The orchestration layer composes the system; it does not replace the
+                        infrastructure you already trust.</p><a href="https://github.com/opentenant/platform"
+                        class="evaluation__source mt-7 inline-flex items-center border-b border-ploy-accent-primary-500 pb-1 text-sm font-semibold text-ploy-text-primary transition-colors hover:text-ploy-accent-primary-500">Inspect
+                        the current implementation →</a>
+                </div>
+                <div
+                    class="evaluation__boundaries divide-y divide-ploy-border-primary border-y border-ploy-border-primary">
+                    <article class="evaluation__boundary grid gap-3 py-6 sm:grid-cols-[8rem_1fr] sm:gap-7">
+                        <div class="font-mono text-[0.65rem] tracking-[0.14em] text-ploy-accent-primary-500">INPUT</div>
+                        <div>
+                            <h3 class="mb-2 text-lg font-bold text-ploy-text-primary">Your existing deployment artifacts
+                            </h3>
+                            <p class="text-sm leading-relaxed text-ploy-text-secondary">Keep your Helm charts, Docker
+                                Compose files, or PM2 configs. OpenTenant references versioned templates instead of
+                                forking them.</p>
+                        </div>
+                    </article>
+                    <article class="evaluation__boundary grid gap-3 py-6 sm:grid-cols-[8rem_1fr] sm:gap-7">
+                        <div class="font-mono text-[0.65rem] tracking-[0.14em] text-ploy-accent-primary-500">CONTROL
+                            PLANE</div>
+                        <div>
+                            <h3 class="mb-2 text-lg font-bold text-ploy-text-primary">A manifest that declares tenancy
+                            </h3>
+                            <p class="text-sm leading-relaxed text-ploy-text-secondary">Platform services, tenant
+                                userspaces, config patches, and dependencies live in one reviewable YAML contract.</p>
+                        </div>
+                    </article>
+                    <article class="evaluation__boundary grid gap-3 py-6 sm:grid-cols-[8rem_1fr] sm:gap-7">
+                        <div class="font-mono text-[0.65rem] tracking-[0.14em] text-ploy-accent-primary-500">GUARDRAILS
+                        </div>
+                        <div>
+                            <h3 class="mb-2 text-lg font-bold text-ploy-text-primary">Boundaries checked before runtime
+                            </h3>
+                            <p class="text-sm leading-relaxed text-ploy-text-secondary">Cycle, missing-link, and
+                                cross-tenant dependency checks run before the engine provisions or deploys a workload.
+                            </p>
+                        </div>
+                    </article>
+                    <article class="evaluation__boundary grid gap-3 py-6 sm:grid-cols-[8rem_1fr] sm:gap-7">
+                        <div class="font-mono text-[0.65rem] tracking-[0.14em] text-ploy-accent-primary-500">RUNTIME
+                        </div>
+                        <div>
+                            <h3 class="mb-2 text-lg font-bold text-ploy-text-primary">Isolation below the application
+                                layer</h3>
+                            <p class="text-sm leading-relaxed text-ploy-text-secondary">Dedicated releases and
+                                namespaces separate workloads, while scoped Vault paths and NetworkPolicies separate
+                                credentials and network access.</p>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+       
+        <section id="how" class="min-w-0 min-h-0 py-20">
+            <div class="min-w-0 min-h-0 max-w-[68.75rem] mx-auto px-6">
+                <div
+                    class="text-ploy-accent-primary-500 font-bold text-xs tracking-[0.14em] uppercase min-w-0 min-h-0 mb-3">
+                    Architecture</div>
+                <h2 class="font-extrabold text-[2.4rem] tracking-[-0.02em] min-w-0 min-h-0 mb-4">From a git push to a
+                    running tenant.</h2>
+                <p class="text-ploy-text-secondary text-lg min-w-0 min-h-0 max-w-[43.75rem] mb-12 section-sub">The
+                    manifest is a composition and bindings engine — raw execution lives in templates, secrets live in
+                    Vault, and the engine compiles it all. One Helm release per tenant, always.</p>
+                <div class="min-w-0 min-h-0 max-w-[38.75rem] flex flex-col mx-auto">
+                    <div
+                        class="border-solid border-ploy-border-primary relative flex gap-5 ml-2 pl-7 py-[1.375rem] border-l-2 before:content-[&#x27;&#x27;] before:bg-ploy-background-accent-primary before:absolute before:w-3 before:h-3 before:top-[1.875rem] before:-left-1.5 before:box-content before:rounded-full before:[box-shadow:rgba(45,_212,_167,_0.12)_0px_0px_0px_4px]">
+                        <div>
+                            <div class="text-ploy-accent-primary-500 font-bold text-sm min-w-0 min-h-0">STEP 01 —
+                                DECLARE</div>
+                            <h3 class="font-bold text-base min-w-0 min-h-0 mb-1.5">Write the manifest</h3>
+                            <p class="text-ploy-text-secondary text-sm min-w-0 min-h-0">Define platform services, tenant
+                                userspaces, and their deployments in one YAML file. Commit it to your GitOps repo —
+                                GitHub or GitLab.</p>
+                        </div>
+                    </div>
+                    <div
+                        class="border-solid border-ploy-border-primary relative flex gap-5 ml-2 pl-7 py-[1.375rem] border-l-2 before:content-[&#x27;&#x27;] before:bg-ploy-background-accent-primary before:absolute before:w-3 before:h-3 before:top-[1.875rem] before:-left-1.5 before:box-content before:rounded-full before:[box-shadow:rgba(45,_212,_167,_0.12)_0px_0px_0px_4px]">
+                        <div>
+                            <div class="text-ploy-accent-primary-500 font-bold text-sm min-w-0 min-h-0">STEP 02 —
+                                VALIDATE</div>
+                            <h3 class="font-bold text-base min-w-0 min-h-0 mb-1.5">Static topology audit</h3>
+                            <p class="text-ploy-text-secondary text-sm min-w-0 min-h-0">The engine detects dependency
+                                cycles, missing links, and unsafe cross-tenant boundaries — before anything touches
+                                runtime.</p>
+                        </div>
+                    </div>
+                    <div
+                        class="border-solid border-ploy-border-primary relative flex gap-5 ml-2 pl-7 py-[1.375rem] border-l-2 before:content-[&#x27;&#x27;] before:bg-ploy-background-accent-primary before:absolute before:w-3 before:h-3 before:top-[1.875rem] before:-left-1.5 before:box-content before:rounded-full before:[box-shadow:rgba(45,_212,_167,_0.12)_0px_0px_0px_4px]">
+                        <div>
+                            <div class="text-ploy-accent-primary-500 font-bold text-sm min-w-0 min-h-0">STEP 03 —
+                                PROVISION</div>
+                            <h3 class="font-bold text-base min-w-0 min-h-0 mb-1.5">Hydrate via Vault</h3>
+                            <p class="text-ploy-text-secondary text-sm min-w-0 min-h-0">Templates are fetched, config
+                                patches applied, and every tenant record written to Vault. The Vault Secrets Operator
+                                turns records into Kubernetes Secrets; Reloader rolls pods on credential rotation —
+                                automatically.</p>
+                        </div>
+                    </div>
+                    <div
+                        class="border-solid border-ploy-border-primary relative flex gap-5 ml-2 pl-7 py-[1.375rem] border-l-2 before:content-[&#x27;&#x27;] before:bg-ploy-background-accent-primary before:absolute before:w-3 before:h-3 before:top-[1.875rem] before:-left-1.5 before:box-content before:rounded-full before:[box-shadow:rgba(45,_212,_167,_0.12)_0px_0px_0px_4px]">
+                        <div>
+                            <div class="text-ploy-accent-primary-500 font-bold text-sm min-w-0 min-h-0">STEP 04 — DEPLOY
+                            </div>
+                            <h3 class="font-bold text-base min-w-0 min-h-0 mb-1.5">One release, one tenant</h3>
+                            <p class="text-ploy-text-secondary text-sm min-w-0 min-h-0">Each tenant gets their own Helm
+                                release, namespace, Ingress, and subdomain — routed through Cloudflare with wildcard DNS
+                                and TLS. Zero manual steps per tenant.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <footer
+            class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm min-w-0 min-h-0 py-9 border-t">
+            <div
+                class="min-w-0 min-h-0 max-w-[68.75rem] flex flex-wrap justify-between gap-4 mx-auto px-6 footer-inner w-full">
+                <div>© 2026 OpenTenant — open source under MIT</div>
+                <div><a href="https://github.com/opentenant/platform"
+                        class="text-ploy-text-secondary min-w-0 min-h-0 ml-[1.375rem] hover:text-ploy-text-primary">GitHub</a>
+                </div>
+            </div>
+        </footer><!--astro:end-->
     </div>
-  </div>
-</section>
-
-<!-- IMPLEMENTATION STACK -->
-<section class="alt" id="stack">
-  <div class="container">
-    <div class="kicker">Implementation Stack</div>
-    <h2>Proven parts. No NIH required.</h2>
-    <p class="section-sub">OpenTenant is the orchestration layer — underneath, it's built entirely on battle-tested infrastructure you already know.</p>
-
-    <table>
-      <tr><th>System</th><th>Role in OpenTenant</th></tr>
-      <tr><td>HashiCorp Vault</td><td>The single source of truth for every secret. Per-tenant records are the contract between provisioning and deployment. Rotation flows through automatically.</td></tr>
-      <tr><td>Supabase</td><td>Platform auth (Supabase Auth + JWT guards), Management API for orgs/projects, Postgres per tenant, Storage, and OAuth2 "bring your own project" via Supabase Connect.</td></tr>
-      <tr><td>NestJS + TypeScript</td><td>The platform service — idempotent REST API for organizations, projects, tenant lifecycle, and the OAuth2 flow. Stateful secrets? Never. Everything in Vault.</td></tr>
-      <tr><td>Kubernetes</td><td>One Helm release per tenant. Namespaces as tenant boundaries. NetworkPolicies for pod-level isolation. Gateway API / Ingress for host-per-tenant routing.</td></tr>
-      <tr><td>Vault Secrets Operator</td><td>Reads tenant records from Vault and materializes them as Kubernetes Secrets inside the cluster.</td></tr>
-      <tr><td>Reloader</td><td>Watches tenant Secrets and rolls the exact pods affected by a credential rotation. Zero manual restarts, blast radius contained to one tenant.</td></tr>
-      <tr><td>External Secrets Operator</td><td>ClusterSecretStore backed by Vault — flat tenant registry where every key under <code>secret/metadata/tenants/</code> is one deployable tenant.</td></tr>
-      <tr><td>Terraform</td><td>Declarative tenant registry: one Vault entry → namespace + ExternalSecret + Helm release. Remove the entry, tear down all three.</td></tr>
-      <tr><td>Cloudflare</td><td>Edge SSL with Full (Strict), wildcard DNS <code>*.yourdomain.com</code>, WAF, WebSockets on, Origin CA certs on nginx-ingress, real client IPs via CF-Connecting-IP.</td></tr>
-      <tr><td>nginx / ingress-nginx</td><td>The egress controller — single entry point, path-routed single domain, streaming uploads, WebSocket-friendly, COOP/COEP headers.</td></tr>
-      <tr><td>GitHub / GitLab</td><td>GitOps source of truth for manifests and templates (<code>git::</code> refs), CI-driven reconciliation, and container registries for OCI charts.</td></tr>
-      <tr><td>Docker Compose / PM2</td><td>First-class alternative engines for lighter workloads — same manifest, same validation, same Vault hydration.</td></tr>
-    </table>
-
-    <div class="stack">
-      <span class="pill"><span class="p-dot"></span> HashiCorp Vault <small>· secrets</small></span>
-      <span class="pill"><span class="p-dot"></span> Supabase <small>· auth &amp; data</small></span>
-      <span class="pill"><span class="p-dot"></span> NestJS <small>· platform API</small></span>
-      <span class="pill"><span class="p-dot"></span> TypeScript <small>· end to end</small></span>
-      <span class="pill"><span class="p-dot"></span> Kubernetes <small>· runtime</small></span>
-      <span class="pill"><span class="p-dot"></span> Helm <small>· one release per tenant</small></span>
-      <span class="pill"><span class="p-dot"></span> VSO <small>· Vault → K8s Secrets</small></span>
-      <span class="pill"><span class="p-dot"></span> External Secrets <small>· flat registry</small></span>
-      <span class="pill"><span class="p-dot"></span> Reloader <small>· auto-roll on rotation</small></span>
-      <span class="pill"><span class="p-dot"></span> Terraform <small>· tenant IaC</small></span>
-      <span class="pill"><span class="p-dot"></span> Cloudflare <small>· edge &amp; SSL</small></span>
-      <span class="pill"><span class="p-dot"></span> nginx <small>· egress controller</small></span>
-      <span class="pill"><span class="p-dot"></span> GitHub / GitLab <small>· GitOps</small></span>
-      <span class="pill"><span class="p-dot"></span> Docker / PM2 <small>· alt engines</small></span>
-    </div>
-  </div>
-</section>
-
-<!-- USE CASES -->
-<section id="cases">
-  <div class="container">
-    <div class="kicker">Use Cases</div>
-    <h2>One orchestrator. Wildly different buildings.</h2>
-    <p class="section-sub">The manifest doesn't care what it manages — processes, properties, or crops. If it can be declared, it can be tenanted.</p>
-
-    <div class="case">
-      <div class="case-card">
-        <div class="tag">The Main Case — SaaS</div>
-        <h3>Any Helm Chart → SaaS</h3>
-        <p>You built a great open-source app. Now ten thousand people want it "as a service." OpenTenant wraps your existing chart: each customer gets their own release, namespace, secrets, subdomain, and branding — from one manifest.</p>
-        <ul>
-          <li>Your chart stays untouched — OpenTenant composes around it</li>
-          <li>Self-serve onboarding: user connects their project → tenant record in Vault → VSO + Reloader deploy it</li>
-          <li>Credential rotation rolls only that tenant's pods</li>
-          <li>Whitelabel: their domain, their theme, their data — your platform</li>
-        </ul>
-      </div>
-      <div class="case-card">
-        <div class="tag">Real Estate — IoT</div>
-        <h3>The Airbnb of Commercial Real Estate</h3>
-        <p>Point OpenTenant at physical space and a tenant becomes an office, retail slot, or clinic floor. Templates become device behaviors. Vault holds the cryptographic keys to the actual door locks.</p>
-        <ul>
-          <li>Lease = userspace: locks, HVAC, badges, sensors scoped to one suite</li>
-          <li>Hosts list space like an Airbnb listing; guests get time-scoped access via the same dependency graph</li>
-          <li>Vault-native secret rotation = physical key rotation, automatically</li>
-          <li>Static validation means no tenant's automation can touch another's</li>
-        </ul>
-      </div>
-      <div class="case-card">
-        <div class="tag">Agriculture — AgTech</div>
-        <h3>The Operating System of Vertical Farms</h3>
-        <p>Every grow rack is a tenant. Each farm runs its own "release" of the cultivation stack — irrigation schedules, lighting curves, climate recipes — declared as versioned templates and patched per crop.</p>
-        <ul>
-          <li>Rack = tenant: its own sensors, actuators, and namespace</li>
-          <li>Light recipe for basil is a template; the basil farm patches the photoperiod</li>
-          <li>Secrets to irrigation controllers live in Vault, rotated automatically</li>
-          <li>A failed pump in rack 7 triggers a rollout of exactly one release — not the whole farm</li>
-        </ul>
-      </div>
-      <div class="case-card">
-        <div class="tag">Whitelabel Platforms</div>
-        <h3>Your Software, Their Logo</h3>
-        <p>Agencies and OEMs resell software under their own brand. OpenTenant gives each reseller a fully isolated userspace with custom domain, theme, and service mix — while you operate one platform.</p>
-        <ul>
-          <li>Onboarding a reseller = one YAML block</li>
-          <li>Offboarding = <code>enabled: false</code></li>
-          <li>Rebranding = one field in their userspace</li>
-          <li>All secrets scoped per reseller — they can't see each other, ever</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- SAFETY -->
-<section class="alt" id="safety">
-  <div class="container">
-    <div class="kicker">Built-in Safety</div>
-    <h2>Audited before anything runs.</h2>
-    <p class="section-sub">No deployment runs without passing the static validation engine — and isolation is enforced below the application layer.</p>
-    <div class="safety-list">
-      <div class="safety-item"><span class="check">✓</span><span><strong>Cycle detection.</strong> Circular dependencies are flagged statically — construction stops before the cement is poured.</span></div>
-      <div class="safety-item"><span class="check">✓</span><span><strong>Missing-link checks.</strong> Every dependency must resolve to a defined node. No dangling references, ever.</span></div>
-      <div class="safety-item"><span class="check">✓</span><span><strong>Cross-boundary validation.</strong> Tenants may depend on platform services — never on each other's internals.</span></div>
-      <div class="safety-item"><span class="check">✓</span><span><strong>Vault scoping.</strong> Secrets resolve per-tenant. The platform orchestrates keys it can never read.</span></div>
-      <div class="safety-item"><span class="check">✓</span><span><strong>Idempotent everywhere.</strong> Tenant creation checks Vault first; migrations are safe to retry; keys are get-or-create.</span></div>
-      <div class="safety-item"><span class="check">✓</span><span><strong>Network isolation.</strong> NetworkPolicies enforce that tenant A's pods can never reach tenant B's — below the app layer.</span></div>
-    </div>
-  </div>
-</section>
-
-<!-- CTA -->
-<section class="cta" id="start">
-  <div class="container">
-    <h2>Stop managing servers.<br>Start managing tenants.</h2>
-    <p>Onboarding a tenant is one block of YAML. Offboarding is <code style="color:var(--accent); font-family:monospace;">enabled: false</code>. Rebranding is one field. That's the whole job.</p>
-    <div class="hero-ctas">
-      <a href="#" class="btn btn-primary">Get Started on GitHub</a>
-      <a href="#" class="btn btn-ghost">Read the Docs</a>
-    </div>
-  </div>
-</section>
-
-<footer>
-  <div class="container footer-inner">
-    <div>© 2025 OpenTenant — open source under MIT</div>
-    <div>
-      <a href="#">GitHub</a>
-      <a href="#">Discord</a>
-      <a href="#">Docs</a>
-    </div>
-  </div>
-</footer>
-
+    <script>(function () { var els = document.querySelectorAll("main section,main article,body>section"); els.forEach(function (el) { el.classList.add("portable-reveal") }); if ("IntersectionObserver" in window) { var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("is-visible"); io.unobserve(e.target) } }) }, { rootMargin: "0px 0px -12% 0px" }); els.forEach(function (el) { io.observe(el) }) } else { els.forEach(function (el) { el.classList.add("is-visible") }) } var f = document.querySelector("form"); if (f) f.addEventListener("submit", function (e) { e.preventDefault(); location.href = document.documentElement.dataset.liveLogin }); Array.from(document.querySelectorAll("button")).filter(function (b) { return ["GitHub", "GitLab"].includes(b.textContent.trim()) }).forEach(function (b) { b.addEventListener("click", function () { location.href = document.documentElement.dataset.liveLogin }) }) })();</script>
 </body>
+
 </html>

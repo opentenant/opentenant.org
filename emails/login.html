@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="x-apple-disable-message-reformatting">
+  <title>Sign in to OpenTenant</title>
+</head>
+<body style="margin:0;padding:0;background:#090d16;color:#eef2f6;font-family:Arial,Helvetica,sans-serif;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">Use this secure link to sign in to your OpenTenant instance. The link expires in {{expires_in}}.</div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#090d16;">
+    <tr>
+      <td align="center" style="padding:36px 16px;">
+        <table role="presentation" class="email-shell" width="600" cellspacing="0" cellpadding="0" border="0" style="width:600px;max-width:600px;">
+          <tr>
+            <td class="mobile-pad" style="padding:0 40px 28px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td width="34" height="34" align="center" valign="middle" style="width:34px;height:34px;background:#2dd4a7;border-radius:7px;color:#082018;font:700 11px/34px Arial,Helvetica,sans-serif;letter-spacing:-0.04em;">OT</td>
+                  <td style="padding-left:11px;color:#eef2f6;font-size:15px;font-weight:700;">OpenTenant</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="border:1px solid #263143;background:#0d1320;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td class="mobile-pad" style="padding:48px 48px 20px;">
+                    <div style="margin:0 0 18px;color:#2dd4a7;font-family:'Courier New',Courier,monospace;font-size:11px;line-height:16px;letter-spacing:1.6px;text-transform:uppercase;">Secure instance access</div>
+                    <h1 class="hero-title" style="margin:0;color:#f5f7fa;font-size:44px;line-height:47px;letter-spacing:-1.8px;font-weight:800;">Sign in to your control plane.</h1>
+                    <p style="margin:22px 0 0;color:#9ba8ba;font-size:16px;line-height:27px;">Hi, use the secure link below to continue to your OpenTenant instance.</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="mobile-pad" style="padding:22px 48px 32px;">
+                    <a class="full-button" href="{{ .ConfirmationURL }}" style="display:inline-block;background:#2dd4a7;border:1px solid #2dd4a7;border-radius:7px;color:#082018;font-size:15px;line-height:20px;font-weight:700;text-decoration:none;text-align:center;padding:13px 24px;">Sign In Securely</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td class="mobile-pad" style="padding:26px 40px 0;color:#6f7d90;font-size:12px;line-height:19px;">
+              <p style="margin:0 0 10px;">Button not working? Copy this URL into your browser:</p>
+              <p style="margin:0;word-break:break-all;color:#91a1b6;">{{ .ConfirmationURL }}</p>
+              <p style="margin:20px 0 0;">OpenTenant · Isolated tenant releases from the deployment templates you already run.</p>
+              <p style="margin:8px 0 0;"><a href="mailto:info@opentenant.org" style="color:#2dd4a7;text-decoration:none;">info@opentenant.org</a></p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

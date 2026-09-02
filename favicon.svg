@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" width="100%" height="100%">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#29cfa8"/><stop offset="1" stop-color="#22c6a0"/>
+</linearGradient>
+<pattern id="towerWindows" width="0.72" height="0.72" patternUnits="userSpaceOnUse">
+<rect width="0.72" height="0.72" fill="#d4d4d4"/>
+<rect x="0.08" y="0.08" width="0.27" height="0.48" fill="#b9b9b9"/>
+<rect x="0.43" y="0.08" width="0.20" height="0.48" fill="#c5c5c5"/>
+</pattern>
+<pattern id="horizontalWindows" width="1.6" height="0.72" patternUnits="userSpaceOnUse">
+<rect width="1.6" height="0.72" fill="#33383a"/>
+<rect x="0" y="0.11" width="1.6" height="0.18" fill="#85898a"/>
+</pattern>
+</defs>
+
+<rect x="0.35" y="0.35" width="43.3" height="43.3" rx="8.5" fill="url(#bg)"/>
+
+
+<!-- LEFT MAIN TOWER: narrower -->
+<polygon points="15.45,10.75 17.65,10.75 18.45,11.0 18.45,38.25 7,37.75" fill="#35393b"/>
+<polygon points="8.0,11.25 15.45,10.75 15.45,38.0 8.0,37.25" fill="#eeeeee"/>
+<polygon points="8.35,12.0 15.0,11.6 15.0,37.2 8.35,36.55" fill="url(#towerWindows)"/>
+<polygon points="8.35,23.0 15.0,29.0 15.0,34.0 8.35,28.0" fill="#858585" opacity="0.24"/>
+<polygon points="8.0,11.25 15.45,10.75 15.85,11.25 8.1,11.85" fill="#fafafa"/>
+<polygon points="8.25,11.35 15.25,10.9 15.25,11.7 8.25,12.1" fill="#363b3d"/>
+
+<!-- RIGHT MAIN TOWER: narrower -->
+<polygon points="24.85,10.25 27.0,10.95 27.7,12.15 27.7,39.0 24.85,38.1" fill="#303537"/>
+<polygon points="17.25,10.9 24.85,10.25 24.85,38.35 17.25,37.8" fill="#f1f1f1"/>
+<polygon points="17.6,11.7 24.35,11.2 24.35,37.55 17.6,37.0" fill="url(#towerWindows)"/>
+<polygon points="17.6,22.3 24.35,28.4 24.35,34.2 17.6,28.1" fill="#7e7e7e" opacity="0.23"/>
+<polygon points="17.25,10.9 24.85,10.25 25.25,10.8 17.35,11.5" fill="#fafafa"/>
+<polygon points="17.5,11.0 24.6,10.4 24.6,11.25 17.5,11.75" fill="#3b4041"/>
+
+<!-- LEFT FOREGROUND -->
+<polygon points="3.45,29.8 7.15,28.65 7.15,37.9 3.45,37.9" fill="#353a3c"/>
+<polygon points="7.15,28.65 8.55,29.75 8.55,37.9 7.15,37.9" fill="#202527"/>
+<path d="M4.05 30.65 L6.8 29.95 M4.05 31.55 L6.8 30.9 M4.05 32.45 L6.8 31.8 M4.05 33.35 L6.8 32.7 M4.05 34.25 L6.8 33.6"
+stroke="#aeb1b1" stroke-width="0.25"/>
+
+<!-- SMALL BUILDING LEFT FRONT -->
+<polygon points="9.0,33.25 12.3,32.55 12.3,38.0 9.0,38.0" fill="#353a3c"/>
+<polygon points="12.3,32.55 13.2,33.1 13.2,38.0 12.3,38.0" fill="#252a2c"/>
+
+<!-- CENTRAL LOW BUILDING -->
+<polygon points="12.9,34.6 16.25,33.75 16.25,38.0 12.9,38.0" fill="#353a3c"/>
+<polygon points="16.25,33.75 17.05,34.25 17.05,38.0 16.25,38.0" fill="#292e30"/>
+
+<!-- RIGHT FRONT BUILDING -->
+<polygon points="20.9,33.35 24.35,32.25 24.35,38.0 20.9,38.0" fill="#353a3c"/>
+<polygon points="24.35,32.25 25.65,33.0 25.65,38.0 24.35,38.0" fill="#252a2c"/>
+
+<!-- TALL RIGHT -->
+<polygon points="26.55,30.0 30.55,28.35 30.55,38.2 26.55,38.2" fill="#34393b"/>
+<polygon points="30.55,28.35 32.0,29.45 32.0,38.2 30.55,38.2" fill="#1f2426"/>
+<path d="M26.85 31.0 L30.3 29.75 M26.85 32.0 L30.3 30.75 M26.85 33.0 L30.3 31.75 M26.85 34.0 L30.3 32.75 M26.85 35.0 L30.3 33.75"
+stroke="#6f7475" stroke-width="0.38"/>
+
+<!-- FAR RIGHT -->
+<polygon points="32.0,32.0 34.35,31.05 34.35,38.2 32.0,38.2" fill="#34393b"/>
+<polygon points="34.35,31.05 35.0,31.65 35.0,38.2 34.35,38.2" fill="#202527"/>
+<polygon points="35.05,34.0 36.45,33.35 36.45,38.2 35.05,38.2" fill="#24292b"/>
+
+<!-- BASE: flatter, narrower trapezoid like reference -->
+<polygon points="3,37.9 36.7,37.55 39.0,40.0 29.0,41.0 8.2,38.5" fill="#252a2c"/>
+<polygon points="21.0,37.55 39.0,39.8 39.0,40.4 29.0,41.0" fill="#252a2c" opacity="0.55"/>
+</svg>

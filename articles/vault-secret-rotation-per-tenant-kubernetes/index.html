@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html data-live-login="https://opentenant.org/login" lang="en" class="text-black dark" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml"
+        href="/favicon.svg">
+  <meta name="ploy-astro-starter-version" content="1.0.0">
+  <title>Vault Secret Rotation per Tenant: Updating Credentials Without a Platform-Wide Restart — OpenTenant | Ploy
+    Astro Starter</title>
+  <meta name="description"
+    content="How Vault Secrets Operator and External Secrets Operator synchronize tenant credentials—and how OpenTenant limits the resulting rollout to the workloads that actually depend on them." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="canonical" href="https://www.opentenant.org/articles/vault-secret-rotation-per-tenant-kubernetes" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title"
+    content="Vault Secret Rotation per Tenant: Updating Credentials Without a Platform-Wide Restart — OpenTenant |  " />
+  <meta property="og:site_name" content=" " />
+  <meta property="og:description"
+    content="How Vault Secrets Operator and External Secrets Operator synchronize tenant credentials—and how OpenTenant limits the resulting rollout to the workloads that actually depend on them." />
+  <meta property="og:url" content="https://www.opentenant.org/articles/vault-secret-rotation-per-tenant-kubernetes" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title"
+    content="Vault Secret Rotation per Tenant: Updating Credentials Without a Platform-Wide Restart — OpenTenant |  " />
+  <meta name="twitter:description"
+    content="How Vault Secrets Operator and External Secrets Operator synchronize tenant credentials—and how OpenTenant limits the resulting rollout to the workloads that actually depend on them." />
+  <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body class="bg-ploy-background-primary text-ploy-text-primary leading-[1.6] decoration-[rgb(230,237,243)] m-0"
+  style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+  <nav
+    class="border-solid border-ploy-border-primary bg-ploy-background-primary/80 min-w-0 min-h-0 sticky z-[100] backdrop-blur-md border-b top-0">
+    <div class="h-16 min-w-0 min-h-0 max-w-[68.75rem] flex justify-between items-center mx-auto px-6 nav-inner w-full">
+      <a href="/" aria-label="OpenTenant home" class="logo"><span
+                        class="brand-logo inline-flex items-center gap-2 "><img src="/favicon.svg" width="34"/><span
+                            class="brand-logo__wordmark text-lg font-bold tracking-[-0.02em] text-ploy-text-primary">OpenTenant</span></span></a>
+      <div class="flex items-center gap-6 nav-links"><a
+          href="/articles/"
+          class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Articles</a><a
+          href="#cases"
+          class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Use
+          Cases</a><a href="https://github.com/opentenant/platform"
+          class="border-solid border-ploy-border-primary text-ploy-text-secondary font-semibold text-sm block transition-[transform,translate,scale,rotate,box-shadow] px-[1.375rem] py-2.5 rounded-lg hover:text-ploy-text-primary border">GitHub</a><a
+          href="/login"
+          class="bg-ploy-button-primary-background text-ploy-button-primary-text font-semibold text-sm block transition-shadow px-[1.375rem] py-2.5 rounded-lg hover:shadow-lg">Login</a></div>
+    </div>
+  </nav>
+  <main class="article-page">
+    <header class="border-b border-ploy-border-primary pb-16 pt-[6.25rem]">
+      <div class="mx-auto max-w-[68.75rem] px-6"><a href="../index.html"
+          class="mb-8 inline-block font-mono text-xs uppercase tracking-[0.14em] text-ploy-accent-primary-500">←
+          Technical library</a>
+        <div class="grid gap-10 lg:grid-cols-[1fr_18rem] lg:items-end">
+          <div>
+            <div
+              class="mb-5 flex flex-wrap gap-3 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
+              <span>architecture</span><span>security</span><span class="text-ploy-text-secondary">draft</span></div>
+            <h1
+              class="max-w-[52rem] text-balance text-[2.7rem] font-extrabold leading-[1.08] tracking-[-0.03em] md:text-[4rem]">
+              Vault Secret Rotation per Tenant: Updating Credentials Without a Platform-Wide Restart</h1>
+          </div>
+          <dl class="divide-y divide-ploy-border-primary border-y border-ploy-border-primary text-sm">
+            <div class="flex justify-between gap-4 py-3">
+              <dt class="text-ploy-text-secondary">Chart</dt>
+              <dd>Vault Secrets Operator</dd>
+            </div>
+            <div class="flex justify-between gap-4 py-3">
+              <dt class="text-ploy-text-secondary">Intent</dt>
+              <dd>mofu</dd>
+            </div>
+            <div class="flex justify-between gap-4 py-3">
+              <dt class="text-ploy-text-secondary">Author</dt>
+              <dd>OpenTenant</dd>
+            </div>
+          </dl>
+        </div>
+        <p class="mt-8 max-w-[48rem] text-lg leading-relaxed text-ploy-text-secondary">How Vault Secrets Operator and
+          External Secrets Operator synchronize tenant credentials—and how OpenTenant limits the resulting rollout to
+          the workloads that actually depend on them.</p>
+      </div>
+    </header>
+    <section class="border-b border-ploy-border-primary bg-ploy-background-secondary py-14 md:py-16"
+      aria-labelledby="vault-secret-rotation-per-tenant-kubernetes-diagram-title">
+      <div class="mx-auto max-w-[68.75rem] px-6">
+        <div class="mb-8 grid gap-5 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
+          <div>
+            <p class="mb-3 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ploy-accent-primary-500">Contained
+              credential rotation</p>
+            <h2 id="vault-secret-rotation-per-tenant-kubernetes-diagram-title"
+              class="max-w-[34rem] text-balance text-3xl font-extrabold leading-tight tracking-[-0.025em] md:text-[2.35rem]">
+              Rotate one secret. Touch only its dependents.</h2>
+          </div>
+          <p class="max-w-[38rem] text-base leading-relaxed text-ploy-text-secondary md:text-lg">The secret version,
+            synchronization event, rollout, and credential verification remain attached to one tenant operation.</p>
+        </div>
+        <div
+          class="article-architecture__flow grid gap-3 lg:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr_auto_1fr] lg:items-stretch">
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-primary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-key-round size-5" aria-hidden="true">
+                  <path
+                    d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z">
+                  </path>
+                  <circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">Vault
+                </div>
+                <h3 class="mt-2 text-base font-bold leading-snug">New version or lease</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">The authority creates or updates tenant
+                  material</p>
+              </div>
+            </div>
+            <div class="article-architecture__connector flex items-center justify-center text-ploy-text-secondary"
+              aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-down size-4 lg:hidden" aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="m19 12-7 7-7-7"></path>
+              </svg><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-right hidden size-4 lg:block" aria-hidden="true">
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg></div>
+          </div>
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-secondary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-refresh-cw size-5" aria-hidden="true">
+                  <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+                  <path d="M21 3v5h-5"></path>
+                  <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+                  <path d="M8 16H3v5"></path>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-secondary-500">VSO /
+                  ESO</div>
+                <h3 class="mt-2 text-base font-bold leading-snug">Destination sync</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">The selected refresh policy updates
+                  delivery state</p>
+              </div>
+            </div>
+            <div class="article-architecture__connector flex items-center justify-center text-ploy-text-secondary"
+              aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-down size-4 lg:hidden" aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="m19 12-7 7-7-7"></path>
+              </svg><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-right hidden size-4 lg:block" aria-hidden="true">
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg></div>
+          </div>
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-primary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-git-branch size-5" aria-hidden="true">
+                  <line x1="6" x2="6" y1="3" y2="15"></line>
+                  <circle cx="18" cy="6" r="3"></circle>
+                  <circle cx="6" cy="18" r="3"></circle>
+                  <path d="M18 9a9 9 0 0 1-9 9"></path>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
+                  Dependency index</div>
+                <h3 class="mt-2 text-base font-bold leading-snug">Affected workloads</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">OpenTenant resolves exact consumers for
+                  this secret</p>
+              </div>
+            </div>
+            <div class="article-architecture__connector flex items-center justify-center text-ploy-text-secondary"
+              aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-down size-4 lg:hidden" aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="m19 12-7 7-7-7"></path>
+              </svg><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-right hidden size-4 lg:block" aria-hidden="true">
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg></div>
+          </div>
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-secondary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-server-cog size-5" aria-hidden="true">
+                  <path d="m10.852 14.772-.383.923"></path>
+                  <path d="M13.148 14.772a3 3 0 1 0-2.296-5.544l-.383-.923"></path>
+                  <path d="m13.148 9.228.383-.923"></path>
+                  <path d="m13.53 15.696-.382-.924a3 3 0 1 1-2.296-5.544"></path>
+                  <path d="m14.772 10.852.923-.383"></path>
+                  <path d="m14.772 13.148.923.383"></path>
+                  <path d="M4.5 10H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-.5"></path>
+                  <path d="M4.5 14H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-.5"></path>
+                  <path d="M6 18h.01"></path>
+                  <path d="M6 6h.01"></path>
+                  <path d="m9.228 10.852-.923-.383"></path>
+                  <path d="m9.228 13.148-.923.383"></path>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-secondary-500">
+                  Kubernetes</div>
+                <h3 class="mt-2 text-base font-bold leading-snug">Targeted rollout</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">Reload or restart follows the workload
+                  strategy</p>
+              </div>
+            </div>
+            <div class="article-architecture__connector flex items-center justify-center text-ploy-text-secondary"
+              aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-down size-4 lg:hidden" aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="m19 12-7 7-7-7"></path>
+              </svg><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-right hidden size-4 lg:block" aria-hidden="true">
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg></div>
+          </div>
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-primary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-shield-check size-5" aria-hidden="true">
+                  <path
+                    d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z">
+                  </path>
+                  <path d="m9 12 2 2 4-4"></path>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
+                  Credential check</div>
+                <h3 class="mt-2 text-base font-bold leading-snug">Verify then revoke</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">Readiness succeeds before the previous
+                  value retires</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="mt-7 flex flex-col gap-2 border-t border-ploy-border-primary pt-5 font-mono text-[0.68rem] text-ploy-text-secondary md:flex-row md:flex-wrap md:gap-x-7">
+          <span>Vault version → destination version</span><span>secret binding → workload set</span><span>new credential
+            works → old credential revoked</span></div>
+      </div>
+    </section>
+    <div class="mx-auto grid max-w-[68.75rem] gap-12 px-6 py-16 lg:grid-cols-[13rem_minmax(0,1fr)_12rem]">
+      <aside class="hidden lg:block">
+        <div class="sticky top-28">
+          <div class="mb-4 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">On this
+            page</div>
+          <nav class="space-y-3 text-sm text-ploy-text-secondary"><a href="#direct-answer"
+              class="block hover:text-ploy-text-primary">Direct answer</a><a href="#three-separate-lifecycle-problems"
+              class="block hover:text-ploy-text-primary">Three separate lifecycle problems</a><a
+              href="#vault-secrets-operator" class="block hover:text-ploy-text-primary">Vault Secrets Operator</a><a
+              href="#external-secrets-operator" class="block hover:text-ploy-text-primary">External Secrets
+              Operator</a><a href="#synchronization-is-not-application-reload"
+              class="block hover:text-ploy-text-primary">Synchronization is not application reload</a><a
+              href="#rotation-needs-an-overlap-plan" class="block hover:text-ploy-text-primary">Rotation needs an
+              overlap plan</a><a href="#how-opentenant-contains-blast-radius"
+              class="block hover:text-ploy-text-primary">How OpenTenant contains blast radius</a><a
+              href="#failure-handling" class="block hover:text-ploy-text-primary">Failure handling</a><a
+              href="#verification-checklist" class="block hover:text-ploy-text-primary">Verification checklist</a><a
+              href="#sources" class="block hover:text-ploy-text-primary">Sources</a></nav>
+        </div>
+      </aside>
+      <article class="min-w-0">
+        <div class="prose prose-invert ploy-richtext max-w-none prose-headings:text-balance">
+          <h1 id="vault-secret-rotation-per-tenant">Vault secret rotation per tenant</h1>
+          <h2 id="direct-answer">Direct answer</h2>
+          <p>Changing a value in Vault is only the first step of rotation. A production platform must synchronize the
+            new value, identify every dependent workload, restart only applications that cannot reload it in place,
+            verify readiness, and preserve a rollback path. OpenTenant automates that tenant-scoped sequence across
+            Vault, Vault Secrets Operator or External Secrets Operator, and targeted Kubernetes rollouts.</p>
+          <p>The goal is not “restart on every Secret event.” It is a controlled credential transition with contained
+            blast radius.</p>
+          <h2 id="three-separate-lifecycle-problems">Three separate lifecycle problems</h2>
+          <p>Secret systems are often discussed as one feature, but rotation crosses three controllers:</p>
+          <ol>
+            <li><strong>Secret authority:</strong> Vault creates, stores, leases, or updates the credential.</li>
+            <li><strong>Delivery:</strong> VSO, External Secrets Operator, CSI, or an agent makes the value available to
+              a workload.</li>
+            <li><strong>Consumption:</strong> The application reloads the value in place or a rollout replaces its pods.
+            </li>
+          </ol>
+          <p>A green status at one layer does not prove the next layer completed. OpenTenant records each stage against
+            one tenant release.</p>
+          <h2 id="vault-secrets-operator">Vault Secrets Operator</h2>
+          <p>HashiCorp's <a href="https://developer.hashicorp.com/vault/docs/platform/k8s/vso"
+              rel="noopener noreferrer nofollow">Vault Secrets Operator documentation</a> says VSO watches custom
+            resources, synchronizes supported Vault sources into destination Kubernetes Secrets, and keeps source
+            changes replicated over the destination's lifetime. HashiCorp also documents automatic drift remediation and
+            secret rotation support for Deployments, ReplicaSets, and StatefulSets.</p>
+          <p>This works well for Helm charts that already consume Kubernetes Secrets. The application does not need a
+            direct Vault client, but the destination Secret becomes part of the security boundary. Kubernetes RBAC, etcd
+            encryption, operator permissions, and namespace isolation remain important.</p>
+          <h2 id="external-secrets-operator">External Secrets Operator</h2>
+          <p><a href="https://external-secrets.io/latest/api/externalsecret/"
+              rel="noopener noreferrer nofollow">External Secrets Operator</a> also reconciles external values into
+            Kubernetes Secrets. Its refresh behavior is explicit:</p>
+          <ul>
+            <li><code>Periodic</code> is the default and updates at <code>refreshInterval</code> when the interval is
+              greater than zero.</li>
+            <li><code>CreatedOnce</code> creates the Secret and does not follow future source changes.</li>
+            <li><code>OnChange</code> updates when the ExternalSecret's metadata or specification changes.</li>
+          </ul>
+          <p>Those modes are operational choices. A database password expected to rotate should not silently use
+            <code>CreatedOnce</code>. A bootstrap password persisted by the application may become dangerous if
+            regenerated periodically. OpenTenant stores the refresh policy with the tenant secret binding instead of
+            applying one global default to every credential.</p>
+          <pre><code class="language-yaml">apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: app-database
+  namespace: tenant-acme
+spec:
+  refreshPolicy: Periodic
+  refreshInterval: 15m
+  secretStoreRef:
+    name: tenant-acme-vault
+    kind: SecretStore
+  target:
+    name: app-database
+    creationPolicy: Owner
+  data:
+    - secretKey: password
+      remoteRef:
+        key: tenants/acme/database
+        property: password
+</code></pre>
+          <p>The example illustrates desired state; names, paths, and intervals must be generated from trusted tenant
+            identity and tested against the installed operator version.</p>
+          <h2 id="synchronization-is-not-application-reload">Synchronization is not application reload</h2>
+          <p>Kubernetes updates a Secret object, but many applications read environment variables only at process start.
+            Mounted Secret volumes may update eventually, yet the application may still cache the old value. The
+            platform must know each workload's consumption behavior.</p>
+          <p>There are three common strategies:</p>
+          <h3 id="native-hot-reload">Native hot reload</h3>
+          <p>Prefer an application-native reload when it is documented, observable, and does not interrupt requests. The
+            workload should expose proof that it accepted the new credential.</p>
+          <h3 id="operator-triggered-rollout">Operator-triggered rollout</h3>
+          <p>Use VSO's supported rollout behavior when the selected resource and secret CRD support it. Keep the mapping
+            explicit so one tenant secret cannot trigger unrelated workloads.</p>
+          <h3 id="reloader-triggered-rollout">Reloader-triggered rollout</h3>
+          <p><a href="https://github.com/stakater/Reloader" rel="noopener noreferrer nofollow">Stakater Reloader</a>
+            watches ConfigMaps and Secrets and triggers workload rollouts. Its search-and-match annotations allow a
+            workload to reload only when it references a resource explicitly marked for reload—useful in a multi-tenant
+            cluster where global auto-reload would be too broad.</p>
+          <p>OpenTenant generates targeted annotations from the dependency graph. A shared platform Secret should never
+            restart every tenant merely because a controller can discover all references.</p>
+          <h2 id="rotation-needs-an-overlap-plan">Rotation needs an overlap plan</h2>
+          <p>Replacing a credential immediately can break live connections before new pods are ready. Where the upstream
+            system permits it, safer rotation uses an overlap window:</p>
+          <ol>
+            <li>Create the new credential or lease.</li>
+            <li>Synchronize it to the tenant scope.</li>
+            <li>Roll or reload dependent workloads.</li>
+            <li>Verify authentication and readiness with the new value.</li>
+            <li>Revoke the previous credential after the grace period.</li>
+          </ol>
+          <p>Some systems only permit a single active password. Those rotations need maintenance behavior, connection
+            draining, and rollback rules specific to the application. OpenTenant cannot manufacture dual-credential
+            support when the dependency lacks it; the deployment profile must say so.</p>
+          <h2 id="how-opentenant-contains-blast-radius">How OpenTenant contains blast radius</h2>
+          <pre><code class="language-text">Vault version or lease changes
+  → operator reconciles tenant destination
+  → dependency index resolves affected workloads
+  → tenant rollout policy selects reload or restart
+  → readiness and authentication checks run
+  → previous credential is revoked when safe
+  → event and release provenance are recorded
+</code></pre>
+          <p>The dependency index is the key. Each secret binding records the tenant, Vault path or role, destination,
+            consuming workload, and rollout strategy. Rotation of <code>tenants/acme/database</code> affects Acme's API
+            and workers—not every release using the same base chart.</p>
+          <h2 id="failure-handling">Failure handling</h2>
+          <p>A secure rotation controller fails closed and exposes the stage that failed.</p>
+          <ul>
+            <li><strong>Vault update failed:</strong> do not change Kubernetes state.</li>
+            <li><strong>Synchronization stalled:</strong> keep the previous workload running and alert on version
+              mismatch.</li>
+            <li><strong>Rollout failed:</strong> stop revocation while the old credential remains valid, when the
+              authority supports overlap.</li>
+            <li><strong>Readiness passed but authentication failed:</strong> treat the release as failed and restore the
+              previous reference or credential according to the dependency's rollback capability.</li>
+            <li><strong>Repeated events:</strong> coalesce updates so a burst of Secret changes does not create endless
+              pod churn.</li>
+          </ul>
+          <h2 id="verification-checklist">Verification checklist</h2>
+          <ul>
+            <li>Vault policies restrict each tenant to its own secret paths or dynamic roles.</li>
+            <li>Operator credentials follow least privilege and cannot read the entire tenant registry unnecessarily.
+            </li>
+            <li>Refresh policies match credential semantics.</li>
+            <li>The destination Secret is encrypted and RBAC-restricted.</li>
+            <li>Every consuming workload declares reload behavior.</li>
+            <li>Negative tests prove tenant A's secret cannot restart or update tenant B.</li>
+            <li>Rotation tests cover old connections, new connections, readiness, and rollback.</li>
+            <li>Audit records connect the Vault version to the Kubernetes Secret version and rollout revision.</li>
+            <li>Offboarding revokes credentials before deleting dependent resources.</li>
+          </ul>
+          <h2 id="sources">Sources</h2>
+          <ul>
+            <li><a href="https://developer.hashicorp.com/vault/docs/platform/k8s/vso"
+                rel="noopener noreferrer nofollow">Vault Secrets Operator — HashiCorp</a></li>
+            <li><a href="https://external-secrets.io/latest/api/externalsecret/"
+                rel="noopener noreferrer nofollow">ExternalSecret refresh behavior — External Secrets Operator</a></li>
+            <li><a href="https://github.com/stakater/Reloader" rel="noopener noreferrer nofollow">Reloader —
+                Stakater</a></li>
+          </ul>
+          <p>OpenTenant makes rotation a tenant operation rather than a cluster-wide event: synchronize the intended
+            value, touch only the declared dependents, and prove the release recovered before retiring the old
+            credential.</p>
+        </div>
+      </article>
+      <aside>
+        <div class="sticky top-28 rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+          <div class="mb-2 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">Source
+            check</div>
+          <p class="mb-5 text-sm leading-relaxed text-ploy-text-secondary">Every published guide must cite upstream
+            documentation and use a tested deployment example.</p><a
+            href="https://developer.hashicorp.com/vault/docs/platform/k8s/vso"
+            class="text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Upstream source
+            →</a>
+        </div>
+      </aside>
+    </div>
+    <section class="border-y border-ploy-border-primary bg-ploy-background-secondary py-16 text-center">
+      <div class="mx-auto max-w-[42rem] px-6">
+        <h2 class="mb-4 text-balance text-3xl font-extrabold">From chart installation to tenant operations.</h2>
+        <p class="mb-7 text-ploy-text-secondary">See how OpenTenant models release, secrets, domain, and lifecycle
+          boundaries.</p><a href="../../index.html#evaluation"
+          class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-button font-button text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ploy-accent-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ploy-background-primary disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-ploy-button-primary-border bg-ploy-button-primary-background text-ploy-button-primary-text hover:bg-ploy-button-primary-background/90 h-10 px-4">Inspect
+          Architecture</a>
+      </div>
+    </section>
+  </main>
+  <footer
+    class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm min-w-0 min-h-0 py-9 border-t">
+    <div class="min-w-0 min-h-0 max-w-[68.75rem] flex flex-wrap justify-between gap-4 mx-auto px-6 footer-inner w-full">
+      <div>© 2026 OpenTenant — open source under MIT</div>
+      <div><a href="https://github.com/opentenant/platform"
+          class="text-ploy-text-secondary min-w-0 min-h-0 ml-[1.375rem] hover:text-ploy-text-primary">GitHub</a></div>
+    </div>
+  </footer>
+  <meta name="ploy-ploydb-reads"
+    content="[{&quot;ployDbId&quot;:&quot;pdb_d8e097e350704072a94c&quot;,&quot;tableId&quot;:&quot;tbl_096668abfd1e4613b96a&quot;,&quot;filters&quot;:[{&quot;field&quot;:&quot;fld_f6d93c32653d4e42&quot;,&quot;value&quot;:&quot;vault-secret-rotation-per-tenant-kubernetes&quot;}],&quot;rowCount&quot;:1,&quot;servedSample&quot;:false}]">
+  <script>(function () { var els = document.querySelectorAll("main section,main article,body>section"); els.forEach(function (el) { el.classList.add("portable-reveal") }); if ("IntersectionObserver" in window) { var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("is-visible"); io.unobserve(e.target) } }) }, { rootMargin: "0px 0px -12% 0px" }); els.forEach(function (el) { io.observe(el) }) } else { els.forEach(function (el) { el.classList.add("is-visible") }) } var f = document.querySelector("form"); if (f) f.addEventListener("submit", function (e) { e.preventDefault(); location.href = document.documentElement.dataset.liveLogin }); Array.from(document.querySelectorAll("button")).filter(function (b) { return ["GitHub", "GitLab"].includes(b.textContent.trim()) }).forEach(function (b) { b.addEventListener("click", function () { location.href = document.documentElement.dataset.liveLogin }) }) })();</script>
+</body>
+
+</html>

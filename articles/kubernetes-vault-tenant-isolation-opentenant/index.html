@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html data-live-login="https://opentenant.org/login" lang="en" class="text-black dark" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml"
+        href="/favicon.svg">
+  <meta name="ploy-astro-starter-version" content="1.0.0">
+  <title>Kubernetes + Vault for Tenant Isolation: From Ubuntu Cluster to Automated Releases — OpenTenant | </title>
+  <meta name="description"
+    content="A production-minded guide to installing Canonical Kubernetes, integrating an external HashiCorp Vault, and compiling those primitives into isolated tenant releases with OpenTenant." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="canonical" href="https://www.opentenant.org/articles/kubernetes-vault-tenant-isolation-opentenant" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title"
+    content="Kubernetes + Vault for Tenant Isolation: From Ubuntu Cluster to Automated Releases — OpenTenant |  " />
+  <meta property="og:site_name" content=" " />
+  <meta property="og:description"
+    content="A production-minded guide to installing Canonical Kubernetes, integrating an external HashiCorp Vault, and compiling those primitives into isolated tenant releases with OpenTenant." />
+  <meta property="og:url" content="https://www.opentenant.org/articles/kubernetes-vault-tenant-isolation-opentenant" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title"
+    content="Kubernetes + Vault for Tenant Isolation: From Ubuntu Cluster to Automated Releases — OpenTenant |  " />
+  <meta name="twitter:description"
+    content="A production-minded guide to installing Canonical Kubernetes, integrating an external HashiCorp Vault, and compiling those primitives into isolated tenant releases with OpenTenant." />
+  <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body class="bg-ploy-background-primary text-ploy-text-primary leading-[1.6] decoration-[rgb(230,237,243)] m-0"
+  style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+  <nav
+    class="border-solid border-ploy-border-primary bg-ploy-background-primary/80 min-w-0 min-h-0 sticky z-[100] backdrop-blur-md border-b top-0">
+    <div class="h-16 min-w-0 min-h-0 max-w-[68.75rem] flex justify-between items-center mx-auto px-6 nav-inner w-full">
+      
+                <a href="/" aria-label="OpenTenant home" class="logo"><span
+                        class="brand-logo inline-flex items-center gap-2 "><img src="/favicon.svg" width="34"/><span
+                            class="brand-logo__wordmark text-lg font-bold tracking-[-0.02em] text-ploy-text-primary">OpenTenant</span></span></a>
+      <div class="flex items-center gap-6 nav-links"><a href="../index.html"
+          class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Articles</a><a
+          href="#cases"
+          class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Use
+          Cases</a><a href="https://github.com/opentenant/platform"
+          class="border-solid border-ploy-border-primary text-ploy-text-secondary font-semibold text-sm block transition-[transform,translate,scale,rotate,box-shadow] px-[1.375rem] py-2.5 rounded-lg hover:text-ploy-text-primary border">GitHub</a><a
+          href="/login"
+          class="bg-ploy-button-primary-background text-ploy-button-primary-text font-semibold text-sm block transition-shadow px-[1.375rem] py-2.5 rounded-lg hover:shadow-lg">Login</a>
+      </div>
+    </div>
+  </nav>
+  <main class="article-page">
+    <header class="border-b border-ploy-border-primary pb-16 pt-[6.25rem]">
+      <div class="mx-auto max-w-[68.75rem] px-6"><a href="../index.html"
+          class="mb-8 inline-block font-mono text-xs uppercase tracking-[0.14em] text-ploy-accent-primary-500">←
+          Technical library</a>
+        <div class="grid gap-10 lg:grid-cols-[1fr_18rem] lg:items-end">
+          <div>
+            <div
+              class="mb-5 flex flex-wrap gap-3 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
+              <span>architecture</span><span>security</span><span class="text-ploy-text-secondary">draft</span></div>
+            <h1
+              class="max-w-[52rem] text-balance text-[2.7rem] font-extrabold leading-[1.08] tracking-[-0.03em] md:text-[4rem]">
+              Kubernetes + Vault for Tenant Isolation: From Ubuntu Cluster to Automated Releases</h1>
+          </div>
+          <dl class="divide-y divide-ploy-border-primary border-y border-ploy-border-primary text-sm">
+            <div class="flex justify-between gap-4 py-3">
+              <dt class="text-ploy-text-secondary">Chart</dt>
+              <dd>Kubernetes + Vault</dd>
+            </div>
+            <div class="flex justify-between gap-4 py-3">
+              <dt class="text-ploy-text-secondary">Intent</dt>
+              <dd>mofu</dd>
+            </div>
+            <div class="flex justify-between gap-4 py-3">
+              <dt class="text-ploy-text-secondary">Author</dt>
+              <dd>OpenTenant</dd>
+            </div>
+          </dl>
+        </div>
+        <p class="mt-8 max-w-[48rem] text-lg leading-relaxed text-ploy-text-secondary">A production-minded guide to
+          installing Canonical Kubernetes, integrating an external HashiCorp Vault, and compiling those primitives into
+          isolated tenant releases with OpenTenant.</p>
+      </div>
+    </header>
+    <section class="border-b border-ploy-border-primary bg-ploy-background-secondary py-14 md:py-16"
+      aria-labelledby="kubernetes-vault-tenant-isolation-opentenant-diagram-title">
+      <div class="mx-auto max-w-[68.75rem] px-6">
+        <div class="mb-8 grid gap-5 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
+          <div>
+            <p class="mb-3 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ploy-accent-primary-500">Identity
+              to isolated release</p>
+            <h2 id="kubernetes-vault-tenant-isolation-opentenant-diagram-title"
+              class="max-w-[34rem] text-balance text-3xl font-extrabold leading-tight tracking-[-0.025em] md:text-[2.35rem]">
+              One tenant declaration becomes a scoped runtime.</h2>
+          </div>
+          <p class="max-w-[38rem] text-base leading-relaxed text-ploy-text-secondary md:text-lg">OpenTenant binds the
+            release boundary to the Vault identity before a workload is allowed to start.</p>
+        </div>
+        <div
+          class="article-architecture__flow grid gap-3 lg:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr_auto_1fr] lg:items-stretch">
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-primary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-fingerprint-pattern size-5" aria-hidden="true">
+                  <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"></path>
+                  <path d="M14 13.12c0 2.38 0 6.38-1 8.88"></path>
+                  <path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"></path>
+                  <path d="M2 12a10 10 0 0 1 18-6"></path>
+                  <path d="M2 16h.01"></path>
+                  <path d="M21.8 16c.2-2 .131-5.354 0-6"></path>
+                  <path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"></path>
+                  <path d="M8.65 22c.21-.66.45-1.32.57-2"></path>
+                  <path d="M9 6.8a6 6 0 0 1 9 5.2v2"></path>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">Tenant
+                  record</div>
+                <h3 class="mt-2 text-base font-bold leading-snug">Validated identity</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">Trusted tenant ID and approved template
+                  inputs</p>
+              </div>
+            </div>
+            <div class="article-architecture__connector flex items-center justify-center text-ploy-text-secondary"
+              aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-down size-4 lg:hidden" aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="m19 12-7 7-7-7"></path>
+              </svg><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-right hidden size-4 lg:block" aria-hidden="true">
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg></div>
+          </div>
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-secondary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-key-round size-5" aria-hidden="true">
+                  <path
+                    d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z">
+                  </path>
+                  <circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-secondary-500">Vault
+                </div>
+                <h3 class="mt-2 text-base font-bold leading-snug">Scoped secret path</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">Policy and role resolve only this
+                  tenant&#x27;s material</p>
+              </div>
+            </div>
+            <div class="article-architecture__connector flex items-center justify-center text-ploy-text-secondary"
+              aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-down size-4 lg:hidden" aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="m19 12-7 7-7-7"></path>
+              </svg><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-right hidden size-4 lg:block" aria-hidden="true">
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg></div>
+          </div>
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-primary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-container size-5" aria-hidden="true">
+                  <path
+                    d="M22 7.7c0-.6-.4-1.2-.8-1.5l-6.3-3.9a1.72 1.72 0 0 0-1.7 0l-10.3 6c-.5.2-.9.8-.9 1.4v6.6c0 .5.4 1.2.8 1.5l6.3 3.9a1.72 1.72 0 0 0 1.7 0l10.3-6c.5-.3.9-1 .9-1.5Z">
+                  </path>
+                  <path d="M10 21.9V14L2.1 9.1"></path>
+                  <path d="m10 14 11.9-6.9"></path>
+                  <path d="M14 19.8v-8.1"></path>
+                  <path d="M18 17.5V9.4"></path>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
+                  Kubernetes</div>
+                <h3 class="mt-2 text-base font-bold leading-snug">Namespace boundary</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">Service account, RBAC, and policy are
+                  reconciled</p>
+              </div>
+            </div>
+            <div class="article-architecture__connector flex items-center justify-center text-ploy-text-secondary"
+              aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-down size-4 lg:hidden" aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="m19 12-7 7-7-7"></path>
+              </svg><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-right hidden size-4 lg:block" aria-hidden="true">
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg></div>
+          </div>
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-secondary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-server-cog size-5" aria-hidden="true">
+                  <path d="m10.852 14.772-.383.923"></path>
+                  <path d="M13.148 14.772a3 3 0 1 0-2.296-5.544l-.383-.923"></path>
+                  <path d="m13.148 9.228.383-.923"></path>
+                  <path d="m13.53 15.696-.382-.924a3 3 0 1 1-2.296-5.544"></path>
+                  <path d="m14.772 10.852.923-.383"></path>
+                  <path d="m14.772 13.148.923.383"></path>
+                  <path d="M4.5 10H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-.5"></path>
+                  <path d="M4.5 14H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-.5"></path>
+                  <path d="M6 18h.01"></path>
+                  <path d="M6 6h.01"></path>
+                  <path d="m9.228 10.852-.923-.383"></path>
+                  <path d="m9.228 13.148-.923.383"></path>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-secondary-500">Helm
+                </div>
+                <h3 class="mt-2 text-base font-bold leading-snug">Isolated release</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">One chart release receives tenant
+                  configuration</p>
+              </div>
+            </div>
+            <div class="article-architecture__connector flex items-center justify-center text-ploy-text-secondary"
+              aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-down size-4 lg:hidden" aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="m19 12-7 7-7-7"></path>
+              </svg><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-right hidden size-4 lg:block" aria-hidden="true">
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg></div>
+          </div>
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-primary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-circle-check size-5" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="m9 12 2 2 4-4"></path>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">Readiness
+                </div>
+                <h3 class="mt-2 text-base font-bold leading-snug">Operational proof</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">Health, secret delivery, and route
+                  checks complete</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="mt-7 flex flex-col gap-2 border-t border-ploy-border-primary pt-5 font-mono text-[0.68rem] text-ploy-text-secondary md:flex-row md:flex-wrap md:gap-x-7">
+          <span>tenant_id → Vault scope</span><span>service account → Vault role</span><span>release revision →
+            readiness evidence</span></div>
+      </div>
+    </section>
+    <div class="mx-auto grid max-w-[68.75rem] gap-12 px-6 py-16 lg:grid-cols-[13rem_minmax(0,1fr)_12rem]">
+      <aside class="hidden lg:block">
+        <div class="sticky top-28">
+          <div class="mb-4 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">On this
+            page</div>
+          <nav class="space-y-3 text-sm text-ploy-text-secondary"><a href="#direct-answer"
+              class="block hover:text-ploy-text-primary">Direct answer</a><a href="#start-with-a-kubernetes-cluster"
+              class="block hover:text-ploy-text-primary">Start with a Kubernetes cluster</a><a
+              href="#connect-kubernetes-to-an-external-vault" class="block hover:text-ploy-text-primary">Connect
+              Kubernetes to an external Vault</a><a href="#choose-how-secrets-reach-workloads"
+              class="block hover:text-ploy-text-primary">Choose how secrets reach workloads</a><a
+              href="#why-the-quickstart-is-not-a-tenant-platform" class="block hover:text-ploy-text-primary">Why the
+              quickstart is not a tenant platform</a><a href="#how-opentenant-compiles-the-tenant-lifecycle"
+              class="block hover:text-ploy-text-primary">How OpenTenant compiles the tenant lifecycle</a><a
+              href="#security-boundaries-that-remain-explicit" class="block hover:text-ploy-text-primary">Security
+              boundaries that remain explicit</a><a href="#evaluation-checklist"
+              class="block hover:text-ploy-text-primary">Evaluation checklist</a><a href="#sources"
+              class="block hover:text-ploy-text-primary">Sources</a></nav>
+        </div>
+      </aside>
+      <article class="min-w-0">
+        <div class="prose prose-invert ploy-richtext max-w-none prose-headings:text-balance">
+          <h1 id="kubernetes-vault-for-tenant-isolation">Kubernetes + Vault for tenant isolation</h1>
+          <h2 id="direct-answer">Direct answer</h2>
+          <p>Canonical Kubernetes gives you a cluster. HashiCorp Vault gives workloads a controlled way to obtain
+            secrets. A tenant platform still has to connect those systems to customer identity, release boundaries,
+            policy, domains, upgrades, rotation, and deletion. OpenTenant automates that missing lifecycle: one tenant
+            declaration is reconciled into an isolated release, a scoped Vault path, tenant configuration, and routing.
+          </p>
+          <p>This guide separates the upstream setup from the orchestration OpenTenant adds. The commands below are
+            useful starting points, not a production security baseline.</p>
+          <h2 id="start-with-a-kubernetes-cluster">Start with a Kubernetes cluster</h2>
+          <p>Canonical documents a compact installation path for its upstream Kubernetes distribution using the
+            <code>k8s</code> snap:</p>
+          <pre><code class="language-bash">sudo snap install k8s --classic
+sudo k8s bootstrap
+sudo k8s status
+sudo k8s kubectl get all --all-namespaces
+</code></pre>
+          <p>According to <a href="https://ubuntu.com/kubernetes/install" rel="noopener noreferrer nofollow">Canonical's
+              installation guide</a>, the distribution includes networking, gateway, local storage, DNS, a load
+            balancer, metrics server, and ingress. A multi-node cluster is formed with a join token, and Canonical
+            states that three or more control-plane nodes automatically provide high availability.</p>
+          <p>That gets a cluster running. It does not decide which customer owns which workloads, secrets, hostnames, or
+            release history.</p>
+          <h2 id="connect-kubernetes-to-an-external-vault">Connect Kubernetes to an external Vault</h2>
+          <p>HashiCorp's <a
+              href="https://developer.hashicorp.com/vault/tutorials/kubernetes-introduction/kubernetes-external-vault"
+              rel="noopener noreferrer nofollow">external Vault tutorial</a> demonstrates a Kubernetes workload
+            retrieving secrets from a Vault service outside the cluster. Its lab uses minikube, a Vault dev server, the
+            Kubernetes authentication method, a policy and role, and Vault Agent Injector.</p>
+          <p>The important production pattern is the trust path:</p>
+          <ol>
+            <li>A Kubernetes service account identifies the workload.</li>
+            <li>Vault's Kubernetes auth method validates that identity.</li>
+            <li>A Vault role binds approved service accounts and namespaces to a policy.</li>
+            <li>The policy grants only the required secret paths and capabilities.</li>
+            <li>An injector or operator delivers secret material to the workload.</li>
+          </ol>
+          <p>HashiCorp explicitly warns that its dev server and root-token workflow are insecure and should not be used
+            in production. A production deployment also needs TLS, a durable and highly available Vault service,
+            controlled network reachability, auditable policies, and a rotation model.</p>
+          <h2 id="choose-how-secrets-reach-workloads">Choose how secrets reach workloads</h2>
+          <p>There is no single delivery pattern for every application.</p>
+          <p><strong>Vault Agent Injector</strong> adds a sidecar or init workflow that authenticates to Vault and
+            renders secrets into the pod filesystem. This can avoid putting application credentials directly into
+            environment variables.</p>
+          <p><strong>Vault Secrets Operator or External Secrets Operator</strong> reconciles external values into
+            Kubernetes resources. This works well for charts that already expect Kubernetes Secrets, but it means
+            Kubernetes becomes part of the delivery path and must be protected accordingly.</p>
+          <p>OpenTenant's current architecture uses a Vault-backed tenant registry with operator-driven materialization.
+            The tenant record is the contract: identity, enabled state, secret references, release configuration, and
+            routing inputs can be reconciled without placing long-lived secrets in the OpenTenant application service.
+          </p>
+          <h2 id="why-the-quickstart-is-not-a-tenant-platform">Why the quickstart is not a tenant platform</h2>
+          <p>A working cluster plus a working Vault login still leaves the most consequential questions unanswered:</p>
+          <ul>
+            <li>Does each tenant receive a namespace, a release, or an entire cluster?</li>
+            <li>Which service accounts can authenticate to which Vault roles?</li>
+            <li>Can one tenant reference another tenant's secret path?</li>
+            <li>What happens when a credential rotates?</li>
+            <li>Which pods restart, and how is blast radius contained?</li>
+            <li>Who owns ingress, TLS, DNS, backups, upgrades, and offboarding?</li>
+            <li>What evidence connects a Git change to the running tenant release?</li>
+          </ul>
+          <p>Namespace boundaries are useful, but they are not a complete hard-security boundary on their own.
+            Production isolation should also include RBAC, NetworkPolicy, admission controls, workload security
+            settings, resource quotas, and carefully scoped cloud identities.</p>
+          <h2 id="how-opentenant-compiles-the-tenant-lifecycle">How OpenTenant compiles the tenant lifecycle</h2>
+          <p>OpenTenant does not replace Kubernetes or Vault. It turns their primitives into repeatable tenant
+            operations.</p>
+          <pre><code class="language-text">tenant declaration
+  → validate template and allowed configuration
+  → resolve tenant identity and Vault scope
+  → create or reconcile namespace
+  → bind service account, Vault role, and secret references
+  → install or upgrade one Helm release
+  → configure tenant domain and route
+  → observe readiness and retain rollback provenance
+</code></pre>
+          <p>The unit of operation is the tenant, not an ad hoc sequence of shell commands. For each tenant, OpenTenant
+            can keep the same base chart while applying approved values such as replicas, feature flags, branding, and
+            domain configuration. Credentials remain referenced through the tenant's Vault scope.</p>
+          <p>When a secret changes, the operator layer updates the intended Kubernetes delivery mechanism. A reloader
+            can then restart only the workloads that depend on the changed Secret. The desired outcome is a contained
+            rollout for one tenant—not a platform-wide restart.</p>
+          <h2 id="security-boundaries-that-remain-explicit">Security boundaries that remain explicit</h2>
+          <p>Automation is valuable only when the policy is visible. A production OpenTenant profile should make these
+            controls reviewable:</p>
+          <h3 id="vault-path-policy">Vault path policy</h3>
+          <p>Use a tenant-derived path that cannot be selected freely by untrusted input. Bind it to narrowly scoped
+            Vault policies and Kubernetes service accounts. Avoid wildcard permissions that span the tenant registry.
+          </p>
+          <h3 id="kubernetes-identity">Kubernetes identity</h3>
+          <p>Create service accounts per tenant or per workload class. Restrict role bindings to the intended namespace
+            and avoid default service-account credentials when they are not needed.</p>
+          <h3 id="network-isolation">Network isolation</h3>
+          <p>Start from deny-by-default NetworkPolicies and add only the egress and ingress required by the chart, Vault
+            delivery pattern, observability stack, and edge connector.</p>
+          <h3 id="release-provenance">Release provenance</h3>
+          <p>Record the chart reference, version, values hash, source revision, and reconciliation result. A tenant
+            upgrade should be explainable and reversible.</p>
+          <h3 id="safe-deletion">Safe deletion</h3>
+          <p>Offboarding should disable access first, then remove routing, release resources, and secret references
+            according to a retention policy. Destruction should not be an unreviewed side effect of a missing record.
+          </p>
+          <h2 id="evaluation-checklist">Evaluation checklist</h2>
+          <p>Before calling the system production-ready, verify:</p>
+          <ul>
+            <li>Kubernetes control-plane and node availability match the environment's recovery objectives.</li>
+            <li>Vault is not running in dev mode and root tokens are not used for routine operations.</li>
+            <li>Kubernetes authentication validates the intended issuer, API endpoint, and service accounts.</li>
+            <li>Vault policies cannot traverse into another tenant's path.</li>
+            <li>Secret delivery and rotation are tested for the actual Helm chart.</li>
+            <li>RBAC and NetworkPolicy prevent cross-tenant access in negative tests.</li>
+            <li>Tenant creation and upgrade are idempotent.</li>
+            <li>Failed reconciliation does not leave public routes or credentials orphaned.</li>
+            <li>Backup, restore, audit logging, and deletion behavior are documented.</li>
+          </ul>
+          <h2 id="sources">Sources</h2>
+          <ul>
+            <li><a href="https://ubuntu.com/kubernetes/install" rel="noopener noreferrer nofollow">Install Kubernetes —
+                Canonical</a></li>
+            <li><a
+                href="https://developer.hashicorp.com/vault/tutorials/kubernetes-introduction/kubernetes-external-vault"
+                rel="noopener noreferrer nofollow">Integrate Kubernetes with an external Vault cluster — HashiCorp</a>
+            </li>
+          </ul>
+          <p>OpenTenant's role begins where those installation guides end: turning proven infrastructure components into
+            a consistent, tenant-scoped operating model.</p>
+        </div>
+      </article>
+      <aside>
+        <div class="sticky top-28 rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+          <div class="mb-2 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">Source
+            check</div>
+          <p class="mb-5 text-sm leading-relaxed text-ploy-text-secondary">Every published guide must cite upstream
+            documentation and use a tested deployment example.</p><a
+            href="https://developer.hashicorp.com/vault/tutorials/kubernetes-introduction/kubernetes-external-vault"
+            class="text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Upstream source
+            →</a>
+        </div>
+      </aside>
+    </div>
+    <section class="border-y border-ploy-border-primary bg-ploy-background-secondary py-16 text-center">
+      <div class="mx-auto max-w-[42rem] px-6">
+        <h2 class="mb-4 text-balance text-3xl font-extrabold">From chart installation to tenant operations.</h2>
+        <p class="mb-7 text-ploy-text-secondary">See how OpenTenant models release, secrets, domain, and lifecycle
+          boundaries.</p><a href="../../index.html#evaluation"
+          class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-button font-button text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ploy-accent-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ploy-background-primary disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-ploy-button-primary-border bg-ploy-button-primary-background text-ploy-button-primary-text hover:bg-ploy-button-primary-background/90 h-10 px-4">Inspect
+          Architecture</a>
+      </div>
+    </section>
+  </main>
+  <footer
+    class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm min-w-0 min-h-0 py-9 border-t">
+    <div class="min-w-0 min-h-0 max-w-[68.75rem] flex flex-wrap justify-between gap-4 mx-auto px-6 footer-inner w-full">
+      <div>© 2026 OpenTenant — open source under MIT</div>
+      <div><a href="https://github.com/opentenant/platform"
+          class="text-ploy-text-secondary min-w-0 min-h-0 ml-[1.375rem] hover:text-ploy-text-primary">GitHub</a></div>
+    </div>
+  </footer>
+  <meta name="ploy-ploydb-reads"
+    content="[{&quot;ployDbId&quot;:&quot;pdb_d8e097e350704072a94c&quot;,&quot;tableId&quot;:&quot;tbl_096668abfd1e4613b96a&quot;,&quot;filters&quot;:[{&quot;field&quot;:&quot;fld_f6d93c32653d4e42&quot;,&quot;value&quot;:&quot;kubernetes-vault-tenant-isolation-opentenant&quot;}],&quot;rowCount&quot;:1,&quot;servedSample&quot;:false}]">
+  <script>(function () { var els = document.querySelectorAll("main section,main article,body>section"); els.forEach(function (el) { el.classList.add("portable-reveal") }); if ("IntersectionObserver" in window) { var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("is-visible"); io.unobserve(e.target) } }) }, { rootMargin: "0px 0px -12% 0px" }); els.forEach(function (el) { io.observe(el) }) } else { els.forEach(function (el) { el.classList.add("is-visible") }) } var f = document.querySelector("form"); if (f) f.addEventListener("submit", function (e) { e.preventDefault(); location.href = document.documentElement.dataset.liveLogin }); Array.from(document.querySelectorAll("button")).filter(function (b) { return ["GitHub", "GitLab"].includes(b.textContent.trim()) }).forEach(function (b) { b.addEventListener("click", function () { location.href = document.documentElement.dataset.liveLogin }) }) })();</script>
+</body>
+
+</html>

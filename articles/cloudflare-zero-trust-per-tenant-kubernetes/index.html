@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html data-live-login="https://opentenant.org/login" lang="en" class="text-black dark" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml"
+        href="/favicon.svg">
+  <meta name="ploy-astro-starter-version" content="1.0.0">
+  <title>Cloudflare Zero Trust for Every Tenant: Automating Edge Access on Kubernetes — OpenTenant | </title>
+  <meta name="description"
+    content="How Cloudflare Tunnel, Access policies, Kubernetes, and OpenTenant fit together to give every tenant a private origin, explicit hostname, and reviewable access policy." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="canonical" href="https://www.opentenant.org/articles/cloudflare-zero-trust-per-tenant-kubernetes" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title"
+    content="Cloudflare Zero Trust for Every Tenant: Automating Edge Access on Kubernetes — OpenTenant |  " />
+  <meta property="og:site_name" content=" " />
+  <meta property="og:description"
+    content="How Cloudflare Tunnel, Access policies, Kubernetes, and OpenTenant fit together to give every tenant a private origin, explicit hostname, and reviewable access policy." />
+  <meta property="og:url" content="https://www.opentenant.org/articles/cloudflare-zero-trust-per-tenant-kubernetes" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title"
+    content="Cloudflare Zero Trust for Every Tenant: Automating Edge Access on Kubernetes — OpenTenant |  " />
+  <meta name="twitter:description"
+    content="How Cloudflare Tunnel, Access policies, Kubernetes, and OpenTenant fit together to give every tenant a private origin, explicit hostname, and reviewable access policy." />
+  <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body class="bg-ploy-background-primary text-ploy-text-primary leading-[1.6] decoration-[rgb(230,237,243)] m-0"
+  style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+  <nav
+    class="border-solid border-ploy-border-primary bg-ploy-background-primary/80 min-w-0 min-h-0 sticky z-[100] backdrop-blur-md border-b top-0">
+    <div class="h-16 min-w-0 min-h-0 max-w-[68.75rem] flex justify-between items-center mx-auto px-6 nav-inner w-full">
+     
+                <a href="/" aria-label="OpenTenant home" class="logo"><span
+                        class="brand-logo inline-flex items-center gap-2 "><img src="/favicon.svg" width="34"/><span
+                            class="brand-logo__wordmark text-lg font-bold tracking-[-0.02em] text-ploy-text-primary">OpenTenant</span></span></a>
+      <div class="flex items-center gap-6 nav-links"><a href="../index.html"
+          class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Articles</a><a
+          href="#cases"
+          class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Use
+          Cases</a><a href="https://github.com/opentenant/platform"
+          class="border-solid border-ploy-border-primary text-ploy-text-secondary font-semibold text-sm block transition-[transform,translate,scale,rotate,box-shadow] px-[1.375rem] py-2.5 rounded-lg hover:text-ploy-text-primary border">GitHub</a><a
+          href="/login"
+          class="bg-ploy-button-primary-background text-ploy-button-primary-text font-semibold text-sm block transition-shadow px-[1.375rem] py-2.5 rounded-lg hover:shadow-lg">Login</a>
+      </div>
+    </div>
+  </nav>
+  <main class="article-page">
+    <header class="border-b border-ploy-border-primary pb-16 pt-[6.25rem]">
+      <div class="mx-auto max-w-[68.75rem] px-6"><a href="../index.html"
+          class="mb-8 inline-block font-mono text-xs uppercase tracking-[0.14em] text-ploy-accent-primary-500">←
+          Technical library</a>
+        <div class="grid gap-10 lg:grid-cols-[1fr_18rem] lg:items-end">
+          <div>
+            <div
+              class="mb-5 flex flex-wrap gap-3 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
+              <span>architecture</span><span>security</span><span class="text-ploy-text-secondary">draft</span></div>
+            <h1
+              class="max-w-[52rem] text-balance text-[2.7rem] font-extrabold leading-[1.08] tracking-[-0.03em] md:text-[4rem]">
+              Cloudflare Zero Trust for Every Tenant: Automating Edge Access on Kubernetes</h1>
+          </div>
+          <dl class="divide-y divide-ploy-border-primary border-y border-ploy-border-primary text-sm">
+            <div class="flex justify-between gap-4 py-3">
+              <dt class="text-ploy-text-secondary">Chart</dt>
+              <dd>Cloudflare Tunnel</dd>
+            </div>
+            <div class="flex justify-between gap-4 py-3">
+              <dt class="text-ploy-text-secondary">Intent</dt>
+              <dd>mofu</dd>
+            </div>
+            <div class="flex justify-between gap-4 py-3">
+              <dt class="text-ploy-text-secondary">Author</dt>
+              <dd>OpenTenant</dd>
+            </div>
+          </dl>
+        </div>
+        <p class="mt-8 max-w-[48rem] text-lg leading-relaxed text-ploy-text-secondary">How Cloudflare Tunnel, Access
+          policies, Kubernetes, and OpenTenant fit together to give every tenant a private origin, explicit hostname,
+          and reviewable access policy.</p>
+      </div>
+    </header>
+    <section class="border-b border-ploy-border-primary bg-ploy-background-secondary py-14 md:py-16"
+      aria-labelledby="cloudflare-zero-trust-per-tenant-kubernetes-diagram-title">
+      <div class="mx-auto max-w-[68.75rem] px-6">
+        <div class="mb-8 grid gap-5 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
+          <div>
+            <p class="mb-3 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ploy-accent-primary-500">Edge
+              access compilation</p>
+            <h2 id="cloudflare-zero-trust-per-tenant-kubernetes-diagram-title"
+              class="max-w-[34rem] text-balance text-3xl font-extrabold leading-tight tracking-[-0.025em] md:text-[2.35rem]">
+              A private origin with tenant-specific access.</h2>
+          </div>
+          <p class="max-w-[38rem] text-base leading-relaxed text-ploy-text-secondary md:text-lg">The route and its
+            authorization policy move together, while the cluster keeps an outbound-only connector path.</p>
+        </div>
+        <div
+          class="article-architecture__flow grid gap-3 lg:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr_auto_1fr] lg:items-stretch">
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-primary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-earth size-5" aria-hidden="true">
+                  <path d="M21.54 15H17a2 2 0 0 0-2 2v4.54"></path>
+                  <path d="M7 3.34V5a3 3 0 0 0 3 3a2 2 0 0 1 2 2c0 1.1.9 2 2 2a2 2 0 0 0 2-2c0-1.1.9-2 2-2h3.17"></path>
+                  <path d="M11 21.95V18a2 2 0 0 0-2-2a2 2 0 0 1-2-2v-1a2 2 0 0 0-2-2H2.05"></path>
+                  <circle cx="12" cy="12" r="10"></circle>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">Hostname
+                </div>
+                <h3 class="mt-2 text-base font-bold leading-snug">Tenant route</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">A unique host resolves to one release
+                  service</p>
+              </div>
+            </div>
+            <div class="article-architecture__connector flex items-center justify-center text-ploy-text-secondary"
+              aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-down size-4 lg:hidden" aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="m19 12-7 7-7-7"></path>
+              </svg><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-right hidden size-4 lg:block" aria-hidden="true">
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg></div>
+          </div>
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-secondary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-shield-check size-5" aria-hidden="true">
+                  <path
+                    d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z">
+                  </path>
+                  <path d="m9 12 2 2 4-4"></path>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-secondary-500">
+                  Cloudflare</div>
+                <h3 class="mt-2 text-base font-bold leading-snug">Access policy</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">Identity, posture, or Service Auth is
+                  evaluated</p>
+              </div>
+            </div>
+            <div class="article-architecture__connector flex items-center justify-center text-ploy-text-secondary"
+              aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-down size-4 lg:hidden" aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="m19 12-7 7-7-7"></path>
+              </svg><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-right hidden size-4 lg:block" aria-hidden="true">
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg></div>
+          </div>
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-primary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-cloud size-5" aria-hidden="true">
+                  <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">Tunnel
+                </div>
+                <h3 class="mt-2 text-base font-bold leading-snug">Outbound connector</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">cloudflared connects without public
+                  origin ingress</p>
+              </div>
+            </div>
+            <div class="article-architecture__connector flex items-center justify-center text-ploy-text-secondary"
+              aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-down size-4 lg:hidden" aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="m19 12-7 7-7-7"></path>
+              </svg><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-right hidden size-4 lg:block" aria-hidden="true">
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg></div>
+          </div>
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-secondary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-network size-5" aria-hidden="true">
+                  <rect x="16" y="16" width="6" height="6" rx="1"></rect>
+                  <rect x="2" y="16" width="6" height="6" rx="1"></rect>
+                  <rect x="9" y="2" width="6" height="6" rx="1"></rect>
+                  <path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"></path>
+                  <path d="M12 12V8"></path>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-secondary-500">
+                  NetworkPolicy</div>
+                <h3 class="mt-2 text-base font-bold leading-snug">Narrow service path</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">Connector traffic reaches only declared
+                  ports</p>
+              </div>
+            </div>
+            <div class="article-architecture__connector flex items-center justify-center text-ploy-text-secondary"
+              aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-down size-4 lg:hidden" aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="m19 12-7 7-7-7"></path>
+              </svg><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-right hidden size-4 lg:block" aria-hidden="true">
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg></div>
+          </div>
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-primary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-circle-check size-5" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="m9 12 2 2 4-4"></path>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">Tenant
+                  release</div>
+                <h3 class="mt-2 text-base font-bold leading-snug">Expected origin</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">Response identity is checked before
+                  activation</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="mt-7 flex flex-col gap-2 border-t border-ploy-border-primary pt-5 font-mono text-[0.68rem] text-ploy-text-secondary md:flex-row md:flex-wrap md:gap-x-7">
+          <span>hostname → one tenant</span><span>policy → explicit access profile</span><span>connector → declared
+            service only</span></div>
+      </div>
+    </section>
+    <div class="mx-auto grid max-w-[68.75rem] gap-12 px-6 py-16 lg:grid-cols-[13rem_minmax(0,1fr)_12rem]">
+      <aside class="hidden lg:block">
+        <div class="sticky top-28">
+          <div class="mb-4 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">On this
+            page</div>
+          <nav class="space-y-3 text-sm text-ploy-text-secondary"><a href="#direct-answer"
+              class="block hover:text-ploy-text-primary">Direct answer</a><a href="#what-cloudflare-tunnel-changes"
+              class="block hover:text-ploy-text-primary">What Cloudflare Tunnel changes</a><a
+              href="#kubernetes-connector-architecture" class="block hover:text-ploy-text-primary">Kubernetes connector
+              architecture</a><a href="#access-policies-and-service-authentication"
+              class="block hover:text-ploy-text-primary">Access policies and service authentication</a><a
+              href="#what-per-tenant-should-mean" class="block hover:text-ploy-text-primary">What “per tenant” should
+              mean</a><a href="#how-opentenant-automates-the-edge-lifecycle"
+              class="block hover:text-ploy-text-primary">How OpenTenant automates the edge lifecycle</a><a
+              href="#security-and-operational-guardrails" class="block hover:text-ploy-text-primary">Security and
+              operational guardrails</a><a href="#evaluation-checklist"
+              class="block hover:text-ploy-text-primary">Evaluation checklist</a><a href="#sources"
+              class="block hover:text-ploy-text-primary">Sources</a></nav>
+        </div>
+      </aside>
+      <article class="min-w-0">
+        <div class="prose prose-invert ploy-richtext max-w-none prose-headings:text-balance">
+          <h1 id="cloudflare-zero-trust-for-every-tenant">Cloudflare Zero Trust for every tenant</h1>
+          <h2 id="direct-answer">Direct answer</h2>
+          <p>Cloudflare Tunnel creates an outbound-only connection from a Kubernetes environment to Cloudflare, so an
+            origin does not need a publicly routable IP. Cloudflare Access then decides which users, devices, or
+            services can reach an application. OpenTenant automates the tenant-specific layer: hostname, route, access
+            profile, connector secret reference, release binding, and lifecycle are compiled from the same tenant
+            declaration.</p>
+          <p>“Deployed for every tenant” should not mean one hand-configured tunnel process per customer. It should mean
+            every tenant receives an explicit, reviewable edge configuration with no shared hostname or accidental
+            policy inheritance.</p>
+          <h2 id="what-cloudflare-tunnel-changes">What Cloudflare Tunnel changes</h2>
+          <p>Cloudflare describes Tunnel as a connection initiated by the <code>cloudflared</code> daemon from the
+            origin to Cloudflare's global network. Because the connector establishes the connection outbound, the origin
+            can avoid a publicly routable IP and block general inbound traffic. See <a
+              href="https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/"
+              rel="noopener noreferrer nofollow">How Cloudflare Tunnel works</a>.</p>
+          <p>For Kubernetes, this changes the common ingress model. Instead of exposing a public load balancer and
+            allowing the Internet to reach it, <code>cloudflared</code> can route an approved hostname to a
+            cluster-local service.</p>
+          <pre><code class="language-text">user or service
+  → Cloudflare edge
+  → Access policy evaluation
+  → outbound-established Tunnel
+  → cloudflared deployment
+  → tenant Kubernetes service
+</code></pre>
+          <p>The origin still needs normal application security. Tunnel removes direct public origin exposure; it does
+            not make an unsafe service safe.</p>
+          <h2 id="kubernetes-connector-architecture">Kubernetes connector architecture</h2>
+          <p>Cloudflare's <a
+              href="https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/deployment-guides/kubernetes/"
+              rel="noopener noreferrer nofollow">Kubernetes deployment guide</a> recommends running
+            <code>cloudflared</code> as a deployment adjacent to application deployments. Keeping it separate allows
+            connector replicas and application replicas to be managed independently.</p>
+          <p>Cloudflare's example uses two connector replicas on the same remotely managed tunnel for high availability.
+            It stores the tunnel token in a Kubernetes Secret and reads it through the <code>TUNNEL_TOKEN</code>
+            environment variable.</p>
+          <p>Two caveats matter for platform teams:</p>
+          <ul>
+            <li>Connector replicas provide availability, not application load balancing.</li>
+            <li>Cloudflare warns against autoscaling <code>cloudflared</code> because downscaling removes connectors and
+              breaks connections assigned to those replicas.</li>
+          </ul>
+          <p>OpenTenant should therefore treat the connector plane as controlled infrastructure. Tenant workloads may
+            share a hardened connector deployment while retaining distinct hostnames, services, routes, and policies. A
+            deployment profile can choose dedicated connectors when a stronger operational boundary is required.</p>
+          <h2 id="access-policies-and-service-authentication">Access policies and service authentication</h2>
+          <p>A Tunnel route answers where traffic goes. An Access policy answers who or what may use it.</p>
+          <p>Cloudflare Access policies can evaluate identity, group membership, device posture, network context, and
+            service credentials. For machine-to-machine traffic, Cloudflare's <a
+              href="https://developers.cloudflare.com/cloudflare-one/access-controls/policies/"
+              rel="noopener noreferrer nofollow">Access policy documentation</a> describes <strong>Service
+              Auth</strong>, including service tokens and mutual TLS.</p>
+          <p>Cloudflare also warns that <strong>Bypass</strong> does not enforce Access controls and does not log
+            requests through Access. It should not become a permanent shortcut for internal services. If a service
+            should remain non-interactive while retaining authentication and logs, Service Auth is the more appropriate
+            model.</p>
+          <p>For a tenant platform, policy should be selected by workload type:</p>
+          <ul>
+            <li><strong>Public application:</strong> no user login at the edge, but the origin remains reachable only
+              through the tunnel and normal WAF/rate controls can apply.</li>
+            <li><strong>Tenant admin:</strong> require the approved identity provider, tenant group, and optionally
+              device posture.</li>
+            <li><strong>Service endpoint:</strong> use Service Auth with a tenant-scoped service token or mutual TLS.
+            </li>
+            <li><strong>Operator access:</strong> use a separate administrative hostname and a stricter policy than
+              customer traffic.</li>
+          </ul>
+          <h2 id="what-per-tenant-should-mean">What “per tenant” should mean</h2>
+          <p>Per-tenant Zero Trust is a data-model decision before it is a deployment decision. Each tenant needs
+            explicit state for:</p>
+          <ul>
+            <li>Public and administrative hostnames</li>
+            <li>Target Kubernetes service and port</li>
+            <li>Access application or policy profile</li>
+            <li>Allowed identity group or organization</li>
+            <li>Service credentials, when needed</li>
+            <li>Session and posture requirements</li>
+            <li>Enabled or suspended state</li>
+            <li>DNS, certificate, and route ownership</li>
+          </ul>
+          <p>A single wildcard DNS record can simplify domain operations, but it must not collapse authorization. The
+            requested hostname should resolve to exactly one tenant route, and administrative policies should not be
+            inferred from naming conventions alone.</p>
+          <h2 id="how-opentenant-automates-the-edge-lifecycle">How OpenTenant automates the edge lifecycle</h2>
+          <p>OpenTenant's existing architecture already models a tenant as a release, secret scope, domain, and
+            configuration. Cloudflare becomes another reconciled layer of that tenant record.</p>
+          <pre><code class="language-text">tenant enabled
+  → validate hostname and ownership rules
+  → resolve the tenant release service
+  → create or update DNS and Tunnel route
+  → attach the selected Access policy profile
+  → bind connector credentials through Vault
+  → verify edge and origin readiness
+  → mark the tenant route active
+</code></pre>
+          <p>The reverse path matters just as much. Suspending a tenant should revoke edge access before workloads are
+            removed. Offboarding should remove or disable Access applications, hostname routes, service credentials, and
+            DNS state according to policy.</p>
+          <p>OpenTenant can keep secrets out of the release manifest by storing Cloudflare API credentials, tunnel
+            tokens, and tenant service credentials in Vault. The release references the appropriate scope; an operator
+            materializes only what the connector or workload requires.</p>
+          <h2 id="security-and-operational-guardrails">Security and operational guardrails</h2>
+          <h3 id="minimize-cloudflare-api-permissions">Minimize Cloudflare API permissions</h3>
+          <p>Use scoped API tokens for the exact account and zone operations required by reconciliation. Separate
+            platform-wide connector administration from tenant route changes where possible.</p>
+          <h3 id="protect-connector-credentials">Protect connector credentials</h3>
+          <p>A remotely managed tunnel token authorizes a connector to run that tunnel. Store it in Vault and limit
+            which namespace and service account can receive it. Do not copy it into tenant values files or Git history.
+          </p>
+          <h3 id="default-deny-the-origin">Default-deny the origin</h3>
+          <p>Restrict inbound network paths so traffic reaches the service only through the intended connector and
+            cluster controls. Apply Kubernetes NetworkPolicies between <code>cloudflared</code> and tenant services
+            instead of allowing the connector namespace to reach every workload by default.</p>
+          <h3 id="separate-customer-and-operator-access">Separate customer and operator access</h3>
+          <p>Customer-facing application routes, tenant administration, and platform operations should have independent
+            Access applications or policy profiles. A broad policy reused everywhere turns configuration convenience
+            into shared blast radius.</p>
+          <h3 id="test-suspension-and-rollback">Test suspension and rollback</h3>
+          <p>Verify that disabling a tenant removes access promptly, that failed edge changes do not publish an unready
+            service, and that the last known-good route can be restored without exposing a different tenant.</p>
+          <h2 id="evaluation-checklist">Evaluation checklist</h2>
+          <ul>
+            <li>The Kubernetes origin has no unintended public ingress path.</li>
+            <li><code>cloudflared</code> runs as a controlled deployment with an intentional replica count.</li>
+            <li>Connector token delivery is Vault-backed and namespace-scoped.</li>
+            <li>Every hostname maps to one expected tenant service.</li>
+            <li>Administrative routes require stronger policy than public routes.</li>
+            <li>Service-to-service routes use Service Auth rather than permanent Bypass.</li>
+            <li>Tenant disablement revokes edge access before destructive cleanup.</li>
+            <li>Cloudflare API operations and Access decisions are auditable.</li>
+            <li>Negative tests prove that one tenant's identity and hostname cannot reach another tenant's service.</li>
+          </ul>
+          <h2 id="sources">Sources</h2>
+          <ul>
+            <li><a href="https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/"
+                rel="noopener noreferrer nofollow">Cloudflare Tunnel</a></li>
+            <li><a
+                href="https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/deployment-guides/kubernetes/"
+                rel="noopener noreferrer nofollow">Deploy Cloudflare Tunnel on Kubernetes</a></li>
+            <li><a href="https://developers.cloudflare.com/cloudflare-one/access-controls/policies/"
+                rel="noopener noreferrer nofollow">Cloudflare Access policies</a></li>
+          </ul>
+          <p>OpenTenant's contribution is the repeatability: the edge route, access policy, release, and secret scope
+            move together as one tenant lifecycle instead of four separate operational tickets.</p>
+        </div>
+      </article>
+      <aside>
+        <div class="sticky top-28 rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+          <div class="mb-2 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">Source
+            check</div>
+          <p class="mb-5 text-sm leading-relaxed text-ploy-text-secondary">Every published guide must cite upstream
+            documentation and use a tested deployment example.</p><a
+            href="https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/deployment-guides/kubernetes/"
+            class="text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Upstream source
+            →</a>
+        </div>
+      </aside>
+    </div>
+    <section class="border-y border-ploy-border-primary bg-ploy-background-secondary py-16 text-center">
+      <div class="mx-auto max-w-[42rem] px-6">
+        <h2 class="mb-4 text-balance text-3xl font-extrabold">From chart installation to tenant operations.</h2>
+        <p class="mb-7 text-ploy-text-secondary">See how OpenTenant models release, secrets, domain, and lifecycle
+          boundaries.</p><a href="../../index.html#evaluation"
+          class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-button font-button text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ploy-accent-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ploy-background-primary disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-ploy-button-primary-border bg-ploy-button-primary-background text-ploy-button-primary-text hover:bg-ploy-button-primary-background/90 h-10 px-4">Inspect
+          Architecture</a>
+      </div>
+    </section>
+  </main>
+  <footer
+    class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm min-w-0 min-h-0 py-9 border-t">
+    <div class="min-w-0 min-h-0 max-w-[68.75rem] flex flex-wrap justify-between gap-4 mx-auto px-6 footer-inner w-full">
+      <div>© 2026 OpenTenant — open source under MIT</div>
+      <div><a href="https://github.com/opentenant/platform"
+          class="text-ploy-text-secondary min-w-0 min-h-0 ml-[1.375rem] hover:text-ploy-text-primary">GitHub</a></div>
+    </div>
+  </footer>
+  <meta name="ploy-ploydb-reads"
+    content="[{&quot;ployDbId&quot;:&quot;pdb_d8e097e350704072a94c&quot;,&quot;tableId&quot;:&quot;tbl_096668abfd1e4613b96a&quot;,&quot;filters&quot;:[{&quot;field&quot;:&quot;fld_f6d93c32653d4e42&quot;,&quot;value&quot;:&quot;cloudflare-zero-trust-per-tenant-kubernetes&quot;}],&quot;rowCount&quot;:1,&quot;servedSample&quot;:false}]">
+  <script>(function () { var els = document.querySelectorAll("main section,main article,body>section"); els.forEach(function (el) { el.classList.add("portable-reveal") }); if ("IntersectionObserver" in window) { var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("is-visible"); io.unobserve(e.target) } }) }, { rootMargin: "0px 0px -12% 0px" }); els.forEach(function (el) { io.observe(el) }) } else { els.forEach(function (el) { el.classList.add("is-visible") }) } var f = document.querySelector("form"); if (f) f.addEventListener("submit", function (e) { e.preventDefault(); location.href = document.documentElement.dataset.liveLogin }); Array.from(document.querySelectorAll("button")).filter(function (b) { return ["GitHub", "GitLab"].includes(b.textContent.trim()) }).forEach(function (b) { b.addEventListener("click", function () { location.href = document.documentElement.dataset.liveLogin }) }) })();</script>
+</body>
+
+</html>

@@ -2,60 +2,72 @@
 # opentenant-reseller.yaml
 # OpenTenant v3.0 — Canonical Delegation Blueprint
 #
-# This file defines the RESELLER TREE: partners who operate their own
+# This file defines the reseller tree: partners who operate their own
 # OpenTenant instances on top of ours, reselling to their own tenants,
 # with their own template registries, recursively.
 #
-# Transpiler output per node:
-#   - K8s namespace + RBAC scoped to node depth
-#   - Vault namespace + policy subtree (parent CANNOT read child secrets)
-#   - Supabase schema + RLS anchored to node_id chain
-#   - Argo CD ApplicationSet generator (recursive)
-#   - Billing ledger entry (revenue split per hop)
+# Compiler-derived properties:
+#   - parent
+#   - depth
+#   - ancestry
+#
+# Explicit deployment properties:
+#   - Vault namespace
+#   - Kubernetes placement
+#   - tenant cloud/region placement
+#   - delegated template policies
 # ============================================================================
+
 ---
 version: "opentenant.org/v3.0"
 
 # ----------------------------------------------------------------------------
-# 0. ROOT — The Operator of Operators (you)
+# 0. ROOT — The Operator of Operators
 # ----------------------------------------------------------------------------
 root:
   id: "opentenant-core"
   domain: "opentenant.io"
-  # Hard ceiling — the ONLY schema-enforced depth limit in the system
+
   max_depth: 16
-  # Royalty model: each hop down the tree takes a cut
+
   royalty_schedule:
-    - depth: 1   # direct resellers
+    - depth: 1
       keep_pct: 70
       pass_up_pct: 30
-    - depth: 2   # sub-resellers
+
+    - depth: 2
       keep_pct: 55
-      pass_up_pct: 45   # 30 to root, 15 to depth-1 parent
+      pass_up_pct: 45
+
     - depth: "default"
       keep_pct: 50
       pass_up_pct: 50
 
 # ----------------------------------------------------------------------------
-# 1. GLOBAL TEMPLATE REGISTRY — What everyone at depth 0 may resell
+# 1. GLOBAL TEMPLATE REGISTRY
 # ----------------------------------------------------------------------------
 template_registry:
+
   - id: "route-optimization"
     engine: "helm"
     chart: "oci://registry.opentenant.io/route-optimization"
     version: "2.2.0"
-    # Resale policy — can partners re-publish this to THEIR tenants?
+
     resale:
       allowed: true
-      white_label: true        # partner may strip our branding
-      rebrand_fields: ["name", "description", "icon"]
-      price_floor: 149.00      # they cannot resell below this
-      royalty_per_seat: 12.00  # flows up the tree per hop
+      white_label: true
+      rebrand_fields:
+        - "name"
+        - "description"
+        - "icon"
+      price_floor: 149.00
+      royalty_per_seat: 12.00
 
   - id: "driver-app"
     engine: "helm"
     chart: "oci://registry.opentenant.io/driver-api"
     version: "1.3.0"
+
     resale:
       allowed: true
       white_label: true
@@ -66,82 +78,87 @@ template_registry:
     engine: "helm"
     chart: "oci://registry.opentenant.io/fleet-maintenance"
     version: "1.9.0"
+
     resale:
-      allowed: false   # root-only product — creates exclusivity
+      allowed: false
 
 # ----------------------------------------------------------------------------
-# 2. DELEGATION TREE — Recursion lives here
-#     Each reseller is a full OpenTenant node: brand, vault, registry, children.
+# 2. DELEGATION TREE
+#
+# A node's position in `children:` determines its parent, depth and ancestry.
 # ----------------------------------------------------------------------------
 delegation_tree:
 
   # ==========================================================================
-  # DEPTH 1 — Your direct partners
+  # DEPTH 1 — Direct partner
   # ==========================================================================
   - id: "logifleet-partner"
     kind: "reseller"
-    parent: "opentenant-core"
-    depth: 1
     enabled: true
 
-    # Their brand — total whitelabel
     brand:
       name: "LogiFleet Platform"
       domain: "*.logifleet.io"
       theme: "industrial-teal"
       support_email: "support@logifleet.io"
 
-    # Their crypto subtree — even WE cannot read inside without breaking glass
     vault_namespace: "opentenant/resellers/logifleet"
-    #他们的 isolated compute
+
     kubernetes:
-      cluster_pool: "shared-us-east"     # or "dedicated" for enterprise partners
+      cluster_pool: "shared-us-east"
       namespace_prefix: "lf-"
       resource_quotas:
         cpu: "200"
         memory: "400Gi"
 
-    # Their OWN registry — charts they authored, published to THEIR namespace.
-    # This is the "infinite depth" hook: they compose OUR templates
-    # into THEIR composite products.
+    # Templates authored/published by this reseller.
     template_registry:
+
       - id: "lf-logistics-suite"
         engine: "helm"
         chart: "oci://registry.logifleet.io/logistics-suite"
         version: "4.0.1"
-        # It's a COMPOSITE — it pulls in root templates as dependencies
+
         composes:
-          - template: "route-optimization"   # from root registry (royalty applies)
-          - template: "driver-app"           # from root registry (royalty applies)
+          - template: "route-optimization"
+          - template: "driver-app"
+
         resale:
           allowed: true
           white_label: true
           price_floor: 399.00
-          royalty_per_seat: 25.00   # their margin on top of upstream royalties
+          royalty_per_seat: 25.00
 
-    # Their own tenants — FULL tenant schema, identical to v2.3
+    # Customers operated by LogiFleet.
     tenants:
+
       - id: "carrier-mx"
         tier: "premium"
+        enabled: true
+
         namespace: "lf-tenant-carrier-mx"
+
+        placement:
+          cloud: "aws"
+          region: "us-east-1"
+
         subscriptions:
           - template: "lf-logistics-suite"
+
         org_chart:
           - id: "operations"
             roles:
               - id: "dispatch"
-                members: ["disp@carrier-mx.com"]
+                members:
+                  - "disp@carrier-mx.com"
 
-    # And their children — they may resell FURTHER
+    # ========================================================================
+    # DEPTH 2 — Regional partners
+    # ========================================================================
     children:
 
-      # ======================================================================
-      # DEPTH 2 — LogiFleet's regional sub-partners
-      # ======================================================================
       - id: "logifleet-mexico"
         kind: "reseller"
-        parent: "logifleet-partner"
-        depth: 2
         enabled: true
 
         brand:
@@ -151,36 +168,54 @@ delegation_tree:
           locale: "es-MX"
 
         vault_namespace: "opentenant/resellers/logifleet/children/mexico"
+
         kubernetes:
           cluster_pool: "shared-latam"
           namespace_prefix: "lfmx-"
 
-        # They can only resell what their parent delegated to them
-        inherited_registry_policy:
+        # Policies delegated to this node by LogiFleet.
+        delegated_templates:
+
           - template: "lf-logistics-suite"
             resale:
               allowed: true
               white_label: true
-              price_floor: 450.00        # parent sets their floor
+              price_floor: 450.00
               royalty_per_seat: 40.00
 
         tenants:
+
           - id: "transportes-norte"
             tier: "standard"
+            enabled: true
+
+            namespace: "lfmx-tenant-transportes-norte"
+
+            placement:
+              cloud: "gcp"
+              region: "us-central1"
+
             subscriptions:
               - template: "lf-logistics-suite"
 
-        # They COULD have children too — depth 3, 4, 5...
-        # The schema is identical. The compiler doesn't care.
         children: []
 
-      # ======================================================================
-      # DEPTH 2 — another branch
-      # ======================================================================
+      # ========================================================================
+      # DEPTH 2 — Reserved regional partner slot
+      # ========================================================================
       - id: "logifleet-brazil"
         kind: "reseller"
-        parent: "logifleet-partner"
-        depth: 2
-        enabled: false   # not yet onboarded — schema reserves the slot
+        enabled: false
+
+        brand:
+          name: "LogiFleet Brazil"
+          domain: "*.logifleet.com.br"
+          theme: "industrial-teal-br"
+
         vault_namespace: "opentenant/resellers/logifleet/children/brazil"
+
+        kubernetes:
+          cluster_pool: "shared-latam"
+          namespace_prefix: "lfbr-"
+
         children: []

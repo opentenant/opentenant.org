@@ -33,18 +33,11 @@ interface NodeDef {
   template_registry?: TemplateDef[];
   // v3.0 uses this for explicit downstream policy metadata. The effective
   // registry still comes from inherited template registries plus local entries.
-  delegated_templates?: {
+  inherited_registry_policy?: {
     template: string;
     resale?: TemplateDef["resale"];
   }[];
-  tenants?: {
-    id: string;
-    tier?: string;
-    namespace?: string;
-    enabled?: boolean;
-    placement?: { cloud?: string; region?: string };
-    subscriptions?: { template: string }[];
-  }[];
+  tenants?: { id: string; tier?: string; subscriptions?: { template: string }[] }[];
   children?: NodeDef[];
 }
 
@@ -169,74 +162,9 @@ class VisualCompiler {
         );
       }
 
-      // Start from the templates the parent chain makes visible.
-      const effective = new Map<string, TemplateDef>(inheritedTemplates);
-
-      // A downstream reseller can only receive an explicit delegated policy for
-      // a template that is already visible upstream. The delegation may tighten
-      // commercial terms (e.g. raise price_floor / royalty_per_seat) without
-      // changing the underlying template identity.
-      for (const delegation of n.delegated_templates ?? []) {
-        const upstream = effective.get(delegation.template);
-        if (!upstream) {
-          this.fail(
-            `Delegated template '${delegation.template}' at '${n.id}' is not available upstream`,
-          );
-          continue;
-        }
-
-        if (upstream.resale?.allowed !== true) {
-          this.fail(
-            `Delegated template '${delegation.template}' at '${n.id}' is not resellable upstream`,
-          );
-          continue;
-        }
-
-        const delegatedResale = delegation.resale ?? {};
-        const upstreamFloor = upstream.resale?.price_floor;
-        const delegatedFloor = delegatedResale.price_floor;
-
-        if (
-          upstreamFloor != null &&
-          delegatedFloor != null &&
-          delegatedFloor < upstreamFloor
-        ) {
-          this.fail(
-            `Delegated template '${delegation.template}' at '${n.id}' undercuts upstream price_floor: ${delegatedFloor} < ${upstreamFloor}`,
-          );
-        }
-
-        effective.set(delegation.template, {
-          ...upstream,
-          resale: {
-            ...upstream.resale,
-            ...delegatedResale,
-          },
-          inherited: true,
-          inherited_from: upstream.inherited_from ?? "upstream",
-        });
-      }
-
-      // Local templates are the node's own published products and can shadow an
-      // inherited template only when their commercial floor remains compatible.
+      const effective = new Map(inheritedTemplates);
       for (const t of n.template_registry ?? []) {
-        const inherited = effective.get(t.id);
-        const inheritedFloor = inherited?.resale?.price_floor;
-        const localFloor = t.resale?.price_floor;
-
-        if (
-          inherited &&
-          inheritedFloor != null &&
-          localFloor != null &&
-          localFloor < inheritedFloor
-        ) {
-          this.fail(
-            `Template '${t.id}' at '${n.id}' undercuts inherited price_floor: ${localFloor} < ${inheritedFloor}`,
-          );
-        }
-
         effective.set(t.id, t);
-
         for (const comp of t.composes ?? []) {
           const upstream = effective.get(comp.template);
           if (!upstream) {
@@ -251,9 +179,8 @@ class VisualCompiler {
         }
       }
 
-      const localIds = new Set((n.template_registry ?? []).map((t) => t.id));
       const templates = [...effective.values()].filter(
-        (t) => t.resale?.allowed !== false || localIds.has(t.id),
+        (t) => t.resale?.allowed !== false || (n.template_registry ?? []).some((x) => x.id === t.id),
       );
       const tenants = (n.tenants ?? []).map((t) => t.id);
       const h =
@@ -280,34 +207,14 @@ class VisualCompiler {
       this.nodes.push(v);
       this.byId.set(n.id, v);
 
-      // Vault namespaces are hierarchical security paths, not node-id slugs.
-      // Example:
-      //   logifleet-partner -> opentenant/resellers/logifleet
-      //   logifleet-mexico  -> opentenant/resellers/logifleet/children/mexico
-      // The invariant is ancestry containment, not `vault.includes(node.id)`.
-      const normalizePath = (value: string): string =>
-        value.replace(/^\/+|\/+$/g, "");
-
-      const vault = n.vault_namespace ? normalizePath(n.vault_namespace) : "";
-      const parentNode = this.byId.get(parent);
-      const parentVault = parentNode?.vault ? normalizePath(parentNode.vault) : "";
-
-      if (vault) {
-        if (depth === 1) {
-          if (!(vault === "opentenant" || vault.startsWith("opentenant/"))) {
-            this.fail(
-              `Vault namespace for '${n.id}' must live under 'opentenant/': '${n.vault_namespace}'`,
-            );
-          }
-        } else if (
-          parentVault &&
-          vault !== parentVault &&
-          !vault.startsWith(`${parentVault}/`)
-        ) {
-          this.fail(
-            `Vault path mismatch at '${n.id}': '${n.vault_namespace}' is not under parent Vault namespace '${parentNode?.vault}'`,
-          );
-        }
+      const expectedVaultFragment = [...path, n.id].join("/");
+      if (n.vault_namespace && !n.vault_namespace.includes(n.id)) {
+        this.fail(
+          `Vault namespace for '${n.id}' does not contain its node id: '${n.vault_namespace}'`,
+        );
+      }
+      if (expectedVaultFragment && n.vault_namespace && !n.vault_namespace.includes(n.id)) {
+        this.fail(`Vault path mismatch at '${n.id}'`);
       }
 
       for (const tenant of n.tenants ?? []) {

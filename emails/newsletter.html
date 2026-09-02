@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="x-apple-disable-message-reformatting">
+  <title>OpenTenant Security Dispatch</title>
+  <style>
+    @media only screen and (max-width: 660px) {
+      .email-shell { width: 100% !important; }
+      .mobile-pad { padding-left: 24px !important; padding-right: 24px !important; }
+      .hero-title { font-size: 38px !important; line-height: 41px !important; }
+      .article-number { width: 44px !important; }
+      .full-button { display:block !important;width:100% !important;box-sizing:border-box !important; }
+    }
+  </style>
+</head>
+<body style="margin:0;padding:0;background:#090d16;color:#eef2f6;font-family:Arial,Helvetica,sans-serif;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">Five implementation guides for tenant isolation, secrets, edge access, networks, and TLS.</div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#090d16;">
+    <tr>
+      <td align="center" style="padding:32px 14px;">
+        <table role="presentation" class="email-shell" width="640" cellspacing="0" cellpadding="0" border="0" style="width:640px;max-width:640px;">
+          <tr>
+            <td class="mobile-pad" style="padding:0 36px 26px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td>
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                      <tr>
+                        <td width="34" height="34" align="center" valign="middle" style="width:34px;height:34px;background:#2dd4a7;border-radius:7px;color:#082018;font:700 11px/34px Arial,Helvetica,sans-serif;">OT</td>
+                        <td style="padding-left:11px;color:#eef2f6;font-size:15px;font-weight:700;">OpenTenant</td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td align="right" style="color:#6f7d90;font-family:'Courier New',Courier,monospace;font-size:10px;letter-spacing:1.3px;text-transform:uppercase;">Security dispatch / {{issue_date}}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="border-top:1px solid #263143;border-bottom:1px solid #263143;background:#0d1320;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td class="mobile-pad" style="padding:52px 44px 42px;">
+                    <div style="margin:0 0 16px;color:#2dd4a7;font-family:'Courier New',Courier,monospace;font-size:11px;line-height:16px;letter-spacing:1.6px;text-transform:uppercase;">Enterprise security series</div>
+                    <h1 class="hero-title" style="margin:0;color:#f5f7fa;font-size:50px;line-height:51px;letter-spacing:-2px;font-weight:800;">Tenant infrastructure, explained end to end.</h1>
+                    <p style="margin:24px 0 0;max-width:520px;color:#9ba8ba;font-size:16px;line-height:27px;">This edition traces the controls between a tenant declaration and a running environment: Vault identity, default-deny networking, outbound-only edge access, targeted rotation, and verified TLS.</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="mobile-pad" style="padding:42px 36px 12px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td class="article-number" width="58" valign="top" style="width:58px;padding-top:3px;color:#2dd4a7;font-family:'Courier New',Courier,monospace;font-size:11px;letter-spacing:1.2px;">01</td>
+                  <td style="padding:0 0 30px;border-bottom:1px solid #263143;">
+                    <h2 style="margin:0 0 10px;color:#eef2f6;font-size:22px;line-height:28px;letter-spacing:-.4px;">Kubernetes + Vault tenant isolation</h2>
+                    <p style="margin:0 0 16px;color:#9ba8ba;font-size:14px;line-height:23px;">Build the trust path from Kubernetes service account to Vault role, scoped secret path, namespace, and isolated Helm release.</p>
+                    <a href="https://opentenant.org/articles/kubernetes-vault-tenant-isolation-opentenant" style="color:#2dd4a7;font-size:13px;font-weight:700;text-decoration:none;">Read architecture →</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="article-number" width="58" valign="top" style="width:58px;padding-top:33px;color:#67a4ff;font-family:'Courier New',Courier,monospace;font-size:11px;letter-spacing:1.2px;">02</td>
+                  <td style="padding:30px 0;border-bottom:1px solid #263143;">
+                    <h2 style="margin:0 0 10px;color:#eef2f6;font-size:22px;line-height:28px;letter-spacing:-.4px;">Cloudflare Zero Trust per tenant</h2>
+                    <p style="margin:0 0 16px;color:#9ba8ba;font-size:14px;line-height:23px;">Use Access policy and an outbound-only Tunnel while keeping every hostname bound to one tenant service.</p>
+                    <a href="https://opentenant.org/articles/cloudflare-zero-trust-per-tenant-kubernetes" style="color:#2dd4a7;font-size:13px;font-weight:700;text-decoration:none;">Read architecture →</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="article-number" width="58" valign="top" style="width:58px;padding-top:33px;color:#2dd4a7;font-family:'Courier New',Courier,monospace;font-size:11px;letter-spacing:1.2px;">03</td>
+                  <td style="padding:30px 0;border-bottom:1px solid #263143;">
+                    <h2 style="margin:0 0 10px;color:#eef2f6;font-size:22px;line-height:28px;letter-spacing:-.4px;">NetworkPolicy default deny</h2>
+                    <p style="margin:0 0 16px;color:#9ba8ba;font-size:14px;line-height:23px;">Start isolated, then compile only the DNS, secrets, application, observability, and edge paths the release declares.</p>
+                    <a href="https://opentenant.org/articles/kubernetes-networkpolicy-per-tenant-default-deny" style="color:#2dd4a7;font-size:13px;font-weight:700;text-decoration:none;">Read architecture →</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="article-number" width="58" valign="top" style="width:58px;padding-top:33px;color:#67a4ff;font-family:'Courier New',Courier,monospace;font-size:11px;letter-spacing:1.2px;">04</td>
+                  <td style="padding:30px 0;border-bottom:1px solid #263143;">
+                    <h2 style="margin:0 0 10px;color:#eef2f6;font-size:22px;line-height:28px;letter-spacing:-.4px;">Vault secret rotation per tenant</h2>
+                    <p style="margin:0 0 16px;color:#9ba8ba;font-size:14px;line-height:23px;">Synchronize a new version, resolve the exact dependents, roll only those workloads, verify, then retire the old credential.</p>
+                    <a href="https://opentenant.org/articles/vault-secret-rotation-per-tenant-kubernetes" style="color:#2dd4a7;font-size:13px;font-weight:700;text-decoration:none;">Read architecture →</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="article-number" width="58" valign="top" style="width:58px;padding-top:33px;color:#2dd4a7;font-family:'Courier New',Courier,monospace;font-size:11px;letter-spacing:1.2px;">05</td>
+                  <td style="padding:30px 0 12px;">
+                    <h2 style="margin:0 0 10px;color:#eef2f6;font-size:22px;line-height:28px;letter-spacing:-.4px;">Tenant TLS + domain automation</h2>
+                    <p style="margin:0 0 16px;color:#9ba8ba;font-size:14px;line-height:23px;">Verify hostname ownership, reconcile Cloudflare DNS, attach the Gateway route, issue the certificate, and prove the public endpoint.</p>
+                    <a href="https://opentenant.org/articles/tenant-tls-custom-domain-automation" style="color:#2dd4a7;font-size:13px;font-weight:700;text-decoration:none;">Read architecture →</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="mobile-pad" style="padding:32px 36px 46px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#0d1320;border:1px solid #263143;">
+                <tr>
+                  <td style="padding:30px;">
+                    <div style="margin:0 0 10px;color:#2dd4a7;font-family:'Courier New',Courier,monospace;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;">OpenTenant control plane</div>
+                    <h2 style="margin:0;color:#eef2f6;font-size:24px;line-height:30px;">One tenant contract. Every operational boundary.</h2>
+                    <p style="margin:13px 0 22px;color:#9ba8ba;font-size:14px;line-height:23px;">See how OpenTenant turns existing deployment templates into isolated releases with scoped secrets, domains, and configuration.</p>
+                    <!--[if mso]>
+                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://opentenant.org/#evaluation" style="height:46px;v-text-anchor:middle;width:190px;" arcsize="12%" strokecolor="#2dd4a7" fillcolor="#2dd4a7"><w:anchorlock/><center style="color:#082018;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;">Inspect Architecture</center></v:roundrect>
+                    <![endif]-->
+                    <!--[if !mso]><!-- -->
+                    <a class="full-button" href="https://opentenant.org/#evaluation" style="display:inline-block;background:#2dd4a7;border:1px solid #2dd4a7;border-radius:7px;color:#082018;font-size:14px;line-height:18px;font-weight:700;text-decoration:none;text-align:center;padding:13px 22px;">Inspect Architecture</a>
+                    <!--<![endif]-->
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td class="mobile-pad" style="padding:0 36px;color:#6f7d90;font-size:11px;line-height:18px;">
+              <p style="margin:0 0 8px;">OpenTenant · Open-source tenant orchestration for Helm, Docker Compose, and PM2 applications.</p>
+              <p style="margin:0;"><a href="{{preferences_url}}" style="color:#91a1b6;text-decoration:underline;">Email preferences</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="{{unsubscribe_url}}" style="color:#91a1b6;text-decoration:underline;">Unsubscribe</a></p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

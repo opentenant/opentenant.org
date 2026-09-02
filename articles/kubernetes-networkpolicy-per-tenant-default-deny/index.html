@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html data-live-login="https://opentenant.org/login" lang="en" class="text-black dark" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml"
+        href="/favicon.svg">
+  <meta name="ploy-astro-starter-version" content="1.0.0">
+  <title>Kubernetes NetworkPolicy per Tenant: Building a Default-Deny Release Boundary — OpenTenant | </title>
+  <meta name="description"
+    content="How to generate default-deny NetworkPolicy for every tenant release while preserving only the DNS, secrets, observability, and edge paths each workload actually needs." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="canonical" href="https://www.opentenant.org/articles/kubernetes-networkpolicy-per-tenant-default-deny" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title"
+    content="Kubernetes NetworkPolicy per Tenant: Building a Default-Deny Release Boundary — OpenTenant |  " />
+  <meta property="og:site_name" content=" " />
+  <meta property="og:description"
+    content="How to generate default-deny NetworkPolicy for every tenant release while preserving only the DNS, secrets, observability, and edge paths each workload actually needs." />
+  <meta property="og:url"
+    content="https://www.opentenant.org/articles/kubernetes-networkpolicy-per-tenant-default-deny" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title"
+    content="Kubernetes NetworkPolicy per Tenant: Building a Default-Deny Release Boundary — OpenTenant |  " />
+  <meta name="twitter:description"
+    content="How to generate default-deny NetworkPolicy for every tenant release while preserving only the DNS, secrets, observability, and edge paths each workload actually needs." />
+  <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body class="bg-ploy-background-primary text-ploy-text-primary leading-[1.6] decoration-[rgb(230,237,243)] m-0"
+  style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+  <nav
+    class="border-solid border-ploy-border-primary bg-ploy-background-primary/80 min-w-0 min-h-0 sticky z-[100] backdrop-blur-md border-b top-0">
+    <div class="h-16 min-w-0 min-h-0 max-w-[68.75rem] flex justify-between items-center mx-auto px-6 nav-inner w-full">
+      
+                <a href="/" aria-label="OpenTenant home" class="logo"><span
+                        class="brand-logo inline-flex items-center gap-2 "><img src="/favicon.svg" width="34"/><span
+                            class="brand-logo__wordmark text-lg font-bold tracking-[-0.02em] text-ploy-text-primary">OpenTenant</span></span></a>
+      <div class="flex items-center gap-6 nav-links"><a href="../index.html"
+          class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Articles</a><a
+          href="#cases"
+          class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Use
+          Cases</a><a href="https://github.com/opentenant/platform"
+          class="border-solid border-ploy-border-primary text-ploy-text-secondary font-semibold text-sm block transition-[transform,translate,scale,rotate,box-shadow] px-[1.375rem] py-2.5 rounded-lg hover:text-ploy-text-primary border">GitHub</a><a
+          href="/login"
+          class="bg-ploy-button-primary-background text-ploy-button-primary-text font-semibold text-sm block transition-shadow px-[1.375rem] py-2.5 rounded-lg hover:shadow-lg">Login</a>
+      </div>
+    </div>
+  </nav>
+  <main class="article-page">
+    <header class="border-b border-ploy-border-primary pb-16 pt-[6.25rem]">
+      <div class="mx-auto max-w-[68.75rem] px-6"><a href="../index.html"
+          class="mb-8 inline-block font-mono text-xs uppercase tracking-[0.14em] text-ploy-accent-primary-500">←
+          Technical library</a>
+        <div class="grid gap-10 lg:grid-cols-[1fr_18rem] lg:items-end">
+          <div>
+            <div
+              class="mb-5 flex flex-wrap gap-3 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
+              <span>architecture</span><span>security</span><span class="text-ploy-text-secondary">draft</span></div>
+            <h1
+              class="max-w-[52rem] text-balance text-[2.7rem] font-extrabold leading-[1.08] tracking-[-0.03em] md:text-[4rem]">
+              Kubernetes NetworkPolicy per Tenant: Building a Default-Deny Release Boundary</h1>
+          </div>
+          <dl class="divide-y divide-ploy-border-primary border-y border-ploy-border-primary text-sm">
+            <div class="flex justify-between gap-4 py-3">
+              <dt class="text-ploy-text-secondary">Chart</dt>
+              <dd>Kubernetes NetworkPolicy</dd>
+            </div>
+            <div class="flex justify-between gap-4 py-3">
+              <dt class="text-ploy-text-secondary">Intent</dt>
+              <dd>mofu</dd>
+            </div>
+            <div class="flex justify-between gap-4 py-3">
+              <dt class="text-ploy-text-secondary">Author</dt>
+              <dd>OpenTenant</dd>
+            </div>
+          </dl>
+        </div>
+        <p class="mt-8 max-w-[48rem] text-lg leading-relaxed text-ploy-text-secondary">How to generate default-deny
+          NetworkPolicy for every tenant release while preserving only the DNS, secrets, observability, and edge paths
+          each workload actually needs.</p>
+      </div>
+    </header>
+    <section class="border-b border-ploy-border-primary bg-ploy-background-secondary py-14 md:py-16"
+      aria-labelledby="kubernetes-networkpolicy-per-tenant-default-deny-diagram-title">
+      <div class="mx-auto max-w-[68.75rem] px-6">
+        <div class="mb-8 grid gap-5 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
+          <div>
+            <p class="mb-3 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ploy-accent-primary-500">
+              Default-deny policy graph</p>
+            <h2 id="kubernetes-networkpolicy-per-tenant-default-deny-diagram-title"
+              class="max-w-[34rem] text-balance text-3xl font-extrabold leading-tight tracking-[-0.025em] md:text-[2.35rem]">
+              Every allowed connection is compiled, not assumed.</h2>
+          </div>
+          <p class="max-w-[38rem] text-base leading-relaxed text-ploy-text-secondary md:text-lg">OpenTenant starts from
+            isolation, then restores only the DNS, secrets, edge, and application paths declared by the release.</p>
+        </div>
+        <div
+          class="article-architecture__flow grid gap-3 lg:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr_auto_1fr] lg:items-stretch">
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-primary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-lock-keyhole size-5" aria-hidden="true">
+                  <circle cx="12" cy="16" r="1"></circle>
+                  <rect x="3" y="10" width="18" height="12" rx="2"></rect>
+                  <path d="M7 10V7a5 5 0 0 1 10 0v3"></path>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">Baseline
+                </div>
+                <h3 class="mt-2 text-base font-bold leading-snug">Deny ingress + egress</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">Every selected tenant pod begins
+                  isolated</p>
+              </div>
+            </div>
+            <div class="article-architecture__connector flex items-center justify-center text-ploy-text-secondary"
+              aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-down size-4 lg:hidden" aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="m19 12-7 7-7-7"></path>
+              </svg><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-right hidden size-4 lg:block" aria-hidden="true">
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg></div>
+          </div>
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-secondary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-waypoints size-5" aria-hidden="true">
+                  <path d="m10.586 5.414-5.172 5.172"></path>
+                  <path d="m18.586 13.414-5.172 5.172"></path>
+                  <path d="M6 12h12"></path>
+                  <circle cx="12" cy="20" r="2"></circle>
+                  <circle cx="12" cy="4" r="2"></circle>
+                  <circle cx="20" cy="12" r="2"></circle>
+                  <circle cx="4" cy="12" r="2"></circle>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-secondary-500">Cluster
+                  service</div>
+                <h3 class="mt-2 text-base font-bold leading-snug">DNS resolution</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">TCP and UDP 53 reach the discovered
+                  resolver</p>
+              </div>
+            </div>
+            <div class="article-architecture__connector flex items-center justify-center text-ploy-text-secondary"
+              aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-down size-4 lg:hidden" aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="m19 12-7 7-7-7"></path>
+              </svg><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-right hidden size-4 lg:block" aria-hidden="true">
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg></div>
+          </div>
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-primary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-file-key size-5" aria-hidden="true">
+                  <path
+                    d="M10.65 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v10.1">
+                  </path>
+                  <path d="M14 2v5a1 1 0 0 0 1 1h5"></path>
+                  <path d="m10 15 1 1"></path>
+                  <path d="m11 14-4.586 4.586"></path>
+                  <circle cx="5" cy="20" r="2"></circle>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">Secret
+                  plane</div>
+                <h3 class="mt-2 text-base font-bold leading-snug">Vault delivery</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">Only the chosen operator or agent path
+                  is opened</p>
+              </div>
+            </div>
+            <div class="article-architecture__connector flex items-center justify-center text-ploy-text-secondary"
+              aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-down size-4 lg:hidden" aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="m19 12-7 7-7-7"></path>
+              </svg><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-right hidden size-4 lg:block" aria-hidden="true">
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg></div>
+          </div>
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-secondary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-network size-5" aria-hidden="true">
+                  <rect x="16" y="16" width="6" height="6" rx="1"></rect>
+                  <rect x="2" y="16" width="6" height="6" rx="1"></rect>
+                  <rect x="9" y="2" width="6" height="6" rx="1"></rect>
+                  <path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"></path>
+                  <path d="M12 12V8"></path>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-secondary-500">
+                  Application graph</div>
+                <h3 class="mt-2 text-base font-bold leading-snug">Declared dependencies</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">Component labels and ports define
+                  east-west traffic</p>
+              </div>
+            </div>
+            <div class="article-architecture__connector flex items-center justify-center text-ploy-text-secondary"
+              aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-down size-4 lg:hidden" aria-hidden="true">
+                <path d="M12 5v14"></path>
+                <path d="m19 12-7 7-7-7"></path>
+              </svg><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-right hidden size-4 lg:block" aria-hidden="true">
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg></div>
+          </div>
+          <div class="contents">
+            <div
+              class="article-architecture__node flex min-h-[11.5rem] flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+              <div
+                class="flex size-10 items-center justify-center rounded-lg border border-ploy-border-primary bg-ploy-background-primary text-ploy-accent-primary-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-route size-5" aria-hidden="true">
+                  <circle cx="6" cy="19" r="3"></circle>
+                  <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path>
+                  <circle cx="18" cy="5" r="3"></circle>
+                </svg></div>
+              <div class="mt-8">
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">Edge
+                </div>
+                <h3 class="mt-2 text-base font-bold leading-snug">Tenant ingress</h3>
+                <p class="mt-2 text-xs leading-relaxed text-ploy-text-secondary">Gateway or tunnel reaches the target
+                  service only</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="mt-7 flex flex-col gap-2 border-t border-ploy-border-primary pt-5 font-mono text-[0.68rem] text-ploy-text-secondary md:flex-row md:flex-wrap md:gap-x-7">
+          <span>CNI enforcement → negative test</span><span>tenant A ↛ tenant B</span><span>policy change → release
+            verification</span></div>
+      </div>
+    </section>
+    <div class="mx-auto grid max-w-[68.75rem] gap-12 px-6 py-16 lg:grid-cols-[13rem_minmax(0,1fr)_12rem]">
+      <aside class="hidden lg:block">
+        <div class="sticky top-28">
+          <div class="mb-4 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">On this
+            page</div>
+          <nav class="space-y-3 text-sm text-ploy-text-secondary"><a href="#direct-answer"
+              class="block hover:text-ploy-text-primary">Direct answer</a><a
+              href="#what-kubernetes-networkpolicy-controls" class="block hover:text-ploy-text-primary">What Kubernetes
+              NetworkPolicy controls</a><a href="#start-each-tenant-from-default-deny"
+              class="block hover:text-ploy-text-primary">Start each tenant from default deny</a><a
+              href="#restore-dns-deliberately" class="block hover:text-ploy-text-primary">Restore DNS deliberately</a><a
+              href="#compile-the-release-graph-into-allow-rules" class="block hover:text-ploy-text-primary">Compile the
+              release graph into allow rules</a><a href="#label-integrity-is-part-of-the-boundary"
+              class="block hover:text-ploy-text-primary">Label integrity is part of the boundary</a><a
+              href="#what-networkpolicy-does-not-solve" class="block hover:text-ploy-text-primary">What NetworkPolicy
+              does not solve</a><a href="#how-opentenant-automates-policy-safely"
+              class="block hover:text-ploy-text-primary">How OpenTenant automates policy safely</a><a
+              href="#verification-checklist" class="block hover:text-ploy-text-primary">Verification checklist</a><a
+              href="#sources" class="block hover:text-ploy-text-primary">Sources</a></nav>
+        </div>
+      </aside>
+      <article class="min-w-0">
+        <div class="prose prose-invert ploy-richtext max-w-none prose-headings:text-balance">
+          <h1 id="kubernetes-networkpolicy-defaults-for-tenant-releases">Kubernetes NetworkPolicy defaults for tenant
+            releases</h1>
+          <h2 id="direct-answer">Direct answer</h2>
+          <p>Kubernetes pods are non-isolated by default. A tenant namespace does not become a network boundary until an
+            enforcing CNI applies NetworkPolicy resources that select its pods. OpenTenant automates the safer pattern:
+            every tenant release starts with default-deny ingress and egress, then receives narrow allow rules compiled
+            from the services, secret delivery, DNS, observability, and edge routes declared for that tenant.</p>
+          <p>The result is not “a NetworkPolicy.” It is a reproducible policy set tied to one release and tested against
+            the connections that release requires.</p>
+          <h2 id="what-kubernetes-networkpolicy-controls">What Kubernetes NetworkPolicy controls</h2>
+          <p><a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/"
+              rel="noopener noreferrer nofollow">Kubernetes NetworkPolicy</a> controls layer 3 and layer 4 traffic
+            involving pods. Rules select peers using pod labels, namespace labels, and IP blocks, then constrain ports
+            and protocols.</p>
+          <p>Two prerequisites are easy to miss:</p>
+          <ol>
+            <li>The cluster must use a network plugin that enforces NetworkPolicy. Creating resources without an
+              enforcing implementation has no effect.</li>
+            <li>Ingress and egress isolation are independent. A pod becomes isolated in a direction only when a policy
+              selects it for that direction.</li>
+          </ol>
+          <p>Policies are additive rather than ordered. If several policies select a pod, the allowed traffic is the
+            union of their rules. For pod-to-pod traffic, the source egress policy and destination ingress policy must
+            both allow the connection.</p>
+          <h2 id="start-each-tenant-from-default-deny">Start each tenant from default deny</h2>
+          <p>Kubernetes' multi-tenancy guidance recommends a default policy that denies pod communication, followed by
+            explicit DNS and workload rules. A baseline for a tenant namespace can select every pod and isolate both
+            directions:</p>
+          <pre><code class="language-yaml">apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: tenant-acme
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+</code></pre>
+          <p>This is intentionally disruptive. Existing charts often assume unrestricted east-west and outbound traffic.
+            That is why OpenTenant treats policy as part of release compilation, not a cluster-wide switch applied after
+            production traffic exists.</p>
+          <h2 id="restore-dns-deliberately">Restore DNS deliberately</h2>
+          <p>Default-deny egress can prevent name resolution. The tenant policy set must allow UDP and TCP DNS traffic
+            to the actual DNS pods or service used by the cluster.</p>
+          <p>Avoid copying an environment-specific label selector blindly. CoreDNS labels and namespaces vary.
+            OpenTenant deployment profiles should discover or declare the DNS target, render the matching rule, and
+            verify resolution from a tenant pod.</p>
+          <pre><code class="language-yaml">apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns
+  namespace: tenant-acme
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - { protocol: UDP, port: 53 }
+        - { protocol: TCP, port: 53 }
+</code></pre>
+          <h2 id="compile-the-release-graph-into-allow-rules">Compile the release graph into allow rules</h2>
+          <p>A tenant chart typically needs a small number of connection classes.</p>
+          <h3 id="edge-ingress">Edge ingress</h3>
+          <p>Allow traffic from the Gateway, ingress controller, or <code>cloudflared</code> connector to only the
+            tenant service ports. A broad namespace allow would let the edge plane reach every pod; select the actual
+            workload labels instead.</p>
+          <h3 id="intra-release-traffic">Intra-release traffic</h3>
+          <p>Allow frontends to APIs, APIs to databases, and workers to queues based on component labels and ports. Keep
+            each edge directional. “Everything in the namespace may talk to everything” is simpler, but it removes much
+            of the value of policy.</p>
+          <h3 id="secret-delivery">Secret delivery</h3>
+          <p>Vault Agent sidecars, CSI providers, Vault Secrets Operator, and External Secrets Operator have different
+            network paths. An operator may fetch secrets from its own namespace and write Kubernetes Secrets through the
+            API server, while an injected agent connects from each application pod to Vault. The policy must match the
+            selected delivery model.</p>
+          <h3 id="observability">Observability</h3>
+          <p>Declare whether metrics are scraped inbound, logs are pushed outbound, or telemetry uses an in-cluster
+            collector. Do not open all egress because the application “needs monitoring.”</p>
+          <h3 id="approved-external-dependencies">Approved external dependencies</h3>
+          <p>Kubernetes NetworkPolicy uses IP blocks for external networks; it does not natively express arbitrary DNS
+            names. SaaS endpoints with changing IP ranges may require a CNI extension, egress gateway, proxy, or another
+            policy layer. OpenTenant should mark unsupported hostname-only dependencies instead of pretending a static
+            CIDR is durable.</p>
+          <h2 id="label-integrity-is-part-of-the-boundary">Label integrity is part of the boundary</h2>
+          <p>Policies trust labels. If a tenant-controlled workload can add the label used by an edge connector or
+            privileged service, it may gain access that the author did not intend.</p>
+          <p>OpenTenant should reserve platform labels, render them from the trusted tenant identity, and use admission
+            policy to stop tenant workloads from claiming protected identities. Namespace labels used by
+            <code>namespaceSelector</code> need the same treatment.</p>
+          <p>Be especially careful with <code>{}</code> as a <code>namespaceSelector</code>: Kubernetes multi-tenancy
+            guidance warns against broad empty namespace selectors where cross-namespace traffic is allowed.</p>
+          <h2 id="what-networkpolicy-does-not-solve">What NetworkPolicy does not solve</h2>
+          <p>NetworkPolicy is not a complete tenant security boundary.</p>
+          <ul>
+            <li>It does not authorize Kubernetes API operations; use RBAC.</li>
+            <li>It does not limit CPU, memory, or object counts; use quotas and limits.</li>
+            <li>It does not encrypt all traffic; use workload TLS or a service mesh when required.</li>
+            <li>It does not isolate the shared kernel; use runtime hardening, sandboxing, dedicated nodes, or dedicated
+              clusters for stronger threat models.</li>
+            <li>It does not protect storage by itself.</li>
+          </ul>
+          <p>OpenTenant can select a stronger deployment profile when namespace-level isolation is insufficient.
+            Automation should make the trade-off explicit, not hide it.</p>
+          <h2 id="how-opentenant-automates-policy-safely">How OpenTenant automates policy safely</h2>
+          <pre><code class="language-text">tenant manifest
+  → identify release components and ports
+  → apply trusted tenant and component labels
+  → render default-deny ingress and egress
+  → add DNS and declared dependency rules
+  → add edge, secrets, and observability paths
+  → install chart and policy set together
+  → run positive and negative connectivity checks
+</code></pre>
+          <p>Every generated policy is owned by the tenant release and carries the source revision and configuration
+            hash. Upgrades reconcile the policy set alongside the Helm release. Removing a dependency removes its allow
+            rule only after readiness checks prove the new release no longer needs it.</p>
+          <h2 id="verification-checklist">Verification checklist</h2>
+          <ul>
+            <li>Confirm the CNI enforces NetworkPolicy with a negative test.</li>
+            <li>Verify default-deny covers every tenant pod, including chart hooks and jobs.</li>
+            <li>Confirm DNS works over UDP and TCP.</li>
+            <li>Test every declared application connection in both directions.</li>
+            <li>Prove a pod in tenant A cannot reach tenant B's service, database, or metrics endpoint.</li>
+            <li>Verify protected labels cannot be self-assigned.</li>
+            <li>Test Vault or external-secret delivery under the same policies.</li>
+            <li>Confirm edge connectors can reach only declared tenant services.</li>
+            <li>Record policy failures as release failures, not post-deployment warnings.</li>
+          </ul>
+          <h2 id="sources">Sources</h2>
+          <ul>
+            <li><a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/"
+                rel="noopener noreferrer nofollow">Network Policies — Kubernetes</a></li>
+            <li><a href="https://kubernetes.io/docs/concepts/security/multi-tenancy/"
+                rel="noopener noreferrer nofollow">Multi-tenancy — Kubernetes</a></li>
+          </ul>
+          <p>OpenTenant turns these controls into a default attached to every tenant lifecycle, while keeping the
+            generated rules visible and reviewable.</p>
+        </div>
+      </article>
+      <aside>
+        <div class="sticky top-28 rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+          <div class="mb-2 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">Source
+            check</div>
+          <p class="mb-5 text-sm leading-relaxed text-ploy-text-secondary">Every published guide must cite upstream
+            documentation and use a tested deployment example.</p><a
+            href="https://kubernetes.io/docs/concepts/services-networking/network-policies/"
+            class="text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Upstream source
+            →</a>
+        </div>
+      </aside>
+    </div>
+    <section class="border-y border-ploy-border-primary bg-ploy-background-secondary py-16 text-center">
+      <div class="mx-auto max-w-[42rem] px-6">
+        <h2 class="mb-4 text-balance text-3xl font-extrabold">From chart installation to tenant operations.</h2>
+        <p class="mb-7 text-ploy-text-secondary">See how OpenTenant models release, secrets, domain, and lifecycle
+          boundaries.</p><a href="../../index.html#evaluation"
+          class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-button font-button text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ploy-accent-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ploy-background-primary disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-ploy-button-primary-border bg-ploy-button-primary-background text-ploy-button-primary-text hover:bg-ploy-button-primary-background/90 h-10 px-4">Inspect
+          Architecture</a>
+      </div>
+    </section>
+  </main>
+  <footer
+    class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm min-w-0 min-h-0 py-9 border-t">
+    <div class="min-w-0 min-h-0 max-w-[68.75rem] flex flex-wrap justify-between gap-4 mx-auto px-6 footer-inner w-full">
+      <div>© 2026 OpenTenant — open source under MIT</div>
+      <div><a href="https://github.com/opentenant/platform"
+          class="text-ploy-text-secondary min-w-0 min-h-0 ml-[1.375rem] hover:text-ploy-text-primary">GitHub</a></div>
+    </div>
+  </footer>
+  <meta name="ploy-ploydb-reads"
+    content="[{&quot;ployDbId&quot;:&quot;pdb_d8e097e350704072a94c&quot;,&quot;tableId&quot;:&quot;tbl_096668abfd1e4613b96a&quot;,&quot;filters&quot;:[{&quot;field&quot;:&quot;fld_f6d93c32653d4e42&quot;,&quot;value&quot;:&quot;kubernetes-networkpolicy-per-tenant-default-deny&quot;}],&quot;rowCount&quot;:1,&quot;servedSample&quot;:false}]">
+  <script>(function () { var els = document.querySelectorAll("main section,main article,body>section"); els.forEach(function (el) { el.classList.add("portable-reveal") }); if ("IntersectionObserver" in window) { var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("is-visible"); io.unobserve(e.target) } }) }, { rootMargin: "0px 0px -12% 0px" }); els.forEach(function (el) { io.observe(el) }) } else { els.forEach(function (el) { el.classList.add("is-visible") }) } var f = document.querySelector("form"); if (f) f.addEventListener("submit", function (e) { e.preventDefault(); location.href = document.documentElement.dataset.liveLogin }); Array.from(document.querySelectorAll("button")).filter(function (b) { return ["GitHub", "GitLab"].includes(b.textContent.trim()) }).forEach(function (b) { b.addEventListener("click", function () { location.href = document.documentElement.dataset.liveLogin }) }) })();</script>
+</body>
+
+</html>
