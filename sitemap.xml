@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://www.opentenant.org/</loc><lastmod>2026-09-07</lastmod></url>
-  <url><loc>https://www.opentenant.org/articles/</loc><lastmod>2026-09-07</lastmod></url>
-  <url><loc>https://www.opentenant.org/articles/kubernetes-vault-tenant-isolation-opentenant/</loc><lastmod>2026-09-07</lastmod></url>
-  <url><loc>https://www.opentenant.org/articles/cloudflare-zero-trust-per-tenant-kubernetes/</loc><lastmod>2026-09-07</lastmod></url>
-  <url><loc>https://www.opentenant.org/articles/kubernetes-networkpolicy-per-tenant-default-deny/</loc><lastmod>2026-09-07</lastmod></url>
-  <url><loc>https://www.opentenant.org/articles/vault-secret-rotation-per-tenant-kubernetes/</loc><lastmod>2026-09-07</lastmod></url>
-  <url><loc>https://www.opentenant.org/articles/tenant-tls-custom-domain-automation/</loc><lastmod>2026-09-07</lastmod></url>
+  <url><loc>https://www.opentenant.org/</loc><lastmod>2026-09-09</lastmod></url>
+  <url><loc>https://www.opentenant.org/articles/</loc><lastmod>2026-09-09</lastmod></url>
+  <url><loc>https://www.opentenant.org/articles/kubernetes-vault-tenant-isolation-opentenant/index.html</loc><lastmod>2026-09-09</lastmod></url>
+  <url><loc>https://www.opentenant.org/articles/cloudflare-zero-trust-per-tenant-kubernetes/index.html</loc><lastmod>2026-09-09</lastmod></url>
+  <url><loc>https://www.opentenant.org/articles/kubernetes-networkpolicy-per-tenant-default-deny/index.html</loc><lastmod>2026-09-09</lastmod></url>
+  <url><loc>https://www.opentenant.org/articles/vault-secret-rotation-per-tenant-kubernetes/index.html</loc><lastmod>2026-09-09</lastmod></url>
+  <url><loc>https://www.opentenant.org/articles/tenant-tls-custom-domain-automation/index.html</loc><lastmod>2026-09-09</lastmod></url>
 </urlset>
