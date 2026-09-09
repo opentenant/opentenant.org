@@ -65,7 +65,7 @@
                 <div class="bg-ploy-background-secondary px-5 py-4">
                     <div class="font-mono text-[0.65rem] tracking-[0.14em] text-ploy-accent-primary-500">BLUEPRINTS
                     </div>
-                    <div class="mt-1 text-sm font-semibold text-ploy-text-primary">6 priority Helm charts</div>
+                    <div class="mt-1 text-sm font-semibold text-ploy-text-primary">9 priority Helm Tutorials</div>
                 </div>
                 <div class="bg-ploy-background-secondary px-5 py-4">
                     <div class="font-mono text-[0.65rem] tracking-[0.14em] text-ploy-accent-primary-500">BOUNDARIES
@@ -120,7 +120,7 @@
                             class="font-mono text-[0.65rem] uppercase tracking-[0.1em] text-ploy-accent-primary-500">architecture</span><span
                             class="font-mono text-[0.65rem] uppercase tracking-[0.1em] text-ploy-accent-primary-500">comparisons</span><span
                             class="font-mono text-[0.65rem] uppercase tracking-[0.1em] text-ploy-accent-primary-500">security</span><span
-                            class="font-mono text-[0.65rem] uppercase tracking-[0.1em] text-ploy-text-secondary">planned</span>
+                            class="font-mono text-[0.65rem] uppercase tracking-[0.1em] text-ploy-text-secondary">HELM</span>
                     </div>
                     <h3 class="mb-4 max-w-[42rem] text-balance text-2xl font-bold md:text-3xl">Namespace per Tenant vs
                         Shared Namespace: Kubernetes SaaS Isolation</h3>
@@ -132,6 +132,113 @@
                 </div>
             </article> -->
             <div class="grid gap-4 md:grid-cols-2">
+                <article
+                    class="flex min-h-72 flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-7">
+                    <div>
+                        <div
+                            class="mb-5 flex flex-wrap justify-between gap-3 font-mono text-[0.65rem] uppercase tracking-[0.1em] text-ploy-accent-primary-500">
+                            <span>Temporal</span>
+                            <span class="text-ploy-text-secondary">HELM</span>
+                        </div>
+                        <h3 class="mb-3 text-balance text-xl font-bold">Temporal Helm Chart: Designing Isolated Workflow
+                            Clusters</h3>
+                        <p class="text-sm leading-relaxed text-ploy-text-secondary">How platform teams can model one
+                            Temporal release per tenant and manage persistence, secrets, routing, and upgrades
+                            declaratively.</p>
+                    </div><a href="./temporal-helm-chart-isolated-clusters/index.html"
+                        class="mt-7 border-b border-ploy-accent-primary-500 pb-1 text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Open
+                        guide →</a>
+                </article>
+                <article
+                    class="flex min-h-72 flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-7">
+                    <div>
+                        <div
+                            class="mb-5 flex flex-wrap justify-between gap-3 font-mono text-[0.65rem] uppercase tracking-[0.1em] text-ploy-accent-primary-500">
+                            <span>GitLab</span><span class="text-ploy-text-secondary">HELM</span></div>
+                        <h3 class="mb-3 text-balance text-xl font-bold">GitLab Helm Chart: When Dedicated Customer
+                            Releases Make Sense</h3>
+                        <p class="text-sm leading-relaxed text-ploy-text-secondary">A decision guide for operating
+                            dedicated GitLab environments with explicit data, storage, secrets, and upgrade boundaries.
+                        </p>
+                    </div><a href="./gitlab-helm-chart-dedicated-customer-releases/index.html"
+                        class="mt-7 border-b border-ploy-accent-primary-500 pb-1 text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Open
+                        guide →</a>
+                </article>
+                <article
+                    class="flex min-h-72 flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-7">
+                    <div>
+                        <div
+                            class="mb-5 flex flex-wrap justify-between gap-3 font-mono text-[0.65rem] uppercase tracking-[0.1em] text-ploy-accent-primary-500">
+                            <span>Apache Airflow</span><span class="text-ploy-text-secondary">HELM</span></div>
+                        <h3 class="mb-3 text-balance text-xl font-bold">Apache Airflow Helm Chart: From One Deployment
+                            to One Environment per Customer</h3>
+                        <p class="text-sm leading-relaxed text-ploy-text-secondary">A practical architecture for
+                            isolated Airflow environments with tenant-specific executors, secrets, domains, and
+                            lifecycle management.</p>
+                    </div><a href="./airflow-helm-chart-customer-environments/index.html"
+                        class="mt-7 border-b border-ploy-accent-primary-500 pb-1 text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Open
+                        guide →</a>
+                </article>
+                <article
+                    class="flex min-h-72 flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-7">
+                    <div>
+                        <div
+                            class="mb-5 flex flex-wrap justify-between gap-3 font-mono text-[0.65rem] uppercase tracking-[0.1em] text-ploy-accent-primary-500">
+                            <span>Grafana</span><span class="text-ploy-text-secondary">HELM</span></div>
+                        <h3 class="mb-3 text-balance text-xl font-bold">Grafana Helm Chart: A Multi-Tenant Deployment
+                            Blueprint</h3>
+                        <p class="text-sm leading-relaxed text-ploy-text-secondary">How to operate isolated Grafana
+                            releases per customer while keeping chart versions, secrets, domains, and upgrades under one
+                            declarative control plane.</p>
+                    </div><a href="./grafana-helm-chart-multi-tenant-blueprint/index.html"
+                        class="mt-7 border-b border-ploy-accent-primary-500 pb-1 text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Open
+                        guide →</a>
+                </article>
+                <article
+                    class="flex min-h-72 flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-7">
+                    <div>
+                        <div
+                            class="mb-5 flex flex-wrap justify-between gap-3 font-mono text-[0.65rem] uppercase tracking-[0.1em] text-ploy-accent-primary-500">
+                            <span>Harbor</span><span class="text-ploy-text-secondary">HELM</span></div>
+                        <h3 class="mb-3 text-balance text-xl font-bold">Harbor Helm Chart: Building Isolated Registries
+                            for Customers</h3>
+                        <p class="text-sm leading-relaxed text-ploy-text-secondary">A deployment blueprint for
+                            customer-specific Harbor registries with dedicated domains, credentials, storage policies,
+                            and release lifecycles.</p>
+                    </div><a href="./harbor-helm-chart-isolated-registries/index.html"
+                        class="mt-7 border-b border-ploy-accent-primary-500 pb-1 text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Open
+                        guide →</a>
+                </article>
+                <article
+                    class="flex min-h-72 flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-7">
+                    <div>
+                        <div
+                            class="mb-5 flex flex-wrap justify-between gap-3 font-mono text-[0.65rem] uppercase tracking-[0.1em] text-ploy-accent-primary-500">
+                            <span>Keycloak</span><span class="text-ploy-text-secondary">HELM</span></div>
+                        <h3 class="mb-3 text-balance text-xl font-bold">Keycloak Helm Chart: Isolation Patterns for
+                            Managed Identity</h3>
+                        <p class="text-sm leading-relaxed text-ploy-text-secondary">Evaluate release-per-tenant
+                            boundaries for teams offering managed or white-label identity infrastructure on Kubernetes.
+                        </p>
+                    </div><a href="./keycloak-helm-chart-tenant-isolation/index.html"
+                        class="mt-7 border-b border-ploy-accent-primary-500 pb-1 text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Open
+                        guide →</a>
+                </article>
+                <article
+                    class="flex min-h-72 flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-7">
+                    <div>
+                        <div
+                            class="mb-5 flex flex-wrap justify-between gap-3 font-mono text-[0.65rem] uppercase tracking-[0.1em] text-ploy-accent-primary-500">
+                            <span>n8n</span><span class="text-ploy-text-secondary">HELM</span></div>
+                        <h3 class="mb-3 text-balance text-xl font-bold">How to Turn the n8n Helm Chart into an Isolated
+                            SaaS Offering</h3>
+                        <p class="text-sm leading-relaxed text-ploy-text-secondary">A production-minded guide to
+                            wrapping the n8n Helm chart with per-tenant releases, scoped secrets, domains,
+                            configuration, and lifecycle controls.</p>
+                    </div><a href="./n8n-helm-chart-multi-tenant-saas/index.html"
+                        class="mt-7 border-b border-ploy-accent-primary-500 pb-1 text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Open
+                        guide →</a>
+                </article>
                 <article
                     class="flex min-h-72 flex-col justify-between rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-7">
                     <div>
@@ -189,7 +296,7 @@
                         <p class="text-sm leading-relaxed text-ploy-text-secondary">How signed source, immutable
                             artifacts, policy admission, and tenant-scoped rollback provenance create a reviewable
                             deployment chain.</p>
-                    </div><a href="./gitops-supply-chain-security-tenant-releases/index.html"
+                    </div><a href="./gitops-supply-chain-security-tenant-releases.html"
                         class="mt-7 border-b border-ploy-accent-primary-500 pb-1 text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Open
                         guide →</a>
                 </article>

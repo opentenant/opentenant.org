@@ -1,0 +1,9 @@
+{
+  "tasks": {
+    "start": "deno run --allow-net --allow-env --allow-read server/main.ts",
+    "dev": "deno run --watch --allow-net --allow-env --allow-read server/main.ts"
+  },
+  "imports": {
+    "d3": "npm:d3@7.9.0"
+  }
+}

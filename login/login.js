@@ -69,7 +69,7 @@
           const { error } = await supabaseClient.auth.signInWithOAuth({ 
   provider: 'github' ,
         options: {
-          redirectTo:"https://opentenant.org/"
+          redirectTo:"https://opentenant.org/app"
         }
 });
         //   .signInWithOAuth({
@@ -87,7 +87,7 @@
         const { error } = await supabaseClient.auth.signInWithOAuth({ 
   provider: 'google',
         options: {
-          redirectTo:"https://opentenant.org/"
+          redirectTo:"https://opentenant.org/app"
         }
 });
         // .signInWithOAuth({
@@ -124,7 +124,7 @@
         } = await supabaseClient.auth.signInWithOtp({
         email: emailValue,
         options: {
-          redirectTo:"https://opentenant.org/"
+          redirectTo:"https://opentenant.org/app"
         }
         });
         setLoading(false);

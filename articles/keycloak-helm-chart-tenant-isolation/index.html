@@ -4,8 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/svg+xml"
-        href="/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <meta name="ploy-astro-starter-version" content="1.0.0">
     <title>Keycloak Helm Chart: Isolation Patterns for Managed Identity — OpenTenant | </title>
     <meta name="description"
@@ -32,19 +31,29 @@
         class="border-solid border-ploy-border-primary bg-ploy-background-primary/80 min-w-0 min-h-0 sticky z-[100] backdrop-blur-md border-b top-0">
         <div
             class="h-16 min-w-0 min-h-0 max-w-[68.75rem] flex justify-between items-center mx-auto px-6 nav-inner w-full">
-            
-                <a href="/" aria-label="OpenTenant home" class="logo"><span
-                        class="brand-logo inline-flex items-center gap-2 "><img src="/favicon.svg" width="34"/><span
-                            class="brand-logo__wordmark text-lg font-bold tracking-[-0.02em] text-ploy-text-primary">OpenTenant</span></span></a>
-            <div class="flex items-center gap-6 nav-links"><a href="../index.html"
+            <a href="../../index.html" aria-label="OpenTenant home" class="logo"><span
+                    class="brand-logo inline-flex items-center gap-2 "><svg aria-hidden="true" viewBox="0 0 32 32"
+                        class="brand-logo__mark size-7 shrink-0">
+                        <rect width="32" height="32" rx="7" class="fill-ploy-accent-primary"></rect>
+                        <path d="M8 23V9h6v14M18 23V9h6v14" fill="none" class="stroke-ploy-accent-primary-950"
+                            stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                        <path d="M5.5 25.5h21" fill="none" class="stroke-ploy-accent-primary-950" stroke-width="2.6"
+                            stroke-linecap="round"></path>
+                        <circle cx="11" cy="16" r="1.25" class="fill-ploy-accent-primary-950"></circle>
+                        <circle cx="21" cy="16" r="1.25" class="fill-ploy-accent-primary-950"></circle>
+                    </svg><span
+                        class="brand-logo__wordmark text-lg font-bold tracking-[-0.02em] text-ploy-text-primary">OpenTenant</span></span></a>
+            <div class="flex items-center gap-6 nav-links"><a href="#evaluation"
+                    class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Evaluate</a><a
+                    href="../index.html"
                     class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Articles</a><a
                     href="#cases"
                     class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Use
                     Cases</a><a href="https://github.com/opentenant/platform"
                     class="border-solid border-ploy-border-primary text-ploy-text-secondary font-semibold text-sm block transition-[transform,translate,scale,rotate,box-shadow] px-[1.375rem] py-2.5 rounded-lg hover:text-ploy-text-primary border">GitHub</a><a
-                    href="/login"
-                    class="bg-ploy-button-primary-background text-ploy-button-primary-text font-semibold text-sm block transition-shadow px-[1.375rem] py-2.5 rounded-lg hover:shadow-lg">Login</a>
-            </div>
+                    href="../../login.html"
+                    class="bg-ploy-button-primary-background text-ploy-button-primary-text font-semibold text-sm block transition-shadow px-[1.375rem] py-2.5 rounded-lg hover:shadow-lg">Get
+                    Instance</a></div>
         </div>
     </nav>
     <main class="article-page">
@@ -57,10 +66,10 @@
                         <div
                             class="mb-5 flex flex-wrap gap-3 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
                             <span>helm-chart-guides</span><span>security</span><span
-                                class="text-ploy-text-secondary">planned</span></div>
+                                class="text-ploy-text-secondary">draft</span></div>
                         <h1
                             class="max-w-[52rem] text-balance text-[2.7rem] font-extrabold leading-[1.08] tracking-[-0.03em] md:text-[4rem]">
-                            Keycloak Helm Chart: Isolation Patterns for Managed Identity</h1>
+                            Keycloak Tenant Isolation on Kubernetes: Realms vs Dedicated Releases</h1>
                     </div>
                     <dl class="divide-y divide-ploy-border-primary border-y border-ploy-border-primary text-sm">
                         <div class="flex justify-between gap-4 py-3">
@@ -77,9 +86,9 @@
                         </div>
                     </dl>
                 </div>
-                <p class="mt-8 max-w-[48rem] text-lg leading-relaxed text-ploy-text-secondary">Evaluate
-                    release-per-tenant boundaries for teams offering managed or white-label identity infrastructure on
-                    Kubernetes.</p>
+                <p class="mt-8 max-w-[48rem] text-lg leading-relaxed text-ploy-text-secondary">Compare realms with
+                    dedicated Keycloak releases, then design per-customer database, secret, domain, network, and upgrade
+                    boundaries.</p>
             </div>
         </header>
         <div class="mx-auto grid max-w-[68.75rem] gap-12 px-6 py-16 lg:grid-cols-[13rem_minmax(0,1fr)_12rem]">
@@ -87,14 +96,149 @@
                 <div class="sticky top-28">
                     <div class="mb-4 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
                         On this page</div>
-                    <nav class="space-y-3 text-sm text-ploy-text-secondary"></nav>
+                    <nav class="space-y-3 text-sm text-ploy-text-secondary"><a href="#direct-answer"
+                            class="block hover:text-ploy-text-primary">Direct answer</a><a
+                            href="#what-keycloak-provides-on-kubernetes" class="block hover:text-ploy-text-primary">What
+                            Keycloak provides on Kubernetes</a><a href="#realms-and-releases-solve-different-problems"
+                            class="block hover:text-ploy-text-primary">Realms and releases solve different
+                            problems</a><a href="#reference-architecture"
+                            class="block hover:text-ploy-text-primary">Reference architecture</a><a
+                            href="#illustrative-tenant-declaration"
+                            class="block hover:text-ploy-text-primary">Illustrative tenant declaration</a><a
+                            href="#database-ownership-is-the-critical-decision"
+                            class="block hover:text-ploy-text-primary">Database ownership is the critical decision</a><a
+                            href="#network-and-administrative-boundaries"
+                            class="block hover:text-ploy-text-primary">Network and administrative boundaries</a><a
+                            href="#upgrade-and-restore-strategy" class="block hover:text-ploy-text-primary">Upgrade and
+                            restore strategy</a><a href="#when-realms-are-the-better-choice"
+                            class="block hover:text-ploy-text-primary">When realms are the better choice</a><a
+                            href="#evaluation-checklist" class="block hover:text-ploy-text-primary">Evaluation
+                            checklist</a><a href="#sources" class="block hover:text-ploy-text-primary">Sources</a></nav>
                 </div>
             </aside>
             <article class="min-w-0">
                 <div class="prose prose-invert ploy-richtext max-w-none prose-headings:text-balance">
-                    <h1 id="editorial-brief">Editorial brief</h1>
-                    <p>Cover realms versus release-level isolation, database ownership, secret scope, custom domains,
-                        upgrades, and the security cases that justify stronger boundaries.</p>
+                    <h1 id="keycloak-tenant-isolation-on-kubernetes-realms-vs-dedicated-releases">Keycloak Tenant
+                        Isolation on Kubernetes: Realms vs Dedicated Releases</h1>
+                    <p>Keycloak realms provide logical separation inside one Keycloak deployment. A dedicated Kubernetes
+                        release per customer adds a different boundary: separate runtime, database ownership,
+                        credentials, domain, network policy, capacity, maintenance, and failure blast radius. For
+                        managed identity and white-label authentication products, the right model depends on the
+                        isolation promise—not on Helm versus Operator alone.</p>
+                    <h2 id="direct-answer">Direct answer</h2>
+                    <p>Use shared Keycloak realms when customers can safely share runtime operations and upgrade timing.
+                        Use dedicated releases when customers require independent domains, database and secret
+                        boundaries, custom extensions, regulated change control, or predictable blast-radius
+                        containment. OpenTenant can orchestrate those per-customer releases around a reviewed Keycloak
+                        deployment template.</p>
+                    <h2 id="what-keycloak-provides-on-kubernetes">What Keycloak provides on Kubernetes</h2>
+                    <p>Keycloak's Operator exposes first-class Kubernetes configuration for resources, scheduling, TLS
+                        Secret references, trusted certificates, and NetworkPolicy rules. Its <a
+                            href="https://www.keycloak.org/operator/advanced-configuration"
+                            rel="noopener noreferrer nofollow">advanced configuration documentation</a> also warns that
+                        NetworkPolicy enforcement depends on a compatible cluster network plugin.</p>
+                    <p>For production, Keycloak stores users, clients, realm configuration, credentials, and signing
+                        material in a relational database. The <a href="https://www.keycloak.org/server/db"
+                            rel="noopener noreferrer nofollow">database guide</a> states that the default
+                        <code>dev-file</code> database is for development and must be replaced for production.</p>
+                    <p>These capabilities configure a Keycloak installation. They do not choose the tenancy model for
+                        the service built around it.</p>
+                    <h2 id="realms-and-releases-solve-different-problems">Realms and releases solve different problems
+                    </h2>
+                    <p>A realm is an application-level administration boundary. It can separate users, clients, roles,
+                        identity providers, and authentication flows while sharing the same Keycloak runtime and
+                        operational lifecycle.</p>
+                    <p>A dedicated release gives a customer its own Kubernetes workload and a separately governed data
+                        and change boundary. That can include:</p>
+                    <ul>
+                        <li>a dedicated database or database-level scope and credentials;</li>
+                        <li>customer-specific TLS, hostname, themes, and identity providers;</li>
+                        <li>isolated extension and provider configuration;</li>
+                        <li>independent compute limits, topology, and maintenance windows;</li>
+                        <li>tenant-specific backup, restore, export, and deletion procedures;</li>
+                        <li>network rules that expose only required database, monitoring, and ingress paths.</li>
+                    </ul>
+                    <p>The trade-off is cost and operational surface area. More releases mean more upgrades, health
+                        checks, database connections, certificates, backups, and failure modes to manage.</p>
+                    <h2 id="reference-architecture">Reference architecture</h2>
+                    <pre><code class="language-text">customer identity profile
+  → choose realm or dedicated-release policy
+  → validate domain, database, extension, and network requirements
+  → resolve tenant-scoped TLS and database secrets
+  → create namespace and deploy Keycloak template
+  → verify database, route, readiness, and admin boundary
+  → record revision for upgrade and rollback
+</code></pre>
+                    <p>OpenTenant's role is to make that lifecycle repeatable. It does not change Keycloak's realm
+                        semantics, token behavior, database security, or upstream upgrade requirements.</p>
+                    <h2 id="illustrative-tenant-declaration">Illustrative tenant declaration</h2>
+                    <pre><code class="language-yaml">tenant: acme
+userspace:
+  namespace: tenant-acme-identity
+  domain: login.acme.example
+deployment:
+  engine: helm
+  template: keycloak-production
+  release: keycloak-acme
+  config:
+    realmImport: acme-v3
+    replicas: 3
+  secretScope: tenants/acme/keycloak
+</code></pre>
+                    <p>Treat this as an architecture sketch. A production declaration should reference versioned
+                        templates and Secret objects rather than embedding database passwords, bootstrap credentials,
+                        realm signing keys, or TLS private keys.</p>
+                    <h2 id="database-ownership-is-the-critical-decision">Database ownership is the critical decision
+                    </h2>
+                    <p>A dedicated Keycloak pod set with shared database credentials is not a complete tenant boundary.
+                        Decide whether each customer receives a database instance, database, or schema and document the
+                        restore and deletion semantics for that choice.</p>
+                    <p>Database TLS and encryption at rest remain responsibilities of the selected database platform and
+                        configuration. OpenTenant can distribute references and coordinate releases, but it should not
+                        claim to provide guarantees that belong to Keycloak or the database service.</p>
+                    <h2 id="network-and-administrative-boundaries">Network and administrative boundaries</h2>
+                    <p>Start with denied-by-default tenant networking, then allow the paths the deployment requires:
+                        DNS, the tenant database, monitoring, and ingress or Gateway traffic. Confirm that the cluster's
+                        network plugin enforces NetworkPolicy.</p>
+                    <p>Separate customer login traffic from operator administration where practical. A custom login
+                        hostname does not automatically secure the admin surface. Keep bootstrap and operator
+                        credentials in scoped secret storage, restrict admin routes, and record configuration changes in
+                        the tenant audit trail.</p>
+                    <h2 id="upgrade-and-restore-strategy">Upgrade and restore strategy</h2>
+                    <p>Keycloak upgrades can involve database migration. Test the target version against the deployment
+                        template and extensions, back up the tenant database, and promote through controlled cohorts. A
+                        Kubernetes rollback cannot reverse an incompatible database migration by itself.</p>
+                    <p>Restore testing should prove that the database, realm configuration, external identity-provider
+                        secrets, TLS route, and signing behavior return together. A backup that restores only the pods
+                        is not a Keycloak recovery plan.</p>
+                    <h2 id="when-realms-are-the-better-choice">When realms are the better choice</h2>
+                    <p>Shared realms are the narrow concession: they are efficient when customers have similar
+                        availability and upgrade needs, custom code is limited, and logical administration boundaries
+                        satisfy the risk model. They reduce infrastructure cost and operational repetition.</p>
+                    <p>Choose dedicated releases when the product promise requires independent runtime and change
+                        ownership. If a customer must be upgraded, restored, suspended, or exported without involving
+                        every other customer, release-level isolation is easier to reason about.</p>
+                    <h2 id="evaluation-checklist">Evaluation checklist</h2>
+                    <ul>
+                        <li>Is the promised isolation logical, operational, or infrastructure-level?</li>
+                        <li>Can one customer's extension or load affect another customer's login path?</li>
+                        <li>Are database credentials and restore procedures tenant-scoped?</li>
+                        <li>Are admin routes separated from public authentication routes?</li>
+                        <li>Does the cluster enforce the intended NetworkPolicy rules?</li>
+                        <li>Can a database migration be tested, backed up, and rolled back safely?</li>
+                        <li>Does offboarding remove routes and credentials before retained identity data?</li>
+                    </ul>
+                    <p>OpenTenant coordinates these release boundaries while Keycloak remains the identity system and
+                        source of truth for its own security model.</p>
+                    <h2 id="sources">Sources</h2>
+                    <ul>
+                        <li><a href="https://www.keycloak.org/operator/advanced-configuration"
+                                rel="noopener noreferrer nofollow">Keycloak Operator advanced configuration</a></li>
+                        <li><a href="https://www.keycloak.org/server/db" rel="noopener noreferrer nofollow">Keycloak
+                                database configuration</a></li>
+                        <li><a href="https://kubernetes.io/docs/concepts/security/multi-tenancy/"
+                                rel="noopener noreferrer nofollow">Kubernetes multi-tenancy</a></li>
+                    </ul>
                 </div>
             </article>
             <aside>
@@ -131,7 +275,6 @@
     </footer>
     <meta name="ploy-ploydb-reads"
         content="[{&quot;ployDbId&quot;:&quot;pdb_d8e097e350704072a94c&quot;,&quot;tableId&quot;:&quot;tbl_096668abfd1e4613b96a&quot;,&quot;filters&quot;:[{&quot;field&quot;:&quot;fld_f6d93c32653d4e42&quot;,&quot;value&quot;:&quot;keycloak-helm-chart-tenant-isolation&quot;}],&quot;rowCount&quot;:1,&quot;servedSample&quot;:false}]">
-    <script>(function () { var els = document.querySelectorAll("main section,main article,body>section"); els.forEach(function (el) { el.classList.add("portable-reveal") }); if ("IntersectionObserver" in window) { var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("is-visible"); io.unobserve(e.target) } }) }, { rootMargin: "0px 0px -12% 0px" }); els.forEach(function (el) { io.observe(el) }) } else { els.forEach(function (el) { el.classList.add("is-visible") }) } var f = document.querySelector("form"); if (f) f.addEventListener("submit", function (e) { e.preventDefault(); location.href = document.documentElement.dataset.liveLogin }); Array.from(document.querySelectorAll("button")).filter(function (b) { return ["GitHub", "GitLab"].includes(b.textContent.trim()) }).forEach(function (b) { b.addEventListener("click", function () { location.href = document.documentElement.dataset.liveLogin }) }) })();</script>
 </body>
 
 </html>

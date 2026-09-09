@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OpenTenant Control Plane</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">OPENTENANT / LIVE CONTROL PLANE</div>
+      <h1>Tenant topology</h1>
+    </div>
+    <div class="toolbar">
+      <span id="conn-kube" class="pill">Kubernetes · —</span>
+      <span id="conn-vault" class="pill">Vault · —</span>
+      <button id="refresh">Refresh</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="summary">
+      <div class="stat"><span>Nodes</span><strong id="stat-total">—</strong></div>
+      <div class="stat"><span>Healthy</span><strong id="stat-healthy">—</strong></div>
+      <div class="stat"><span>Degraded</span><strong id="stat-degraded">—</strong></div>
+      <div class="stat"><span>Unknown</span><strong id="stat-unknown">—</strong></div>
+      <div class="stat wide"><span>Generated</span><strong id="generated">—</strong></div>
+    </section>
+
+    <section class="workspace">
+      <aside class="panel inspector">
+        <div class="panel-title">Selection</div>
+        <div id="selection" class="empty">Click a node in the graph.</div>
+        <div class="legend">
+          <div><i class="dot healthy"></i> healthy</div>
+          <div><i class="dot degraded"></i> degraded</div>
+          <div><i class="dot unknown"></i> unknown</div>
+          <div><i class="dot reserved"></i> reserved</div>
+        </div>
+      </aside>
+      <section class="panel graph-panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Live graph</div>
+            <div class="panel-subtitle">D3 hierarchy derived from Kubernetes + Vault metadata</div>
+          </div>
+          <div class="panel-actions"><button id="fit">Fit</button><button id="reset">Reset</button></div>
+        </div>
+        <svg id="graph" viewBox="0 0 1200 760" preserveAspectRatio="xMidYMid meet"></svg>
+        <div id="errors" class="errors"></div>
+      </section>
+    </section>
+  </main>
+  <script type="module" src="/public/app.js"></script>
+</body>
+</html>

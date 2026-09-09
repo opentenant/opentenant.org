@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html data-live-login="https://opentenant.org/login" lang="en" class="text-black dark" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/styles.css">
+    <title>n8n Kubernetes Deployment per Customer — OpenTenant</title>
+    <meta name="description"
+        content="Use the n8n Helm chart to operate isolated customer environments with dedicated releases, secrets, domains, queue workers, and upgrade controls.">
+    <meta name="robots" content="index, follow">
+    <meta name="googlebot" content="index, follow">
+    <link rel="canonical" href="https://opentenant.org/articles/n8n-helm-chart-multi-tenant-saas/">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="OpenTenant">
+    <meta property="og:title" content="n8n Kubernetes Deployment per Customer — OpenTenant">
+    <meta property="og:description"
+        content="Use the n8n Helm chart to operate isolated customer environments with dedicated releases, secrets, domains, queue workers, and upgrade controls.">
+    <meta property="og:url" content="https://opentenant.org/articles/n8n-helm-chart-multi-tenant-saas/">
+    <meta property="og:image" content="https://opentenant.org/og-opentenant.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="OpenTenant — isolated tenant infrastructure">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="n8n Kubernetes Deployment per Customer — OpenTenant">
+    <meta name="twitter:description"
+        content="Use the n8n Helm chart to operate isolated customer environments with dedicated releases, secrets, domains, queue workers, and upgrade controls.">
+    <meta name="twitter:image" content="https://opentenant.org/og-opentenant.png">
+    <script
+        type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"n8n Kubernetes Deployment per Customer","description":"Use the n8n Helm chart to operate isolated customer environments with dedicated releases, secrets, domains, queue workers, and upgrade controls.","mainEntityOfPage":"https://opentenant.org/articles/n8n-helm-chart-multi-tenant-saas/","author":{"@type":"Organization","name":"OpenTenant","url":"https://opentenant.org/"},"publisher":{"@type":"Organization","name":"OpenTenant","url":"https://opentenant.org/","logo":{"@type":"ImageObject","url":"https://opentenant.org/opentenant-mark.svg"}},"image":["https://opentenant.org/og-opentenant.png"],"dateModified":"2026-09-08"}</script>
+</head>
+
+<body class="bg-ploy-background-primary text-ploy-text-primary leading-[1.6] decoration-[rgb(230,237,243)] m-0"
+    style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+    <nav
+        class="border-solid border-ploy-border-primary bg-ploy-background-primary/80 min-w-0 min-h-0 sticky z-[100] backdrop-blur-md border-b top-0">
+        <div
+            class="h-16 min-w-0 min-h-0 max-w-[68.75rem] flex justify-between items-center mx-auto px-6 nav-inner w-full">
+            <a href="../../index.html" aria-label="OpenTenant home" class="logo"><span
+                    class="brand-logo inline-flex items-center gap-2 "><svg aria-hidden="true" viewBox="0 0 32 32"
+                        class="brand-logo__mark size-7 shrink-0">
+                        <rect width="32" height="32" rx="7" class="fill-ploy-accent-primary"></rect>
+                        <path d="M8 23V9h6v14M18 23V9h6v14" fill="none" class="stroke-ploy-accent-primary-950"
+                            stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                        <path d="M5.5 25.5h21" fill="none" class="stroke-ploy-accent-primary-950" stroke-width="2.6"
+                            stroke-linecap="round"></path>
+                        <circle cx="11" cy="16" r="1.25" class="fill-ploy-accent-primary-950"></circle>
+                        <circle cx="21" cy="16" r="1.25" class="fill-ploy-accent-primary-950"></circle>
+                    </svg><span
+                        class="brand-logo__wordmark text-lg font-bold tracking-[-0.02em] text-ploy-text-primary">OpenTenant</span></span></a>
+            <div class="flex items-center gap-6 nav-links"><a href="#evaluation"
+                    class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Evaluate</a><a
+                    href="/"
+                    class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Articles</a><a
+                    href="/"
+                    class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Use
+                    Cases</a><a href="https://github.com/opentenant/platform"
+                    class="border-solid border-ploy-border-primary text-ploy-text-secondary font-semibold text-sm block transition-[transform,translate,scale,rotate,box-shadow] px-[1.375rem] py-2.5 rounded-lg hover:text-ploy-text-primary border">GitHub</a><a
+                    href="/login"
+                    class="bg-ploy-button-primary-background text-ploy-button-primary-text font-semibold text-sm block transition-shadow px-[1.375rem] py-2.5 rounded-lg hover:shadow-lg">Get
+                    Instance</a></div>
+        </div>
+    </nav>
+    <main class="article-page">
+        <header class="border-b border-ploy-border-primary pb-16 pt-[6.25rem]">
+            <div class="mx-auto max-w-[68.75rem] px-6"><a href="../index.html"
+                    class="mb-8 inline-block font-mono text-xs uppercase tracking-[0.14em] text-ploy-accent-primary-500">←
+                    Technical library</a>
+                <div class="grid gap-10 lg:grid-cols-[1fr_18rem] lg:items-end">
+                    <div>
+                        <div
+                            class="mb-5 flex flex-wrap gap-3 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
+                            <span>helm-chart-guides</span><span>architecture</span><span
+                                class="text-ploy-text-secondary">draft</span></div>
+                        <h1
+                            class="max-w-[52rem] text-balance text-[2.7rem] font-extrabold leading-[1.08] tracking-[-0.03em] md:text-[4rem]">
+                            n8n Kubernetes Deployment per Customer: An Isolated SaaS Pattern</h1>
+                    </div>
+                    <dl class="divide-y divide-ploy-border-primary border-y border-ploy-border-primary text-sm">
+                        <div class="flex justify-between gap-4 py-3">
+                            <dt class="text-ploy-text-secondary">Chart</dt>
+                            <dd>n8n</dd>
+                        </div>
+                        <div class="flex justify-between gap-4 py-3">
+                            <dt class="text-ploy-text-secondary">Intent</dt>
+                            <dd>mofu</dd>
+                        </div>
+                        <div class="flex justify-between gap-4 py-3">
+                            <dt class="text-ploy-text-secondary">Author</dt>
+                            <dd>OpenTenant</dd>
+                        </div>
+                    </dl>
+                </div>
+                <p class="mt-8 max-w-[48rem] text-lg leading-relaxed text-ploy-text-secondary">Use the n8n Helm chart to
+                    operate isolated customer environments with dedicated releases, secrets, domains, queue workers, and
+                    upgrade controls.</p>
+            </div>
+        </header>
+        <div class="mx-auto grid max-w-[68.75rem] gap-12 px-6 py-16 lg:grid-cols-[13rem_minmax(0,1fr)_12rem]">
+            <aside class="hidden lg:block">
+                <div class="sticky top-28">
+                    <div class="mb-4 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
+                        On this page</div>
+                    <nav class="space-y-3 text-sm text-ploy-text-secondary"><a
+                            href="#what-the-n8n-helm-chart-already-provides"
+                            class="block hover:text-ploy-text-primary">What the n8n Helm chart already provides</a><a
+                            href="#the-use-case-dedicated-workflow-automation-environments"
+                            class="block hover:text-ploy-text-primary">The use case: dedicated workflow automation
+                            environments</a><a href="#reference-architecture"
+                            class="block hover:text-ploy-text-primary">Reference architecture</a><a
+                            href="#illustrative-tenant-declaration"
+                            class="block hover:text-ploy-text-primary">Illustrative tenant declaration</a><a
+                            href="#production-decisions-to-make-before-onboarding-customers"
+                            class="block hover:text-ploy-text-primary">Production decisions to make before onboarding
+                            customers</a><a href="#when-a-shared-n8n-instance-is-the-better-fit"
+                            class="block hover:text-ploy-text-primary">When a shared n8n instance is the better
+                            fit</a><a href="#evaluation-checklist" class="block hover:text-ploy-text-primary">Evaluation
+                            checklist</a><a href="#sources" class="block hover:text-ploy-text-primary">Sources</a></nav>
+                </div>
+            </aside>
+            <article class="min-w-0">
+                <div class="prose prose-invert ploy-richtext max-w-none prose-headings:text-balance">
+                    <h1 id="n8n-kubernetes-deployment-per-customer-an-isolated-saas-pattern">n8n Kubernetes Deployment
+                        per Customer: An Isolated SaaS Pattern</h1>
+                    <p>The n8n Helm chart can deploy the application, workers, webhook processors, and supporting
+                        Kubernetes resources. Turning that deployment into a customer-facing SaaS offering requires
+                        another layer: a repeatable way to create, configure, upgrade, suspend, and remove one isolated
+                        n8n environment per tenant. OpenTenant supplies that lifecycle layer without requiring a fork of
+                        the upstream chart.</p>
+                    <h2 id="what-the-n8n-helm-chart-already-provides">What the n8n Helm chart already provides</h2>
+                    <p>The <a href="https://github.com/n8n-io/n8n-hosting/blob/main/charts/n8n/README.md"
+                            rel="noopener noreferrer nofollow">official n8n Helm chart</a> supports two distinct
+                        operating models. Standalone mode runs a single pod with SQLite and is intended for development
+                        or smaller installations. Queue mode separates the main process from workers and optional
+                        webhook processors; it requires external PostgreSQL and Redis.</p>
+                    <p>That distinction matters for a hosted product. In <a
+                            href="https://docs.n8n.io/deploy/host-n8n/configure-n8n/scaling/enable-queue-mode"
+                            rel="noopener noreferrer nofollow">n8n queue mode</a>, the main instance receives triggers,
+                        Redis holds pending execution IDs, and workers load workflow data from the database and execute
+                        jobs. The chart also exposes controls for ingress, worker scaling, KEDA, pod disruption budgets,
+                        network policies, task runners, and existing Secret references.</p>
+                    <p>Those are deployment capabilities. They do not decide who owns each customer environment or how
+                        customer lifecycle events become safe infrastructure changes.</p>
+                    <h2 id="the-use-case-dedicated-workflow-automation-environments">The use case: dedicated workflow
+                        automation environments</h2>
+                    <p>A release-per-customer model fits products that embed or resell n8n while promising stronger
+                        operational separation than a shared application instance can provide. Each customer can receive
+                        its own release, namespace, hostname, encryption key, database credentials, resource policy, and
+                        upgrade window.</p>
+                    <p>This pattern is useful when customers need:</p>
+                    <ul>
+                        <li>independent workflow and credential stores;</li>
+                        <li>customer-specific domains and branding;</li>
+                        <li>separate worker capacity or webhook scaling;</li>
+                        <li>controlled plugin, task-runner, or network access;</li>
+                        <li>maintenance windows that do not affect every tenant at once;</li>
+                        <li>a clean export, suspension, and deletion boundary.</li>
+                    </ul>
+                    <p>OpenTenant models those differences around the chart. The chart remains the versioned deployment
+                        template; the tenant declaration supplies customer-specific configuration and references to
+                        scoped secrets.</p>
+                    <h2 id="reference-architecture">Reference architecture</h2>
+                    <pre><code class="language-text">customer record
+  → validate tenant declaration
+  → reserve namespace and hostname
+  → resolve tenant-scoped secrets
+  → install or upgrade n8n Helm release
+  → verify ingress, main process, workers, and dependencies
+  → record release status and revision
+</code></pre>
+                    <p>For queue mode, PostgreSQL and Redis are part of the operational boundary. A platform can choose
+                        dedicated services per customer, dedicated databases on shared services, or another reviewed
+                        topology. The important point is that the tenancy decision is explicit and recoverable; it is
+                        not hidden in a one-off values file.</p>
+                    <h2 id="illustrative-tenant-declaration">Illustrative tenant declaration</h2>
+                    <pre><code class="language-yaml">tenant: acme
+userspace:
+  namespace: tenant-acme-prod
+  domain: automations.acme.example
+deployment:
+  engine: helm
+  template: n8n
+  release: n8n-acme
+  values:
+    mode: queue
+    workerReplicas: 3
+  secretScope: tenants/acme/n8n
+</code></pre>
+                    <p>This is an architectural example, not a promise of stable field names. The durable pattern is the
+                        separation of template identity, tenant configuration, secret scope, and release ownership.</p>
+                    <h2 id="production-decisions-to-make-before-onboarding-customers">Production decisions to make
+                        before onboarding customers</h2>
+                    <p><strong>Database and Redis topology.</strong> Queue mode requires both. Decide whether isolation
+                        means separate service instances, separate databases and credentials, or a carefully governed
+                        shared service.</p>
+                    <p><strong>Encryption keys and credentials.</strong> Keep n8n encryption keys, database passwords,
+                        Redis credentials, and third-party connector secrets out of chart values. Resolve them from
+                        tenant-scoped secret storage and rotate them through a reviewed process.</p>
+                    <p><strong>Webhook routing.</strong> n8n supports optional webhook processors for scaling incoming
+                        production webhooks. Give each tenant hostname ownership, TLS, rate limits, and a clear route to
+                        the correct release.</p>
+                    <p><strong>Worker capacity.</strong> Set resource requests and limits, then choose HPA or KEDA based
+                        on the workload. Autoscaling configuration is not a substitute for per-tenant quotas and cost
+                        controls.</p>
+                    <p><strong>Upgrades and rollback.</strong> Pin chart and image versions. Promote a tested revision
+                        through tenant cohorts, retain the previous known-good values, and keep database compatibility
+                        in the rollback decision.</p>
+                    <h2 id="when-a-shared-n8n-instance-is-the-better-fit">When a shared n8n instance is the better fit
+                    </h2>
+                    <p>Dedicated releases cost more to operate. A shared instance can be the right choice for internal
+                        automation, low-risk prototypes, or products whose users do not need infrastructure-level
+                        separation. Choose release-per-customer when isolation, independent change windows,
+                        customer-specific networking, or clean lifecycle ownership justify that overhead.</p>
+                    <h2 id="evaluation-checklist">Evaluation checklist</h2>
+                    <ul>
+                        <li>Can one tenant's workers exhaust another tenant's capacity?</li>
+                        <li>Are encryption keys and connector credentials scoped per tenant?</li>
+                        <li>Can a hostname resolve only to its owning release?</li>
+                        <li>Are PostgreSQL, Redis, and binary-data boundaries documented?</li>
+                        <li>Can you upgrade one customer, verify it, and stop the rollout?</li>
+                        <li>Does offboarding remove routes and runtime access before deleting retained data?</li>
+                    </ul>
+                    <p>OpenTenant makes those lifecycle operations declarative while leaving n8n's own runtime and
+                        security behavior to the upstream software and the infrastructure you configure.</p>
+                    <h2 id="sources">Sources</h2>
+                    <ul>
+                        <li><a href="https://github.com/n8n-io/n8n-hosting/blob/main/charts/n8n/README.md"
+                                rel="noopener noreferrer nofollow">n8n Helm chart</a></li>
+                        <li><a href="https://docs.n8n.io/deploy/host-n8n/configure-n8n/scaling/enable-queue-mode"
+                                rel="noopener noreferrer nofollow">n8n queue mode</a></li>
+                    </ul>
+                </div>
+            </article>
+            <aside>
+                <div class="sticky top-28 rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+                    <div class="mb-2 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
+                        Source check</div>
+                    <p class="mb-5 text-sm leading-relaxed text-ploy-text-secondary">Every published guide must cite
+                        upstream documentation and use a tested deployment example.</p><a
+                        href="https://github.com/n8n-io/n8n-hosting/blob/main/charts/n8n/README.md"
+                        class="text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Upstream
+                        source →</a>
+                </div>
+            </aside>
+        </div>
+        <section class="border-y border-ploy-border-primary bg-ploy-background-secondary py-16 text-center">
+            <div class="mx-auto max-w-[42rem] px-6">
+                <h2 class="mb-4 text-balance text-3xl font-extrabold">From chart installation to tenant operations.</h2>
+                <p class="mb-7 text-ploy-text-secondary">See how OpenTenant models release, secrets, domain, and
+                    lifecycle boundaries.</p><a href="../../index.html#evaluation"
+                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-button font-button text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ploy-accent-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ploy-background-primary disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-ploy-button-primary-border bg-ploy-button-primary-background text-ploy-button-primary-text hover:bg-ploy-button-primary-background/90 h-10 px-4">Inspect
+                    Architecture</a>
+            </div>
+        </section>
+    </main>
+    <footer
+        class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm min-w-0 min-h-0 py-9 border-t">
+        <div
+            class="min-w-0 min-h-0 max-w-[68.75rem] flex flex-wrap justify-between gap-4 mx-auto px-6 footer-inner w-full">
+            <div>© 2026 OpenTenant — open source under MIT</div>
+            <div><a href="https://github.com/opentenant/platform"
+                    class="text-ploy-text-secondary min-w-0 min-h-0 ml-[1.375rem] hover:text-ploy-text-primary">GitHub</a>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>

@@ -4,9 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/svg+xml"
-        href="/favicon.svg">
-    <meta name="ploy-astro-starter-version" content="1.0.0">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <title>Grafana Helm Chart: A Multi-Tenant Deployment Blueprint — OpenTenant | </title>
     <meta name="description"
         content="How to operate isolated Grafana releases per customer while keeping chart versions, secrets, domains, and upgrades under one declarative control plane." />
@@ -31,19 +29,29 @@
         class="border-solid border-ploy-border-primary bg-ploy-background-primary/80 min-w-0 min-h-0 sticky z-[100] backdrop-blur-md border-b top-0">
         <div
             class="h-16 min-w-0 min-h-0 max-w-[68.75rem] flex justify-between items-center mx-auto px-6 nav-inner w-full">
-            
-                <a href="/" aria-label="OpenTenant home" class="logo"><span
-                        class="brand-logo inline-flex items-center gap-2 "><img src="/favicon.svg" width="34"/><span
-                            class="brand-logo__wordmark text-lg font-bold tracking-[-0.02em] text-ploy-text-primary">OpenTenant</span></span></a>
-            <div class="flex items-center gap-6 nav-links"><a href="../index.html"
+            <a href="../../index.html" aria-label="OpenTenant home" class="logo"><span
+                    class="brand-logo inline-flex items-center gap-2 "><svg aria-hidden="true" viewBox="0 0 32 32"
+                        class="brand-logo__mark size-7 shrink-0">
+                        <rect width="32" height="32" rx="7" class="fill-ploy-accent-primary"></rect>
+                        <path d="M8 23V9h6v14M18 23V9h6v14" fill="none" class="stroke-ploy-accent-primary-950"
+                            stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                        <path d="M5.5 25.5h21" fill="none" class="stroke-ploy-accent-primary-950" stroke-width="2.6"
+                            stroke-linecap="round"></path>
+                        <circle cx="11" cy="16" r="1.25" class="fill-ploy-accent-primary-950"></circle>
+                        <circle cx="21" cy="16" r="1.25" class="fill-ploy-accent-primary-950"></circle>
+                    </svg><span
+                        class="brand-logo__wordmark text-lg font-bold tracking-[-0.02em] text-ploy-text-primary">OpenTenant</span></span></a>
+            <div class="flex items-center gap-6 nav-links"><a href="#evaluation"
+                    class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Evaluate</a><a
+                    href="../index.html"
                     class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Articles</a><a
                     href="#cases"
                     class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Use
                     Cases</a><a href="https://github.com/opentenant/platform"
                     class="border-solid border-ploy-border-primary text-ploy-text-secondary font-semibold text-sm block transition-[transform,translate,scale,rotate,box-shadow] px-[1.375rem] py-2.5 rounded-lg hover:text-ploy-text-primary border">GitHub</a><a
-                    href="/login"
-                    class="bg-ploy-button-primary-background text-ploy-button-primary-text font-semibold text-sm block transition-shadow px-[1.375rem] py-2.5 rounded-lg hover:shadow-lg">Login</a>
-            </div>
+                    href="../../login.html"
+                    class="bg-ploy-button-primary-background text-ploy-button-primary-text font-semibold text-sm block transition-shadow px-[1.375rem] py-2.5 rounded-lg hover:shadow-lg">Get
+                    Instance</a></div>
         </div>
     </nav>
     <main class="article-page">
@@ -56,10 +64,10 @@
                         <div
                             class="mb-5 flex flex-wrap gap-3 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
                             <span>helm-chart-guides</span><span>architecture</span><span
-                                class="text-ploy-text-secondary">planned</span></div>
+                                class="text-ploy-text-secondary">draft</span></div>
                         <h1
                             class="max-w-[52rem] text-balance text-[2.7rem] font-extrabold leading-[1.08] tracking-[-0.03em] md:text-[4rem]">
-                            Grafana Helm Chart: A Multi-Tenant Deployment Blueprint</h1>
+                            Grafana Helm Chart per Customer: A Multi-Tenant Deployment Blueprint</h1>
                     </div>
                     <dl class="divide-y divide-ploy-border-primary border-y border-ploy-border-primary text-sm">
                         <div class="flex justify-between gap-4 py-3">
@@ -76,9 +84,9 @@
                         </div>
                     </dl>
                 </div>
-                <p class="mt-8 max-w-[48rem] text-lg leading-relaxed text-ploy-text-secondary">How to operate isolated
-                    Grafana releases per customer while keeping chart versions, secrets, domains, and upgrades under one
-                    declarative control plane.</p>
+                <p class="mt-8 max-w-[48rem] text-lg leading-relaxed text-ploy-text-secondary">Build isolated Grafana
+                    customer portals with dedicated releases, datasource credentials, persistence, domains, and
+                    controlled upgrade windows.</p>
             </div>
         </header>
         <div class="mx-auto grid max-w-[68.75rem] gap-12 px-6 py-16 lg:grid-cols-[13rem_minmax(0,1fr)_12rem]">
@@ -86,15 +94,131 @@
                 <div class="sticky top-28">
                     <div class="mb-4 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
                         On this page</div>
-                    <nav class="space-y-3 text-sm text-ploy-text-secondary"></nav>
+                    <nav class="space-y-3 text-sm text-ploy-text-secondary"><a
+                            href="#what-the-grafana-helm-chart-handles" class="block hover:text-ploy-text-primary">What
+                            the Grafana Helm chart handles</a><a
+                            href="#the-use-case-customer-specific-observability-portals"
+                            class="block hover:text-ploy-text-primary">The use case: customer-specific observability
+                            portals</a><a href="#reference-architecture"
+                            class="block hover:text-ploy-text-primary">Reference architecture</a><a
+                            href="#persistence-and-configuration-are-part-of-the-boundary"
+                            class="block hover:text-ploy-text-primary">Persistence and configuration are part of the
+                            boundary</a><a href="#illustrative-tenant-declaration"
+                            class="block hover:text-ploy-text-primary">Illustrative tenant declaration</a><a
+                            href="#upgrade-strategy-for-many-grafana-releases"
+                            class="block hover:text-ploy-text-primary">Upgrade strategy for many Grafana releases</a><a
+                            href="#when-shared-grafana-is-enough" class="block hover:text-ploy-text-primary">When shared
+                            Grafana is enough</a><a href="#evaluation-checklist"
+                            class="block hover:text-ploy-text-primary">Evaluation checklist</a><a href="#sources"
+                            class="block hover:text-ploy-text-primary">Sources</a></nav>
                 </div>
             </aside>
             <article class="min-w-0">
                 <div class="prose prose-invert ploy-richtext max-w-none prose-headings:text-balance">
-                    <h1 id="editorial-brief">Editorial brief</h1>
-                    <p>Primary angle: separate chart installation from customer lifecycle orchestration. Include
-                        datasource-secret boundaries, dashboards as configuration, ingress, upgrades, and cost
-                        trade-offs.</p>
+                    <h1 id="grafana-helm-chart-per-customer-a-multi-tenant-deployment-blueprint">Grafana Helm Chart per
+                        Customer: A Multi-Tenant Deployment Blueprint</h1>
+                    <p>A Grafana Kubernetes deployment can be much more than an internal dashboard. SaaS vendors and
+                        managed-service teams often need a branded observability portal for every customer, with
+                        different datasources, credentials, plugins, dashboards, domains, and maintenance windows. A
+                        dedicated Grafana release per tenant creates those boundaries; OpenTenant automates their
+                        lifecycle around the existing Helm chart.</p>
+                    <h2 id="what-the-grafana-helm-chart-handles">What the Grafana Helm chart handles</h2>
+                    <p>Grafana's <a href="https://grafana.com/docs/grafana/latest/setup-grafana/installation/helm/"
+                            rel="noopener noreferrer nofollow">Helm deployment guide</a> covers installation into
+                        Kubernetes, namespace selection, values-based configuration, access, persistence, plugins, and
+                        private certificate authorities. Grafana recommends using a separate namespace rather than the
+                        default namespace to reduce conflicts and improve resource organization.</p>
+                    <p>The chart is the right unit for expressing one Grafana installation. It does not maintain a
+                        customer registry or decide which release, domain, datasource Secret, dashboard bundle, and
+                        upgrade policy belong to each customer.</p>
+                    <h2 id="the-use-case-customer-specific-observability-portals">The use case: customer-specific
+                        observability portals</h2>
+                    <p>A release-per-customer model is useful when Grafana is part of the product experience rather than
+                        a shared internal tool. Each customer receives an environment with its own:</p>
+                    <ul>
+                        <li>hostname, TLS, and white-label settings;</li>
+                        <li>datasource endpoints and credentials;</li>
+                        <li>dashboard provisioning configuration;</li>
+                        <li>plugins and private CA trust;</li>
+                        <li>persistence and backup policy;</li>
+                        <li>compute limits and availability settings;</li>
+                        <li>chart version and maintenance window.</li>
+                    </ul>
+                    <p>This boundary makes it easier to answer operational questions. Which customers use a particular
+                        plugin? Which release still trusts an old CA? Which datasource credential needs rotation? Which
+                        tenants are ready for the next Grafana version? Those answers can come from tenant declarations
+                        and release state instead of an inventory spreadsheet.</p>
+                    <h2 id="reference-architecture">Reference architecture</h2>
+                    <pre><code class="language-text">customer observability profile
+  → validate domain, datasource, and plugin policy
+  → resolve tenant-scoped credentials
+  → render Grafana values for one release
+  → install into the tenant namespace
+  → verify persistence, datasource health, and public route
+  → promote or roll back independently
+</code></pre>
+                    <p>OpenTenant references the upstream chart and compiles only the per-tenant differences. Shared
+                        dashboard bundles can remain versioned templates; tenant-specific datasource URLs, secrets,
+                        branding, and resource settings remain overlays.</p>
+                    <h2 id="persistence-and-configuration-are-part-of-the-boundary">Persistence and configuration are
+                        part of the boundary</h2>
+                    <p>Grafana's documentation notes that persistent storage is disabled by default in the documented
+                        Helm flow and recommends enabling it when data must survive restarts or failures. For a
+                        customer-facing service, decide what is persisted in Grafana, what is provisioned from Git, and
+                        what can be rebuilt.</p>
+                    <p>A strongly declarative model keeps dashboards, folders, alerting configuration, and datasource
+                        definitions in versioned sources where practical. Sensitive datasource credentials should be
+                        supplied through Secret references, not committed into values files. If a tenant uses a private
+                        certificate authority, its trust material should be scoped and reviewed with the same care as
+                        credentials.</p>
+                    <h2 id="illustrative-tenant-declaration">Illustrative tenant declaration</h2>
+                    <pre><code class="language-yaml">tenant: acme
+userspace:
+  namespace: tenant-acme-observability
+  domain: metrics.acme.example
+deployment:
+  engine: helm
+  template: grafana
+  release: grafana-acme
+  config:
+    dashboardBundle: customer-portal-v4
+    persistence: enabled
+  secretScope: tenants/acme/grafana
+</code></pre>
+                    <p>The field names are illustrative. The design principle is stable: chart version, tenant overlay,
+                        secret ownership, hostname, and release status are represented separately.</p>
+                    <h2 id="upgrade-strategy-for-many-grafana-releases">Upgrade strategy for many Grafana releases</h2>
+                    <p>Do not upgrade every customer simultaneously. Pin a chart and application version, validate it
+                        against a representative datasource and dashboard set, then promote through cohorts. Record the
+                        rendered configuration hash and Helm revision for each tenant.</p>
+                    <p>A rollback plan must consider both Kubernetes resources and Grafana's stored state. If a release
+                        changes plugins, database state, or provisioning behavior, restoring the previous chart revision
+                        alone may not restore service. Backups and compatibility checks belong in the rollout policy.
+                    </p>
+                    <h2 id="when-shared-grafana-is-enough">When shared Grafana is enough</h2>
+                    <p>A single shared Grafana instance is usually simpler and cheaper for internal teams or customers
+                        who can be safely separated with Grafana organizations, folders, and datasource permissions.
+                        Dedicated releases make sense when customers require custom domains, stronger credential and
+                        plugin boundaries, independent availability or maintenance windows, or contractual separation
+                        that a shared instance cannot satisfy cleanly.</p>
+                    <h2 id="evaluation-checklist">Evaluation checklist</h2>
+                    <ul>
+                        <li>Does every tenant have an explicit namespace and release owner?</li>
+                        <li>Are datasource credentials isolated and rotatable without touching other tenants?</li>
+                        <li>Are dashboards and alerting rules provisioned from a versioned source?</li>
+                        <li>Is persistent state backed up, or can the release be rebuilt deterministically?</li>
+                        <li>Can plugins and private CA bundles vary without creating uncontrolled drift?</li>
+                        <li>Can one tenant be upgraded and verified before the next cohort begins?</li>
+                    </ul>
+                    <p>OpenTenant turns those repeated decisions into one reviewable tenant lifecycle while Grafana
+                        remains responsible for the observability application itself.</p>
+                    <h2 id="sources">Sources</h2>
+                    <ul>
+                        <li><a href="https://grafana.com/docs/grafana/latest/setup-grafana/installation/helm/"
+                                rel="noopener noreferrer nofollow">Deploy Grafana using Helm charts</a></li>
+                        <li><a href="https://kubernetes.io/docs/concepts/security/multi-tenancy/"
+                                rel="noopener noreferrer nofollow">Kubernetes multi-tenancy</a></li>
+                    </ul>
                 </div>
             </article>
             <aside>
@@ -128,10 +252,6 @@
                     class="text-ploy-text-secondary min-w-0 min-h-0 ml-[1.375rem] hover:text-ploy-text-primary">GitHub</a>
             </div>
         </div>
-    </footer>
-    <meta name="ploy-ploydb-reads"
-        content="[{&quot;ployDbId&quot;:&quot;pdb_d8e097e350704072a94c&quot;,&quot;tableId&quot;:&quot;tbl_096668abfd1e4613b96a&quot;,&quot;filters&quot;:[{&quot;field&quot;:&quot;fld_f6d93c32653d4e42&quot;,&quot;value&quot;:&quot;grafana-helm-chart-multi-tenant-blueprint&quot;}],&quot;rowCount&quot;:1,&quot;servedSample&quot;:false}]">
-    <script>(function () { var els = document.querySelectorAll("main section,main article,body>section"); els.forEach(function (el) { el.classList.add("portable-reveal") }); if ("IntersectionObserver" in window) { var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("is-visible"); io.unobserve(e.target) } }) }, { rootMargin: "0px 0px -12% 0px" }); els.forEach(function (el) { io.observe(el) }) } else { els.forEach(function (el) { el.classList.add("is-visible") }) } var f = document.querySelector("form"); if (f) f.addEventListener("submit", function (e) { e.preventDefault(); location.href = document.documentElement.dataset.liveLogin }); Array.from(document.querySelectorAll("button")).filter(function (b) { return ["GitHub", "GitLab"].includes(b.textContent.trim()) }).forEach(function (b) { b.addEventListener("click", function () { location.href = document.documentElement.dataset.liveLogin }) }) })();</script>
 </body>
 
 </html>

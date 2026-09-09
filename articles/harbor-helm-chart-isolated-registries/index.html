@@ -4,135 +4,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/svg+xml"
-        href="/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <meta name="ploy-astro-starter-version" content="1.0.0">
     <title>Harbor Helm Chart: Building Isolated Registries for Customers — OpenTenant | </title>
-    <meta name="description"
-        content="A deployment blueprint for customer-specific Harbor registries with dedicated domains, credentials, storage policies, and release lifecycles." />
+    <meta name="description" content="A deployment blueprint for customer-specific Harbor registries with dedicated domains, credentials, storage policies, and release lifecycles." />
     <meta name="robots" content="noindex, nofollow" />
     <link rel="canonical" href="https://www.opentenant.org/articles/harbor-helm-chart-isolated-registries" />
     <meta property="og:type" content="article" />
-    <meta property="og:title"
-        content="Harbor Helm Chart: Building Isolated Registries for Customers — OpenTenant |  " />
+    <meta property="og:title" content="Harbor Helm Chart: Building Isolated Registries for Customers — OpenTenant |  " />
     <meta property="og:site_name" content=" " />
-    <meta property="og:description"
-        content="A deployment blueprint for customer-specific Harbor registries with dedicated domains, credentials, storage policies, and release lifecycles." />
+    <meta property="og:description" content="A deployment blueprint for customer-specific Harbor registries with dedicated domains, credentials, storage policies, and release lifecycles." />
     <meta property="og:url" content="https://www.opentenant.org/articles/harbor-helm-chart-isolated-registries" />
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title"
-        content="Harbor Helm Chart: Building Isolated Registries for Customers — OpenTenant |  " />
-    <meta name="twitter:description"
-        content="A deployment blueprint for customer-specific Harbor registries with dedicated domains, credentials, storage policies, and release lifecycles." />
+    <meta name="twitter:title" content="Harbor Helm Chart: Building Isolated Registries for Customers — OpenTenant |  " />
+    <meta name="twitter:description" content="A deployment blueprint for customer-specific Harbor registries with dedicated domains, credentials, storage policies, and release lifecycles." />
     <link rel="stylesheet" href="/styles.css">
 </head>
 
 <body class="bg-ploy-background-primary text-ploy-text-primary leading-[1.6] decoration-[rgb(230,237,243)] m-0"
     style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
-    <nav
-        class="border-solid border-ploy-border-primary bg-ploy-background-primary/80 min-w-0 min-h-0 sticky z-[100] backdrop-blur-md border-b top-0">
-        <div
-            class="h-16 min-w-0 min-h-0 max-w-[68.75rem] flex justify-between items-center mx-auto px-6 nav-inner w-full">
-            
-                <a href="/" aria-label="OpenTenant home" class="logo"><span
-                        class="brand-logo inline-flex items-center gap-2 "><img src="/favicon.svg" width="34"/><span
-                            class="brand-logo__wordmark text-lg font-bold tracking-[-0.02em] text-ploy-text-primary">OpenTenant</span></span></a>
-            <div class="flex items-center gap-6 nav-links"><a href="../index.html"
-                    class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Articles</a><a
-                    href="#cases"
-                    class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Use
-                    Cases</a><a href="https://github.com/opentenant/platform"
-                    class="border-solid border-ploy-border-primary text-ploy-text-secondary font-semibold text-sm block transition-[transform,translate,scale,rotate,box-shadow] px-[1.375rem] py-2.5 rounded-lg hover:text-ploy-text-primary border">GitHub</a><a
-                    href="/login"
-                    class="bg-ploy-button-primary-background text-ploy-button-primary-text font-semibold text-sm block transition-shadow px-[1.375rem] py-2.5 rounded-lg hover:shadow-lg">Login</a>
-            </div>
+    <nav class="border-solid border-ploy-border-primary bg-ploy-background-primary/80 min-w-0 min-h-0 sticky z-[100] backdrop-blur-md border-b top-0">
+        <div class="h-16 min-w-0 min-h-0 max-w-[68.75rem] flex justify-between items-center mx-auto px-6 nav-inner w-full">
+            <a href="/" aria-label="OpenTenant home" class="logo"><span class="brand-logo inline-flex items-center gap-2 "><img src="/favicon.svg" width="34"/><span class="brand-logo__wordmark text-lg font-bold tracking-[-0.02em] text-ploy-text-primary">OpenTenant</span></span></a>
+            <div class="flex items-center gap-6 nav-links"><a href="../index.html" class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Articles</a><a href="#cases" class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Use Cases</a><a href="https://github.com/opentenant/platform" class="border-solid border-ploy-border-primary text-ploy-text-secondary font-semibold text-sm block transition-[transform,translate,scale,rotate,box-shadow] px-[1.375rem] py-2.5 rounded-lg hover:text-ploy-text-primary border">GitHub</a><a href="/login" class="bg-ploy-button-primary-background text-ploy-button-primary-text font-semibold text-sm block transition-shadow px-[1.375rem] py-2.5 rounded-lg hover:shadow-lg">Login</a></div>
         </div>
     </nav>
     <main class="article-page">
         <header class="border-b border-ploy-border-primary pb-16 pt-[6.25rem]">
-            <div class="mx-auto max-w-[68.75rem] px-6"><a href="../index.html"
-                    class="mb-8 inline-block font-mono text-xs uppercase tracking-[0.14em] text-ploy-accent-primary-500">←
-                    Technical library</a>
+            <div class="mx-auto max-w-[68.75rem] px-6"><a href="../index.html" class="mb-8 inline-block font-mono text-xs uppercase tracking-[0.14em] text-ploy-accent-primary-500">← Technical library</a>
                 <div class="grid gap-10 lg:grid-cols-[1fr_18rem] lg:items-end">
                     <div>
-                        <div
-                            class="mb-5 flex flex-wrap gap-3 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
-                            <span>helm-chart-guides</span><span>security</span><span
-                                class="text-ploy-text-secondary">planned</span></div>
-                        <h1
-                            class="max-w-[52rem] text-balance text-[2.7rem] font-extrabold leading-[1.08] tracking-[-0.03em] md:text-[4rem]">
-                            Harbor Helm Chart: Building Isolated Registries for Customers</h1>
+                        <div class="mb-5 flex flex-wrap gap-3 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
+                            <span>helm-chart-guides</span><span>security</span><span class="text-ploy-text-secondary">draft</span>
+                        </div>
+                        <h1 class="max-w-[52rem] text-balance text-[2.7rem] font-extrabold leading-[1.08] tracking-[-0.03em] md:text-[4rem]">Harbor Helm Chart: Building Isolated Registries for Customers</h1>
                     </div>
                     <dl class="divide-y divide-ploy-border-primary border-y border-ploy-border-primary text-sm">
-                        <div class="flex justify-between gap-4 py-3">
-                            <dt class="text-ploy-text-secondary">Chart</dt>
-                            <dd>Harbor</dd>
-                        </div>
-                        <div class="flex justify-between gap-4 py-3">
-                            <dt class="text-ploy-text-secondary">Intent</dt>
-                            <dd>mofu</dd>
-                        </div>
-                        <div class="flex justify-between gap-4 py-3">
-                            <dt class="text-ploy-text-secondary">Author</dt>
-                            <dd>OpenTenant</dd>
-                        </div>
+                        <div class="flex justify-between gap-4 py-3"><dt class="text-ploy-text-secondary">Chart</dt><dd>Harbor</dd></div>
+                        <div class="flex justify-between gap-4 py-3"><dt class="text-ploy-text-secondary">Intent</dt><dd>mofu</dd></div>
+                        <div class="flex justify-between gap-4 py-3"><dt class="text-ploy-text-secondary">Author</dt><dd>OpenTenant</dd></div>
                     </dl>
                 </div>
-                <p class="mt-8 max-w-[48rem] text-lg leading-relaxed text-ploy-text-secondary">A deployment blueprint
-                    for customer-specific Harbor registries with dedicated domains, credentials, storage policies, and
-                    release lifecycles.</p>
+                <p class="mt-8 max-w-[48rem] text-lg leading-relaxed text-ploy-text-secondary">A deployment blueprint for customer-specific Harbor registries with dedicated domains, credentials, storage policies, and release lifecycles.</p>
             </div>
         </header>
         <div class="mx-auto grid max-w-[68.75rem] gap-12 px-6 py-16 lg:grid-cols-[13rem_minmax(0,1fr)_12rem]">
             <aside class="hidden lg:block">
                 <div class="sticky top-28">
-                    <div class="mb-4 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
-                        On this page</div>
-                    <nav class="space-y-3 text-sm text-ploy-text-secondary"></nav>
+                    <div class="mb-4 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">On this page</div>
+                    <nav class="space-y-3 text-sm text-ploy-text-secondary">
+                        <a href="#direct-answer" class="block hover:text-ploy-text-primary">Direct answer</a>
+                        <a href="#what-the-harbor-helm-chart-provides" class="block hover:text-ploy-text-primary">What the Harbor Helm chart provides</a>
+                        <a href="#the-use-case-dedicated-container-registries-per-customer" class="block hover:text-ploy-text-primary">The use case: dedicated container registries per customer</a>
+                        <a href="#reference-architecture" class="block hover:text-ploy-text-primary">Reference architecture</a>
+                        <a href="#illustrative-tenant-declaration" class="block hover:text-ploy-text-primary">Illustrative tenant declaration</a>
+                        <a href="#production-decisions-before-onboarding" class="block hover:text-ploy-text-primary">Production decisions before onboarding</a>
+                        <a href="#evaluation-checklist" class="block hover:text-ploy-text-primary">Evaluation checklist</a>
+                        <a href="#sources" class="block hover:text-ploy-text-primary">Sources</a>
+                    </nav>
                 </div>
             </aside>
             <article class="min-w-0">
                 <div class="prose prose-invert ploy-richtext max-w-none prose-headings:text-balance">
-                    <h1 id="editorial-brief">Editorial brief</h1>
-                    <p>Cover registry domains, TLS, storage, database and Redis dependencies, robot credentials,
-                        retention, upgrades, and tenant offboarding.</p>
+                    <h1 id="harbor-helm-chart-building-isolated-registries-for-customers">Harbor Helm Chart: Building Isolated Registries for Customers</h1>
+                    <h2 id="direct-answer">Direct answer</h2>
+                    <p>Harbor is an open-source, trusted cloud-native registry that stores, signs, and scans container images, Helm charts, and any other OCI-compliant artifacts. The official Harbor Helm chart deploys Harbor on Kubernetes. A release-per-customer model gives each tenant its own Harbor registry with dedicated domains, credentials, storage policies, project isolation, and release lifecycles.</p>
+                    <h2 id="what-the-harbor-helm-chart-provides">What the Harbor Helm chart provides</h2>
+                    <p>The chart installs Harbor components including core, registry, jobservice, database, and Redis. Harbor provides:</p>
+                    <ul>
+                        <li>Private container and artifact registry with role-based access control</li>
+                        <li>Vulnerability scanning using Trivy or other compatible scanners</li>
+                        <li>Policy-based image replication across registries</li>
+                        <li>Project-based isolation for granular access control</li>
+                        <li>OCI artifact support for Helm charts</li>
+                        <li>Webhook notifications for CI/CD integration</li>
+                    </ul>
+                    <p>Since version 1.6.0, Harbor supports Helm charts management as a composite, cloud-native registry.</p>
+                    <h2 id="the-use-case-dedicated-container-registries-per-customer">The use case: dedicated container registries per customer</h2>
+                    <p>A release-per-customer model is valuable when customers need:</p>
+                    <ul>
+                        <li>Independent container image and Helm chart storage</li>
+                        <li>Customer-specific domains and TLS</li>
+                        <li>Separate vulnerability scanning and retention policies</li>
+                        <li>Isolated replication and webhook configurations</li>
+                        <li>Controlled storage quotas and lifecycle policies</li>
+                        <li>Clean export, suspension, and deletion boundaries</li>
+                    </ul>
+                    <p>Harbor's project-based isolation provides logical separation within a shared instance. Dedicated releases add operational separation: independent runtime, storage ownership, credentials, domain, network policy, and maintenance windows.</p>
+                    <h2 id="reference-architecture">Reference architecture</h2>
+                    <pre><code class="language-text">customer registry profile
+  → validate domain, storage, and retention requirements
+  → resolve tenant-scoped database, Redis, and storage secrets
+  → render Harbor values for one release
+  → install into the tenant namespace
+  → verify registry, scanner, and route readiness
+  → promote or roll back independently
+</code></pre>
+                    <p>The chart uses Helm's templating engine to generate Kubernetes manifests from user-provided configuration values. OpenTenant supplies tenant-specific configuration while keeping the base chart versioned.</p>
+                    <h2 id="illustrative-tenant-declaration">Illustrative tenant declaration</h2>
+                    <pre><code class="language-yaml">tenant: acme
+userspace:
+  namespace: tenant-acme-harbor
+  domain: registry.acme.example
+deployment:
+  engine: helm
+  template: harbor
+  release: harbor-acme
+  config:
+    registry:
+      storage:
+        s3:
+          bucket: harbor-acme
+          region: us-east-1
+    database:
+      external:
+        host: postgres-acme.svc
+        database: harbor
+    redis:
+      external:
+        host: redis-acme.svc
+  secretScope: tenants/acme/harbor
+</code></pre>
+                    <p>This is illustrative. Production Harbor declarations require extensive configuration across all components.</p>
+                    <h2 id="production-decisions-before-onboarding">Production decisions before onboarding</h2>
+                    <p><strong>Storage topology.</strong> Harbor stores images, Helm charts, and other artifacts. Choose S3-compatible object storage, Azure Blob, GCS, or other supported backends. Each tenant needs a dedicated bucket or path with isolated credentials.</p>
+                    <p><strong>Database and Redis.</strong> Harbor requires PostgreSQL and Redis. Decide whether each customer receives dedicated service instances, dedicated databases on shared services, or a governed shared topology.</p>
+                    <p><strong>Domain and TLS.</strong> Each customer registry needs a unique domain and TLS certificate. Harbor supports external TLS termination through Ingress or Gateway API.</p>
+                    <p><strong>Project isolation.</strong> Harbor's project-based isolation provides logical separation within a registry. For stronger boundaries, each release can be configured with its own set of projects, users, and policies.</p>
+                    <p><strong>Retention and replication.</strong> Configure per-tenant retention policies for image and chart cleanup. Replication can sync artifacts between customer registries and central repositories.</p>
+                    <p><strong>Vulnerability scanning.</strong> Each tenant registry needs scanning configuration. Scanners like Trivy can be configured per release.</p>
+                    <h2 id="evaluation-checklist">Evaluation checklist</h2>
+                    <ul>
+                        <li>Does every tenant have a dedicated storage bucket and credentials?</li>
+                        <li>Are database, Redis, and storage credentials isolated per tenant?</li>
+                        <li>Can one tenant's image pull or push affect another tenant's registry performance?</li>
+                        <li>Are retention and replication policies configured per tenant?</li>
+                        <li>Can you upgrade one tenant, verify it, and stop the rollout?</li>
+                        <li>Does offboarding remove storage, credentials, and runtime resources?</li>
+                        <li>Are vulnerability scans configured and reports retained per tenant?</li>
+                    </ul>
+                    <h2 id="sources">Sources</h2>
+                    <ul>
+                        <li><a href="https://goharbor.io/docs/2.0.0/install-config/harbor-helm/" rel="noopener noreferrer nofollow">Harbor Helm chart documentation</a></li>
+                        <li><a href="https://goharbor.io/docs/2.0.0/working-with-projects/working-with-images/managing-helm-charts/" rel="noopener noreferrer nofollow">Harbor managing Helm charts</a></li>
+                        <li><a href="https://goharbor.io/blog/harbor-2.0/" rel="noopener noreferrer nofollow">Harbor OCI support</a></li>
+                    </ul>
+                    <p>OpenTenant transforms Harbor from a single registry into a multi‑tenant registry platform with each customer owning its own domain, storage, and security policies.</p>
                 </div>
             </article>
             <aside>
                 <div class="sticky top-28 rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
-                    <div class="mb-2 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
-                        Source check</div>
-                    <p class="mb-5 text-sm leading-relaxed text-ploy-text-secondary">Every published guide must cite
-                        upstream documentation and use a tested deployment example.</p><a
-                        href="https://github.com/goharbor/harbor-helm"
-                        class="text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Upstream
-                        source →</a>
+                    <div class="mb-2 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">Source check</div>
+                    <p class="mb-5 text-sm leading-relaxed text-ploy-text-secondary">Every published guide must cite upstream documentation and use a tested deployment example.</p>
+                    <a href="https://goharbor.io/docs/2.0.0/install-config/harbor-helm/" class="text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Upstream source →</a>
                 </div>
             </aside>
         </div>
         <section class="border-y border-ploy-border-primary bg-ploy-background-secondary py-16 text-center">
             <div class="mx-auto max-w-[42rem] px-6">
                 <h2 class="mb-4 text-balance text-3xl font-extrabold">From chart installation to tenant operations.</h2>
-                <p class="mb-7 text-ploy-text-secondary">See how OpenTenant models release, secrets, domain, and
-                    lifecycle boundaries.</p><a href="../../index.html#evaluation"
-                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-button font-button text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ploy-accent-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ploy-background-primary disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-ploy-button-primary-border bg-ploy-button-primary-background text-ploy-button-primary-text hover:bg-ploy-button-primary-background/90 h-10 px-4">Inspect
-                    Architecture</a>
+                <p class="mb-7 text-ploy-text-secondary">See how OpenTenant models release, secrets, domain, and lifecycle boundaries.</p>
+                <a href="../../index.html#evaluation" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-button font-button text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ploy-accent-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ploy-background-primary disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-ploy-button-primary-border bg-ploy-button-primary-background text-ploy-button-primary-text hover:bg-ploy-button-primary-background/90 h-10 px-4">Inspect Architecture</a>
             </div>
         </section>
     </main>
-    <footer
-        class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm min-w-0 min-h-0 py-9 border-t">
-        <div
-            class="min-w-0 min-h-0 max-w-[68.75rem] flex flex-wrap justify-between gap-4 mx-auto px-6 footer-inner w-full">
+    <footer class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm min-w-0 min-h-0 py-9 border-t">
+        <div class="min-w-0 min-h-0 max-w-[68.75rem] flex flex-wrap justify-between gap-4 mx-auto px-6 footer-inner w-full">
             <div>© 2026 OpenTenant — open source under MIT</div>
-            <div><a href="https://github.com/opentenant/platform"
-                    class="text-ploy-text-secondary min-w-0 min-h-0 ml-[1.375rem] hover:text-ploy-text-primary">GitHub</a>
-            </div>
+            <div><a href="https://github.com/opentenant/platform" class="text-ploy-text-secondary min-w-0 min-h-0 ml-[1.375rem] hover:text-ploy-text-primary">GitHub</a></div>
         </div>
     </footer>
-    <meta name="ploy-ploydb-reads"
-        content="[{&quot;ployDbId&quot;:&quot;pdb_d8e097e350704072a94c&quot;,&quot;tableId&quot;:&quot;tbl_096668abfd1e4613b96a&quot;,&quot;filters&quot;:[{&quot;field&quot;:&quot;fld_f6d93c32653d4e42&quot;,&quot;value&quot;:&quot;harbor-helm-chart-isolated-registries&quot;}],&quot;rowCount&quot;:1,&quot;servedSample&quot;:false}]">
-    <script>(function () { var els = document.querySelectorAll("main section,main article,body>section"); els.forEach(function (el) { el.classList.add("portable-reveal") }); if ("IntersectionObserver" in window) { var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("is-visible"); io.unobserve(e.target) } }) }, { rootMargin: "0px 0px -12% 0px" }); els.forEach(function (el) { io.observe(el) }) } else { els.forEach(function (el) { el.classList.add("is-visible") }) } var f = document.querySelector("form"); if (f) f.addEventListener("submit", function (e) { e.preventDefault(); location.href = document.documentElement.dataset.liveLogin }); Array.from(document.querySelectorAll("button")).filter(function (b) { return ["GitHub", "GitLab"].includes(b.textContent.trim()) }).forEach(function (b) { b.addEventListener("click", function () { location.href = document.documentElement.dataset.liveLogin }) }) })();</script>
 </body>
-
 </html>

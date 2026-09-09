@@ -4,135 +4,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/svg+xml"
-        href="/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <meta name="ploy-astro-starter-version" content="1.0.0">
     <title>Apache Airflow Helm Chart: From One Deployment to One Environment per Customer — OpenTenant | </title>
-    <meta name="description"
-        content="A practical architecture for isolated Airflow environments with tenant-specific executors, secrets, domains, and lifecycle management." />
+    <meta name="description" content="A practical architecture for isolated Airflow environments with tenant-specific executors, secrets, domains, and lifecycle management." />
     <meta name="robots" content="noindex, nofollow" />
     <link rel="canonical" href="https://www.opentenant.org/articles/airflow-helm-chart-customer-environments" />
     <meta property="og:type" content="article" />
-    <meta property="og:title"
-        content="Apache Airflow Helm Chart: From One Deployment to One Environment per Customer — OpenTenant |  " />
+    <meta property="og:title" content="Apache Airflow Helm Chart: From One Deployment to One Environment per Customer — OpenTenant |  " />
     <meta property="og:site_name" content=" " />
-    <meta property="og:description"
-        content="A practical architecture for isolated Airflow environments with tenant-specific executors, secrets, domains, and lifecycle management." />
+    <meta property="og:description" content="A practical architecture for isolated Airflow environments with tenant-specific executors, secrets, domains, and lifecycle management." />
     <meta property="og:url" content="https://www.opentenant.org/articles/airflow-helm-chart-customer-environments" />
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title"
-        content="Apache Airflow Helm Chart: From One Deployment to One Environment per Customer — OpenTenant |  " />
-    <meta name="twitter:description"
-        content="A practical architecture for isolated Airflow environments with tenant-specific executors, secrets, domains, and lifecycle management." />
+    <meta name="twitter:title" content="Apache Airflow Helm Chart: From One Deployment to One Environment per Customer — OpenTenant |  " />
+    <meta name="twitter:description" content="A practical architecture for isolated Airflow environments with tenant-specific executors, secrets, domains, and lifecycle management." />
     <link rel="stylesheet" href="/styles.css">
 </head>
 
 <body class="bg-ploy-background-primary text-ploy-text-primary leading-[1.6] decoration-[rgb(230,237,243)] m-0"
     style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
-    <nav
-        class="border-solid border-ploy-border-primary bg-ploy-background-primary/80 min-w-0 min-h-0 sticky z-[100] backdrop-blur-md border-b top-0">
-        <div
-            class="h-16 min-w-0 min-h-0 max-w-[68.75rem] flex justify-between items-center mx-auto px-6 nav-inner w-full">
-           
-                <a href="/" aria-label="OpenTenant home" class="logo"><span
-                        class="brand-logo inline-flex items-center gap-2 "><img src="/favicon.svg" width="34"/><span
-                            class="brand-logo__wordmark text-lg font-bold tracking-[-0.02em] text-ploy-text-primary">OpenTenant</span></span></a>
-            <div class="flex items-center gap-6 nav-links"><a href="../index.html"
-                    class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Articles</a><a
-                    href="#cases"
-                    class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Use
-                    Cases</a><a href="https://github.com/opentenant/platform"
-                    class="border-solid border-ploy-border-primary text-ploy-text-secondary font-semibold text-sm block transition-[transform,translate,scale,rotate,box-shadow] px-[1.375rem] py-2.5 rounded-lg hover:text-ploy-text-primary border">GitHub</a><a
-                    href="/login"
-                    class="bg-ploy-button-primary-background text-ploy-button-primary-text font-semibold text-sm block transition-shadow px-[1.375rem] py-2.5 rounded-lg hover:shadow-lg">Login</a>
-            </div>
+    <nav class="border-solid border-ploy-border-primary bg-ploy-background-primary/80 min-w-0 min-h-0 sticky z-[100] backdrop-blur-md border-b top-0">
+        <div class="h-16 min-w-0 min-h-0 max-w-[68.75rem] flex justify-between items-center mx-auto px-6 nav-inner w-full">
+            <a href="/" aria-label="OpenTenant home" class="logo"><span class="brand-logo inline-flex items-center gap-2 "><img src="/favicon.svg" width="34"/><span class="brand-logo__wordmark text-lg font-bold tracking-[-0.02em] text-ploy-text-primary">OpenTenant</span></span></a>
+            <div class="flex items-center gap-6 nav-links"><a href="../index.html" class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Articles</a><a href="#cases" class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Use Cases</a><a href="https://github.com/opentenant/platform" class="border-solid border-ploy-border-primary text-ploy-text-secondary font-semibold text-sm block transition-[transform,translate,scale,rotate,box-shadow] px-[1.375rem] py-2.5 rounded-lg hover:text-ploy-text-primary border">GitHub</a><a href="/login" class="bg-ploy-button-primary-background text-ploy-button-primary-text font-semibold text-sm block transition-shadow px-[1.375rem] py-2.5 rounded-lg hover:shadow-lg">Login</a></div>
         </div>
     </nav>
     <main class="article-page">
         <header class="border-b border-ploy-border-primary pb-16 pt-[6.25rem]">
-            <div class="mx-auto max-w-[68.75rem] px-6"><a href="../index.html"
-                    class="mb-8 inline-block font-mono text-xs uppercase tracking-[0.14em] text-ploy-accent-primary-500">←
-                    Technical library</a>
+            <div class="mx-auto max-w-[68.75rem] px-6"><a href="../index.html" class="mb-8 inline-block font-mono text-xs uppercase tracking-[0.14em] text-ploy-accent-primary-500">← Technical library</a>
                 <div class="grid gap-10 lg:grid-cols-[1fr_18rem] lg:items-end">
                     <div>
-                        <div
-                            class="mb-5 flex flex-wrap gap-3 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
-                            <span>helm-chart-guides</span><span>architecture</span><span
-                                class="text-ploy-text-secondary">planned</span></div>
-                        <h1
-                            class="max-w-[52rem] text-balance text-[2.7rem] font-extrabold leading-[1.08] tracking-[-0.03em] md:text-[4rem]">
-                            Apache Airflow Helm Chart: From One Deployment to One Environment per Customer</h1>
+                        <div class="mb-5 flex flex-wrap gap-3 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
+                            <span>helm-chart-guides</span><span>architecture</span><span class="text-ploy-text-secondary">draft</span>
+                        </div>
+                        <h1 class="max-w-[52rem] text-balance text-[2.7rem] font-extrabold leading-[1.08] tracking-[-0.03em] md:text-[4rem]">Apache Airflow Helm Chart: From One Deployment to One Environment per Customer</h1>
                     </div>
                     <dl class="divide-y divide-ploy-border-primary border-y border-ploy-border-primary text-sm">
-                        <div class="flex justify-between gap-4 py-3">
-                            <dt class="text-ploy-text-secondary">Chart</dt>
-                            <dd>Apache Airflow</dd>
-                        </div>
-                        <div class="flex justify-between gap-4 py-3">
-                            <dt class="text-ploy-text-secondary">Intent</dt>
-                            <dd>mofu</dd>
-                        </div>
-                        <div class="flex justify-between gap-4 py-3">
-                            <dt class="text-ploy-text-secondary">Author</dt>
-                            <dd>OpenTenant</dd>
-                        </div>
+                        <div class="flex justify-between gap-4 py-3"><dt class="text-ploy-text-secondary">Chart</dt><dd>Apache Airflow</dd></div>
+                        <div class="flex justify-between gap-4 py-3"><dt class="text-ploy-text-secondary">Intent</dt><dd>mofu</dd></div>
+                        <div class="flex justify-between gap-4 py-3"><dt class="text-ploy-text-secondary">Author</dt><dd>OpenTenant</dd></div>
                     </dl>
                 </div>
-                <p class="mt-8 max-w-[48rem] text-lg leading-relaxed text-ploy-text-secondary">A practical architecture
-                    for isolated Airflow environments with tenant-specific executors, secrets, domains, and lifecycle
-                    management.</p>
+                <p class="mt-8 max-w-[48rem] text-lg leading-relaxed text-ploy-text-secondary">A practical architecture for isolated Airflow environments with tenant-specific executors, secrets, domains, and lifecycle management.</p>
             </div>
         </header>
         <div class="mx-auto grid max-w-[68.75rem] gap-12 px-6 py-16 lg:grid-cols-[13rem_minmax(0,1fr)_12rem]">
             <aside class="hidden lg:block">
                 <div class="sticky top-28">
-                    <div class="mb-4 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
-                        On this page</div>
-                    <nav class="space-y-3 text-sm text-ploy-text-secondary"></nav>
+                    <div class="mb-4 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">On this page</div>
+                    <nav class="space-y-3 text-sm text-ploy-text-secondary">
+                        <a href="#direct-answer" class="block hover:text-ploy-text-primary">Direct answer</a>
+                        <a href="#what-the-airflow-helm-chart-provides" class="block hover:text-ploy-text-primary">What the Airflow Helm chart provides</a>
+                        <a href="#the-use-case-dedicated-workflow-orchestration-per-customer" class="block hover:text-ploy-text-primary">The use case: dedicated workflow orchestration per customer</a>
+                        <a href="#reference-architecture" class="block hover:text-ploy-text-primary">Reference architecture</a>
+                        <a href="#illustrative-tenant-declaration" class="block hover:text-ploy-text-primary">Illustrative tenant declaration</a>
+                        <a href="#production-decisions-before-onboarding" class="block hover:text-ploy-text-primary">Production decisions before onboarding</a>
+                        <a href="#evaluation-checklist" class="block hover:text-ploy-text-primary">Evaluation checklist</a>
+                        <a href="#sources" class="block hover:text-ploy-text-primary">Sources</a>
+                    </nav>
                 </div>
             </aside>
             <article class="min-w-0">
                 <div class="prose prose-invert ploy-richtext max-w-none prose-headings:text-balance">
-                    <h1 id="editorial-brief">Editorial brief</h1>
-                    <p>Cover executor selection, PostgreSQL and Redis dependencies, DAG delivery, worker scaling,
-                        namespace boundaries, and safe upgrade sequencing.</p>
+                    <h1 id="apache-airflow-helm-chart-from-one-deployment-to-one-environment-per-customer">Apache Airflow Helm Chart: From One Deployment to One Environment per Customer</h1>
+                    <h2 id="direct-answer">Direct answer</h2>
+                    <p>The official Apache Airflow Helm chart bootstraps an Airflow deployment on Kubernetes. It supports multiple executors including LocalExecutor, CeleryExecutor, and KubernetesExecutor. A release-per-customer model gives each tenant its own Airflow environment with independent executors, secrets, domains, DAG delivery, and upgrade windows. OpenTenant automates the tenant lifecycle around the upstream chart.</p>
+                    <h2 id="what-the-airflow-helm-chart-provides">What the Airflow Helm chart provides</h2>
+                    <p>The chart supports:</p>
+                    <ul>
+                        <li>Multiple executors: LocalExecutor, CeleryExecutor, KubernetesExecutor, and hybrid executors</li>
+                        <li>PostgreSQL and MySQL database backends</li>
+                        <li>KEDA-based autoscaling for CeleryExecutor</li>
+                        <li>StatsD/Prometheus metrics</li>
+                        <li>Automatic database migration after deployment</li>
+                        <li>Administrator account creation</li>
+                        <li>One-command deployment for any executor type</li>
+                    </ul>
+                    <p>The chart can be extended by creating a custom chart that depends on the Airflow chart. This is the recommended approach for adding tenant-specific customizations.</p>
+                    <h2 id="the-use-case-dedicated-workflow-orchestration-per-customer">The use case: dedicated workflow orchestration per customer</h2>
+                    <p>A release-per-customer model fits products that embed or resell Airflow while promising operational separation. Each customer can receive its own release, namespace, hostname, database, executor configuration, DAG delivery path, and upgrade window.</p>
+                    <p>This pattern is useful when customers need:</p>
+                    <ul>
+                        <li>Independent DAG stores and execution histories</li>
+                        <li>Customer-specific executors and worker scaling</li>
+                        <li>Separate database and metadata stores</li>
+                        <li>Controlled plugin and provider configurations</li>
+                        <li>Maintenance windows that do not affect every tenant at once</li>
+                    </ul>
+                    <h2 id="reference-architecture">Reference architecture</h2>
+                    <pre><code class="language-text">customer Airflow profile
+  → validate executor, database, and DAG requirements
+  → resolve tenant-scoped database and broker secrets
+  → render Airflow values for one release
+  → install into the tenant namespace
+  → verify database migration, scheduler, and workers
+  → promote or roll back independently
+</code></pre>
+                    <p>For CeleryExecutor, each tenant gets its own PostgreSQL database, Redis broker, worker set, and optional Flower dashboard. For KubernetesExecutor, each task runs in its own pod, providing strong isolation at the task level.</p>
+                    <h2 id="illustrative-tenant-declaration">Illustrative tenant declaration</h2>
+                    <pre><code class="language-yaml">tenant: acme
+userspace:
+  namespace: tenant-acme-airflow
+  domain: airflow.acme.example
+deployment:
+  engine: helm
+  template: airflow
+  release: airflow-acme
+  config:
+    executor: CeleryExecutor
+    workers:
+      replicas: 3
+      resources:
+        requests:
+          cpu: 500m
+          memory: 1Gi
+    dags:
+      gitSync:
+        repo: https://git.acme.com/airflow/dags-acme
+        branch: main
+  secretScope: tenants/acme/airflow
+</code></pre>
+                    <p>This is an architectural example. Production declarations should reference versioned templates and Secret objects.</p>
+                    <h2 id="production-decisions-before-onboarding">Production decisions before onboarding</h2>
+                    <p><strong>Executor selection.</strong> Choose LocalExecutor for single-node, CeleryExecutor for distributed workers with a broker, or KubernetesExecutor for per-task pod isolation. The executor choice affects resource requirements, scaling behavior, and operational complexity.</p>
+                    <p><strong>Database topology.</strong> Airflow requires PostgreSQL or MySQL. Decide whether each customer receives a dedicated database instance, a dedicated database on a shared service, or a governed shared topology.</p>
+                    <p><strong>DAG delivery.</strong> DAGs must be delivered to each tenant's environment. Options include Git sync, persistent volume, or object storage. The Git sync approach allows version-controlled DAG definitions per tenant.</p>
+                    <p><strong>Worker scaling.</strong> For CeleryExecutor, configure worker replicas and resources. KEDA autoscaling is supported for CeleryExecutor. Each tenant's worker scaling should be independent.</p>
+                    <p><strong>Secret management.</strong> Airflow connections, variables, and XComs contain sensitive data. Store them in tenant-scoped secret storage and reference them through the Airflow chart's Secret configuration.</p>
+                    <h2 id="evaluation-checklist">Evaluation checklist</h2>
+                    <ul>
+                        <li>Does every tenant have an explicit executor configuration?</li>
+                        <li>Are database and broker credentials isolated per tenant?</li>
+                        <li>Are DAGs delivered securely and version-controlled per tenant?</li>
+                        <li>Can one tenant's DAG execution affect another tenant's resources?</li>
+                        <li>Can you upgrade one tenant, verify it, and stop the rollout?</li>
+                        <li>Does offboarding remove routes, runtime access, and retained metadata?</li>
+                        <li>Are database migrations tested and reversible per tenant?</li>
+                    </ul>
+                    <h2 id="sources">Sources</h2>
+                    <ul>
+                        <li><a href="https://airflow.apache.org/docs/helm-chart/" rel="noopener noreferrer nofollow">Apache Airflow Helm chart documentation</a></li>
+                        <li><a href="https://airflow.apache.org/docs/helm-chart/parameters-ref.html" rel="noopener noreferrer nofollow">Airflow Helm chart parameters reference</a></li>
+                        <li><a href="https://airflow.apache.org/docs/helm-chart/extending-the-chart.html" rel="noopener noreferrer nofollow">Extending the Airflow Helm chart</a></li>
+                    </ul>
+                    <p>OpenTenant makes Airflow tenant operations repeatable—each customer gets a complete environment with its own scheduling, workers, and DAG lifecycle.</p>
                 </div>
             </article>
             <aside>
                 <div class="sticky top-28 rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
-                    <div class="mb-2 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
-                        Source check</div>
-                    <p class="mb-5 text-sm leading-relaxed text-ploy-text-secondary">Every published guide must cite
-                        upstream documentation and use a tested deployment example.</p><a
-                        href="https://airflow.apache.org/docs/helm-chart/stable/index.html"
-                        class="text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Upstream
-                        source →</a>
+                    <div class="mb-2 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">Source check</div>
+                    <p class="mb-5 text-sm leading-relaxed text-ploy-text-secondary">Every published guide must cite upstream documentation and use a tested deployment example.</p>
+                    <a href="https://airflow.apache.org/docs/helm-chart/" class="text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Upstream source →</a>
                 </div>
             </aside>
         </div>
         <section class="border-y border-ploy-border-primary bg-ploy-background-secondary py-16 text-center">
             <div class="mx-auto max-w-[42rem] px-6">
                 <h2 class="mb-4 text-balance text-3xl font-extrabold">From chart installation to tenant operations.</h2>
-                <p class="mb-7 text-ploy-text-secondary">See how OpenTenant models release, secrets, domain, and
-                    lifecycle boundaries.</p><a href="../../index.html#evaluation"
-                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-button font-button text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ploy-accent-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ploy-background-primary disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-ploy-button-primary-border bg-ploy-button-primary-background text-ploy-button-primary-text hover:bg-ploy-button-primary-background/90 h-10 px-4">Inspect
-                    Architecture</a>
+                <p class="mb-7 text-ploy-text-secondary">See how OpenTenant models release, secrets, domain, and lifecycle boundaries.</p>
+                <a href="../../index.html#evaluation" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-button font-button text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ploy-accent-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ploy-background-primary disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-ploy-button-primary-border bg-ploy-button-primary-background text-ploy-button-primary-text hover:bg-ploy-button-primary-background/90 h-10 px-4">Inspect Architecture</a>
             </div>
         </section>
     </main>
-    <footer
-        class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm min-w-0 min-h-0 py-9 border-t">
-        <div
-            class="min-w-0 min-h-0 max-w-[68.75rem] flex flex-wrap justify-between gap-4 mx-auto px-6 footer-inner w-full">
+    <footer class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm min-w-0 min-h-0 py-9 border-t">
+        <div class="min-w-0 min-h-0 max-w-[68.75rem] flex flex-wrap justify-between gap-4 mx-auto px-6 footer-inner w-full">
             <div>© 2026 OpenTenant — open source under MIT</div>
-            <div><a href="https://github.com/opentenant/platform"
-                    class="text-ploy-text-secondary min-w-0 min-h-0 ml-[1.375rem] hover:text-ploy-text-primary">GitHub</a>
-            </div>
+            <div><a href="https://github.com/opentenant/platform" class="text-ploy-text-secondary min-w-0 min-h-0 ml-[1.375rem] hover:text-ploy-text-primary">GitHub</a></div>
         </div>
     </footer>
-    <meta name="ploy-ploydb-reads"
-        content="[{&quot;ployDbId&quot;:&quot;pdb_d8e097e350704072a94c&quot;,&quot;tableId&quot;:&quot;tbl_096668abfd1e4613b96a&quot;,&quot;filters&quot;:[{&quot;field&quot;:&quot;fld_f6d93c32653d4e42&quot;,&quot;value&quot;:&quot;airflow-helm-chart-customer-environments&quot;}],&quot;rowCount&quot;:1,&quot;servedSample&quot;:false}]">
-    <script>(function () { var els = document.querySelectorAll("main section,main article,body>section"); els.forEach(function (el) { el.classList.add("portable-reveal") }); if ("IntersectionObserver" in window) { var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("is-visible"); io.unobserve(e.target) } }) }, { rootMargin: "0px 0px -12% 0px" }); els.forEach(function (el) { io.observe(el) }) } else { els.forEach(function (el) { el.classList.add("is-visible") }) } var f = document.querySelector("form"); if (f) f.addEventListener("submit", function (e) { e.preventDefault(); location.href = document.documentElement.dataset.liveLogin }); Array.from(document.querySelectorAll("button")).filter(function (b) { return ["GitHub", "GitLab"].includes(b.textContent.trim()) }).forEach(function (b) { b.addEventListener("click", function () { location.href = document.documentElement.dataset.liveLogin }) }) })();</script>
 </body>
-
 </html>

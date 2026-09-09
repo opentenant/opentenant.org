@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html data-live-login="https://opentenant.org/login" lang="en" class="text-black dark" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <meta name="ploy-astro-starter-version" content="1.0.0">
+    <title>GitOps Supply-Chain Security for Tenant Releases: From Commit to Rollback — OpenTenant | </title>
+    <meta name="description" content="How signed source, immutable artifacts, policy admission, and tenant-scoped rollback provenance create a reviewable deployment chain." />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="canonical" href="https://www.opentenant.org/articles/gitops-supply-chain-security-tenant-releases" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="GitOps Supply-Chain Security for Tenant Releases: From Commit to Rollback — OpenTenant |  " />
+    <meta property="og:site_name" content=" " />
+    <meta property="og:description" content="How signed source, immutable artifacts, policy admission, and tenant-scoped rollback provenance create a reviewable deployment chain." />
+    <meta property="og:url" content="https://www.opentenant.org/articles/gitops-supply-chain-security-tenant-releases" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="GitOps Supply-Chain Security for Tenant Releases: From Commit to Rollback — OpenTenant |  " />
+    <meta name="twitter:description" content="How signed source, immutable artifacts, policy admission, and tenant-scoped rollback provenance create a reviewable deployment chain." />
+    <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body class="bg-ploy-background-primary text-ploy-text-primary leading-[1.6] decoration-[rgb(230,237,243)] m-0"
+    style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+    <nav class="border-solid border-ploy-border-primary bg-ploy-background-primary/80 min-w-0 min-h-0 sticky z-[100] backdrop-blur-md border-b top-0">
+        <div class="h-16 min-w-0 min-h-0 max-w-[68.75rem] flex justify-between items-center mx-auto px-6 nav-inner w-full">
+            <a href="/" aria-label="OpenTenant home" class="logo"><span class="brand-logo inline-flex items-center gap-2 "><img src="/favicon.svg" width="34"/><span class="brand-logo__wordmark text-lg font-bold tracking-[-0.02em] text-ploy-text-primary">OpenTenant</span></span></a>
+            <div class="flex items-center gap-6 nav-links"><a href="/" class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Articles</a><a href="#cases" class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Use Cases</a><a href="https://github.com/opentenant/platform" class="border-solid border-ploy-border-primary text-ploy-text-secondary font-semibold text-sm block transition-[transform,translate,scale,rotate,box-shadow] px-[1.375rem] py-2.5 rounded-lg hover:text-ploy-text-primary border">GitHub</a><a href="/login" class="bg-ploy-button-primary-background text-ploy-button-primary-text font-semibold text-sm block transition-shadow px-[1.375rem] py-2.5 rounded-lg hover:shadow-lg">Login</a></div>
+        </div>
+    </nav>
+    <main class="article-page">
+        <header class="border-b border-ploy-border-primary pb-16 pt-[6.25rem]">
+            <div class="mx-auto max-w-[68.75rem] px-6"><a href="/" class="mb-8 inline-block font-mono text-xs uppercase tracking-[0.14em] text-ploy-accent-primary-500">← Technical library</a>
+                <div class="grid gap-10 lg:grid-cols-[1fr_18rem] lg:items-end">
+                    <div>
+                        <div class="mb-5 flex flex-wrap gap-3 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
+                            <span>security</span><span>gitops</span><span class="text-ploy-text-secondary">draft</span>
+                        </div>
+                        <h1 class="max-w-[52rem] text-balance text-[2.7rem] font-extrabold leading-[1.08] tracking-[-0.03em] md:text-[4rem]">GitOps Supply-Chain Security for Tenant Releases: From Commit to Rollback</h1>
+                    </div>
+                    <dl class="divide-y divide-ploy-border-primary border-y border-ploy-border-primary text-sm">
+                        <div class="flex justify-between gap-4 py-3"><dt class="text-ploy-text-secondary">Chart</dt><dd>GitOps architecture</dd></div>
+                        <div class="flex justify-between gap-4 py-3"><dt class="text-ploy-text-secondary">Intent</dt><dd>mofu</dd></div>
+                        <div class="flex justify-between gap-4 py-3"><dt class="text-ploy-text-secondary">Author</dt><dd>OpenTenant</dd></div>
+                    </dl>
+                </div>
+                <p class="mt-8 max-w-[48rem] text-lg leading-relaxed text-ploy-text-secondary">How signed source, immutable artifacts, policy admission, and tenant-scoped rollback provenance create a reviewable deployment chain.</p>
+            </div>
+        </header>
+        <div class="mx-auto grid max-w-[68.75rem] gap-12 px-6 py-16 lg:grid-cols-[13rem_minmax(0,1fr)_12rem]">
+            <aside class="hidden lg:block">
+                <div class="sticky top-28">
+                    <div class="mb-4 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">On this page</div>
+                    <nav class="space-y-3 text-sm text-ploy-text-secondary">
+                        <a href="#direct-answer" class="block hover:text-ploy-text-primary">Direct answer</a>
+                        <a href="#the-supply-chain-components" class="block hover:text-ploy-text-primary">The supply chain components</a>
+                        <a href="#reference-architecture" class="block hover:text-ploy-text-primary">Reference architecture</a>
+                        <a href="#illustrative-tenant-declaration" class="block hover:text-ploy-text-primary">Illustrative tenant declaration</a>
+                        <a href="#production-decisions-before-onboarding" class="block hover:text-ploy-text-primary">Production decisions before onboarding</a>
+                        <a href="#evaluation-checklist" class="block hover:text-ploy-text-primary">Evaluation checklist</a>
+                        <a href="#sources" class="block hover:text-ploy-text-primary">Sources</a>
+                    </nav>
+                </div>
+            </aside>
+            <article class="min-w-0">
+                <div class="prose prose-invert ploy-richtext max-w-none prose-headings:text-balance">
+                    <h1 id="gitops-supply-chain-security-for-tenant-releases-from-commit-to-rollback">GitOps Supply-Chain Security for Tenant Releases: From Commit to Rollback</h1>
+                    <h2 id="direct-answer">Direct answer</h2>
+                    <p>A secure GitOps supply chain for tenant releases requires signed source commits, immutable artifacts, policy-based admission control, and tenant-scoped rollback provenance. OpenTenant compiles these controls into a reviewable deployment chain: every change from commit to rollout is attested, verified, and auditable per tenant.</p>
+                    <h2 id="the-supply-chain-components">The supply chain components</h2>
+                    <p><strong>Signed source.</strong> Git commits are signed with GPG or Sigstore. Each tenant repository enforces signed commits before merging. The commit signature and author are recorded in the deployment provenance.</p>
+                    <p><strong>Immutable artifacts.</strong> Container images and Helm charts are built once, signed, and stored in an immutable registry. Each artifact is identified by its digest, not a mutable tag. Signed attestations (SLSA provenance, SBOM) are stored alongside the artifact.</p>
+                    <p><strong>Policy admission.</strong> Before a tenant release is deployed, policy checks verify:</p>
+                    <ul>
+                        <li>The image is from an approved registry and signed by a trusted authority</li>
+                        <li>The Helm chart has passed security scanning</li>
+                        <li>The configuration does not violate tenant isolation boundaries</li>
+                        <li>The deployment matches the approved Git revision</li>
+                    </ul>
+                    <p><strong>Tenant-scoped rollback.</strong> Every deployment records the source revision, artifact digest, configuration hash, and reconciliation result. Rollback restores the previous known-good state—not by re-running Helm, but by reverting to the attested artifact and configuration that was previously verified.</p>
+                    <h2 id="reference-architecture">Reference architecture</h2>
+                    <pre><code class="language-text">commit signed → build → artifact signed + attested
+  → policy admission (image signing, vulnerability scan, tenant boundary)
+  → Helm release rendered from attested chart
+  → deployment observed and recorded
+  → rollback to previous attested revision
+</code></pre>
+                    <p>OpenTenant's role is to make this supply chain tenant-scoped. Each tenant has its own source repositories, artifact registries, policy bindings, and deployment history.</p>
+                    <h2 id="illustrative-tenant-declaration">Illustrative tenant declaration</h2>
+                    <pre><code class="language-yaml">tenant: acme
+source:
+  repo: git@git.acme.com/tenants/acme/app
+  branch: main
+  signed: required
+artifact:
+  registry: registry.acme.com/tenants/acme
+  signing: cosign
+  attestations: slsa-provenance, sbom
+policy:
+  admission:
+    - image-signature
+    - vulnerability-scan
+    - tenant-boundary
+rollback:
+  retention: 30 days
+  provenance: required
+</code></pre>
+                    <p>This is illustrative. Production declarations should reference specific policy configurations and attestation formats.</p>
+                    <h2 id="production-decisions-before-onboarding">Production decisions before onboarding</h2>
+                    <p><strong>Signing infrastructure.</strong> Choose GPG for commits and Cosign or Sigstore for artifacts. Store signing keys securely and rotate them periodically.</p>
+                    <p><strong>Attestation format.</strong> SLSA provenance provides build integrity. SBOM provides component inventory. Both should be stored alongside artifacts in the registry.</p>
+                    <p><strong>Policy engine.</strong> Use OPA, Kyverno, or similar for admission control. Policies must be tenant-scoped: tenant A's policy should not affect tenant B's deployments.</p>
+                    <p><strong>Rollback strategy.</strong> Rollback should restore the previous known-good revision, not just re-run Helm. The rollback provenance must record why the rollback occurred and what state was restored.</p>
+                    <h2 id="evaluation-checklist">Evaluation checklist</h2>
+                    <ul>
+                        <li>Are commits signed and verified per tenant repository?</li>
+                        <li>Are artifacts built, signed, and stored immutably?</li>
+                        <li>Are SLSA provenance and SBOM attestations generated and stored?</li>
+                        <li>Does policy admission verify image signatures and vulnerability status?</li>
+                        <li>Does policy admission enforce tenant isolation boundaries?</li>
+                        <li>Is rollback provenance recorded and reviewable?</li>
+                        <li>Can a rollback restore the previous known-good revision?</li>
+                    </ul>
+                    <h2 id="sources">Sources</h2>
+                    <ul>
+                        <li><a href="https://slsa.dev/" rel="noopener noreferrer nofollow">SLSA supply chain levels</a></li>
+                        <li><a href="https://www.sigstore.dev/" rel="noopener noreferrer nofollow">Sigstore signing</a></li>
+                        <li><a href="https://fluxcd.io/flux/use-cases/multi-tenancy/" rel="noopener noreferrer nofollow">Flux CD multi-tenancy</a></li>
+                        <li><a href="https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/" rel="noopener noreferrer nofollow">Kubernetes admission controllers</a></li>
+                    </ul>
+                    <p>OpenTenant brings supply‑chain security to tenant operations: every deployment is provably built, verified, and reversible.</p>
+                </div>
+            </article>
+            <aside>
+                <div class="sticky top-28 rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+                    <div class="mb-2 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">Source check</div>
+                    <p class="mb-5 text-sm leading-relaxed text-ploy-text-secondary">Every published guide must cite upstream documentation and use a tested deployment example.</p>
+                    <a href="https://slsa.dev/" class="text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Upstream source →</a>
+                </div>
+            </aside>
+        </div>
+        <section class="border-y border-ploy-border-primary bg-ploy-background-secondary py-16 text-center">
+            <div class="mx-auto max-w-[42rem] px-6">
+                <h2 class="mb-4 text-balance text-3xl font-extrabold">From chart installation to tenant operations.</h2>
+                <p class="mb-7 text-ploy-text-secondary">See how OpenTenant models release, secrets, domain, and lifecycle boundaries.</p>
+                <a href="../../index.html#evaluation" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-button font-button text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ploy-accent-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ploy-background-primary disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-ploy-button-primary-border bg-ploy-button-primary-background text-ploy-button-primary-text hover:bg-ploy-button-primary-background/90 h-10 px-4">Inspect Architecture</a>
+            </div>
+        </section>
+    </main>
+    <footer class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm min-w-0 min-h-0 py-9 border-t">
+        <div class="min-w-0 min-h-0 max-w-[68.75rem] flex flex-wrap justify-between gap-4 mx-auto px-6 footer-inner w-full">
+            <div>© 2026 OpenTenant — open source under MIT</div>
+            <div><a href="https://github.com/opentenant/platform" class="text-ploy-text-secondary min-w-0 min-h-0 ml-[1.375rem] hover:text-ploy-text-primary">GitHub</a></div>
+        </div>
+    </footer>
+</body>
+</html>
