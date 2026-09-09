@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html data-live-login="https://opentenant.org/login" lang="en" class="text-black dark" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <meta name="ploy-astro-starter-version" content="1.0.0">
+    <title>Vault Encryption as a Service: Tenant-Isolated Data Encryption with the Transit Engine — OpenTenant | </title>
+    <meta name="description" content="How to use Vault's Transit secrets engine to provide tenant-scoped envelope encryption without managing thousands of individual keys." />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="canonical" href="https://www.opentenant.org/articles/vault-transit-encryption-as-a-service" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Vault Encryption as a Service: Tenant-Isolated Data Encryption with the Transit Engine — OpenTenant |  " />
+    <meta property="og:site_name" content=" " />
+    <meta property="og:description" content="How to use Vault's Transit secrets engine to provide tenant-scoped envelope encryption without managing thousands of individual keys." />
+    <meta property="og:url" content="https://www.opentenant.org/articles/vault-transit-encryption-as-a-service" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Vault Encryption as a Service: Tenant-Isolated Data Encryption with the Transit Engine — OpenTenant |  " />
+    <meta name="twitter:description" content="How to use Vault's Transit secrets engine to provide tenant-scoped envelope encryption without managing thousands of individual keys." />
+    <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body class="bg-ploy-background-primary text-ploy-text-primary leading-[1.6] decoration-[rgb(230,237,243)] m-0"
+    style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+    <nav class="border-solid border-ploy-border-primary bg-ploy-background-primary/80 min-w-0 min-h-0 sticky z-[100] backdrop-blur-md border-b top-0">
+        <div class="h-16 min-w-0 min-h-0 max-w-[68.75rem] flex justify-between items-center mx-auto px-6 nav-inner w-full">
+            <a href="/" aria-label="OpenTenant home" class="logo"><span class="brand-logo inline-flex items-center gap-2 "><img src="/favicon.svg" width="34"/><span class="brand-logo__wordmark text-lg font-bold tracking-[-0.02em] text-ploy-text-primary">OpenTenant</span></span></a>
+            <div class="flex items-center gap-6 nav-links"><a href="../index.html" class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Articles</a><a href="#cases" class="text-ploy-text-secondary text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Use Cases</a><a href="https://github.com/opentenant/platform" class="border-solid border-ploy-border-primary text-ploy-text-secondary font-semibold text-sm block transition-[transform,translate,scale,rotate,box-shadow] px-[1.375rem] py-2.5 rounded-lg hover:text-ploy-text-primary border">GitHub</a><a href="/login" class="bg-ploy-button-primary-background text-ploy-button-primary-text font-semibold text-sm block transition-shadow px-[1.375rem] py-2.5 rounded-lg hover:shadow-lg">Login</a></div>
+        </div>
+    </nav>
+    <main class="article-page">
+        <header class="border-b border-ploy-border-primary pb-16 pt-[6.25rem]">
+            <div class="mx-auto max-w-[68.75rem] px-6"><a href="../index.html" class="mb-8 inline-block font-mono text-xs uppercase tracking-[0.14em] text-ploy-accent-primary-500">← Technical library</a>
+                <div class="grid gap-10 lg:grid-cols-[1fr_18rem] lg:items-end">
+                    <div>
+                        <div class="mb-5 flex flex-wrap gap-3 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">
+                            <span>architecture</span><span>security</span><span class="text-ploy-text-secondary">draft</span>
+                        </div>
+                        <h1 class="max-w-[52rem] text-balance text-[2.7rem] font-extrabold leading-[1.08] tracking-[-0.03em] md:text-[4rem]">Vault Encryption as a Service: Tenant-Isolated Data Encryption with the Transit Engine</h1>
+                    </div>
+                    <dl class="divide-y divide-ploy-border-primary border-y border-ploy-border-primary text-sm">
+                        <div class="flex justify-between gap-4 py-3"><dt class="text-ploy-text-secondary">Chart</dt><dd>Vault Transit Engine</dd></div>
+                        <div class="flex justify-between gap-4 py-3"><dt class="text-ploy-text-secondary">Intent</dt><dd>mofu</dd></div>
+                        <div class="flex justify-between gap-4 py-3"><dt class="text-ploy-text-secondary">Author</dt><dd>OpenTenant</dd></div>
+                    </dl>
+                </div>
+                <p class="mt-8 max-w-[48rem] text-lg leading-relaxed text-ploy-text-secondary">How to use Vault's Transit secrets engine to provide tenant-scoped envelope encryption without managing thousands of individual keys.</p>
+            </div>
+        </header>
+        <div class="mx-auto grid max-w-[68.75rem] gap-12 px-6 py-16 lg:grid-cols-[13rem_minmax(0,1fr)_12rem]">
+            <aside class="hidden lg:block">
+                <div class="sticky top-28">
+                    <div class="mb-4 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">On this page</div>
+                    <nav class="space-y-3 text-sm text-ploy-text-secondary">
+                        <a href="#direct-answer" class="block hover:text-ploy-text-primary">Direct answer</a>
+                        <a href="#what-the-transit-engine-provides" class="block hover:text-ploy-text-primary">What the Transit engine provides</a>
+                        <a href="#the-use-case-tenant-isolated-encryption-without-key-sprawl" class="block hover:text-ploy-text-primary">The use case: tenant-isolated encryption without key sprawl</a>
+                        <a href="#reference-architecture" class="block hover:text-ploy-text-primary">Reference architecture</a>
+                        <a href="#multi-tenant-isolation-patterns" class="block hover:text-ploy-text-primary">Multi-tenant isolation patterns</a>
+                        <a href="#illustrative-tenant-declaration" class="block hover:text-ploy-text-primary">Illustrative tenant declaration</a>
+                        <a href="#production-decisions-before-onboarding" class="block hover:text-ploy-text-primary">Production decisions before onboarding</a>
+                        <a href="#evaluation-checklist" class="block hover:text-ploy-text-primary">Evaluation checklist</a>
+                        <a href="#sources" class="block hover:text-ploy-text-primary">Sources</a>
+                    </nav>
+                </div>
+            </aside>
+            <article class="min-w-0">
+                <div class="prose prose-invert ploy-richtext max-w-none prose-headings:text-balance">
+                    <h1 id="vault-encryption-as-a-service-tenant-isolated-data-encryption-with-the-transit-engine">Vault Encryption as a Service: Tenant-Isolated Data Encryption with the Transit Engine</h1>
+                    <h2 id="direct-answer">Direct answer</h2>
+                    <p>Vault's Transit secrets engine provides <strong>encryption as a service</strong> or <strong>cryptography as a service</strong>. Applications send plaintext data to Vault, receive ciphertext back, and never touch the encryption keys directly. For multi-tenant platforms, the Transit engine enables cryptographic isolation between tenants, users, and even sessions—all derived from a single master key. OpenTenant automates the tenant lifecycle: each tenant receives its own transit key or derived key scope, with policies that prevent cross-tenant access and rotation procedures that don't require application downtime.</p>
+                    <p>The Transit engine does not store the data sent to it—it performs cryptographic operations and returns the result. Your application remains responsible for storing the ciphertext in its primary data store.</p>
+
+                    <h2 id="what-the-transit-engine-provides">What the Transit engine provides</h2>
+                    <p>The Transit secrets engine handles cryptographic functions on data in transit, including:</p>
+                    <ul>
+                        <li><strong>Encrypt and decrypt</strong> data with AES-GCM, ChaCha20-Poly1305, or RSA</li>
+                        <li><strong>Sign and verify</strong> data with ECDSA, Ed25519, or RSA</li>
+                        <li><strong>Generate hashes and HMACs</strong> for data integrity</li>
+                        <li><strong>Generate cryptographically secure random bytes</strong></li>
+                    </ul>
+                    <p>Key management capabilities include:</p>
+                    <ul>
+                        <li><strong>Centralized key management</strong>—all encryption keys are managed within Vault</li>
+                        <li><strong>Key rotation</strong> without re-encrypting all data immediately</li>
+                        <li><strong>Audit logging</strong>—every cryptographic operation is logged</li>
+                        <li><strong>Access control</strong>—policies define which services can use which keys</li>
+                    </ul>
+                    <p>The Transit engine is optimized for high throughput, handling thousands of transactions per second with minimal latency. Since it does not store data, it scales horizontally.</p>
+
+                    <h2 id="the-use-case-tenant-isolated-encryption-without-key-sprawl">The use case: tenant-isolated encryption without key sprawl</h2>
+                    <p>Before adopting Vault, many platforms rely on application-level encryption with manually managed keys stored in environment variables. This creates several problems:</p>
+                    <ul>
+                        <li><strong>No tenant isolation</strong>—a single compromised key exposes all tenants' data</li>
+                        <li><strong>No key rotation</strong>—rotating keys requires coordinated downtime and re-encryption</li>
+                        <li><strong>No audit trail</strong>—cryptographic operations are invisible to security teams</li>
+                        <li><strong>Key sprawl</strong>—each service manages its own keys independently</li>
+                    </ul>
+                    <p>The Transit engine solves these problems by providing a single, centralized encryption service that supports:</p>
+                    <ul>
+                        <li><strong>Multi-tenant key derivation</strong>—context-based derivation for secure multi-tenancy</li>
+                        <li><strong>Convergent encryption</strong>—deterministic encryption for deduplication</li>
+                        <li><strong>Batch operations</strong>—high-throughput processing for enterprise workloads</li>
+                    </ul>
+
+                    <h2 id="reference-architecture">Reference architecture</h2>
+                    <pre><code class="language-text">tenant encryption profile
+  → validate tenant identity and isolation level
+  → create or reference tenant-scoped transit key
+  → derive tenant-specific encryption context
+  → application encrypts data via Vault API
+  → ciphertext stored in tenant database
+  → decrypt on read with same context
+  → rotate keys without application downtime
+</code></pre>
+                    <p>The key insight is <strong>envelope encryption</strong>: a master key never leaves Vault. For each encryption operation, Vault derives a tenant-specific data encryption key (DEK) based on the tenant context. The application never sees the raw key material.</p>
+
+                    <h2 id="multi-tenant-isolation-patterns">Multi-tenant isolation patterns</h2>
+
+                    <h3 id="pattern-1-per-tenant-transit-keys">Pattern 1: Per-tenant transit keys</h3>
+                    <p>Each tenant receives a dedicated transit key. This provides strong isolation but requires managing one key per tenant.</p>
+                    <pre><code class="language-text">tenant: acme
+  → transit/keys/tenant-acme
+tenant: beta
+  → transit/keys/tenant-beta
+</code></pre>
+                    <p><strong>When to use</strong>: Small number of tenants, strongest isolation required.</p>
+
+                    <h3 id="pattern-2-single-key-with-context-based-derivation">Pattern 2: Single key with context-based derivation</h3>
+                    <p>A single master key with context-based key derivation provides tenant isolation without managing thousands of individual keys. Vault derives a new key based on a user-supplied context value.</p>
+                    <pre><code class="language-text">tenant: acme, user: alice
+  → transit/encrypt/my-key?context=acme:alice
+tenant: acme, user: bob
+  → transit/encrypt/my-key?context=acme:bob
+</code></pre>
+                    <p><strong>When to use</strong>: Large number of tenants, multiple isolation levels needed (organization, user, session).</p>
+                    <p>Ariso.ai achieved <strong>three isolation levels—organization, user, and session—derived from a single master key</strong> with sub-millisecond latency (0.46ms median, 0.63ms at p99).</p>
+
+                    <h3 id="pattern-3-convergent-encryption-for-deduplication">Pattern 3: Convergent encryption for deduplication</h3>
+                    <p>Convergent encryption produces the same ciphertext for the same plaintext, enabling deduplication and searchable encrypted fields.</p>
+                    <p><strong>When to use</strong>: Storage optimization, encrypted search, compliance with deduplication requirements.</p>
+
+                    <h2 id="illustrative-tenant-declaration">Illustrative tenant declaration</h2>
+                    <pre><code class="language-yaml">tenant: acme
+encryption:
+  engine: transit
+  # Pattern 1: Dedicated key per tenant
+  key: tenant-acme
+  # Pattern 2: Context-based derivation (alternative)
+  # masterKey: platform-master
+  # context: "tenant:acme"
+  isolation:
+    level: tenant  # tenant | user | session
+  algorithms:
+    encrypt: aes256-gcm96
+    sign: ecdsa-p256
+  rotation:
+    policy: scheduled
+    interval: 90d
+  secretScope: tenants/acme/encryption
+</code></pre>
+                    <p>This is an architectural example. Production declarations should reference specific key configurations and policies.</p>
+
+                    <h2 id="production-decisions-before-onboarding">Production decisions before onboarding</h2>
+                    <p><strong>Isolation level.</strong> Decide the granularity of cryptographic isolation. Ariso.ai needed three levels—organization, user, and session—each derived from a single master key. The more granular the isolation, the more contexts you manage.</p>
+                    <p><strong>Key type selection.</strong> The Transit engine supports multiple key types:</p>
+                    <ul>
+                        <li><code>aes256-gcm96</code>—AES-256 with GCM (default, recommended for most use cases)</li>
+                        <li><code>chacha20-poly1305</code>—ChaCha20-Poly1305 for high-performance scenarios</li>
+                        <li><code>rsa-2048/3072/4096</code>—Asymmetric encryption</li>
+                        <li><code>ecdsa-p256/p384/p521</code>—Digital signatures</li>
+                        <li><code>ed25519</code>—Ed25519 signatures</li>
+                    </ul>
+                    <p><strong>Key rotation strategy.</strong> The Transit engine supports key rotation without re-encrypting all data immediately. The ciphertext includes a version prefix (<code>vault:v1:...</code>) that indicates which key version was used. During rotation:</p>
+                    <ol>
+                        <li>Create a new key version</li>
+                        <li>New encryptions use the new version</li>
+                        <li>Old ciphertext remains decryptable with the old version</li>
+                        <li>Rewrap old ciphertext to the new version when convenient</li>
+                    </ol>
+                    <p><strong>Performance considerations.</strong> The Transit engine is optimized for high throughput. For sub-millisecond latency, consider:</p>
+                    <ul>
+                        <li>Caching DEKs at the application layer (Ariso.ai achieved an 8:1 encrypt-to-decrypt ratio with effective DEK caching)</li>
+                        <li>Using HCP Vault Dedicated to eliminate operational burden</li>
+                        <li>Horizontal scaling—Transit operations are primarily reads and scale horizontally</li>
+                    </ul>
+                    <p><strong>Policy design.</strong> Vault policies must be tenant-scoped to prevent cross-tenant access:</p>
+                    <pre><code class="language-hcl"># Tenant A can only use its own key
+path "transit/encrypt/tenant-acme" {
+  capabilities = ["create", "update"]
+}
+path "transit/decrypt/tenant-acme" {
+  capabilities = ["create", "update"]
+}
+# Tenant A cannot access Tenant B's key
+path "transit/encrypt/tenant-beta" {
+  capabilities = ["deny"]
+}
+</code></pre>
+                    <p><strong>Application integration.</strong> Applications call Vault's REST API rather than using the CLI:</p>
+                    <pre><code class="language-bash"># Encrypt
+curl --header "X-Vault-Token: $VAULT_TOKEN" \
+     --request POST \
+     --data '{"plaintext": "c2Vuc2l0aXZlLWRhdGE="}' \
+     $VAULT_ADDR/v1/transit/encrypt/my-app-key
+
+# Decrypt
+curl --header "X-Vault-Token: $VAULT_TOKEN" \
+     --request POST \
+     --data '{"ciphertext": "vault:v1:8SDd3WHDOjf7mq69CyCqy..."}' \
+     $VAULT_ADDR/v1/transit/decrypt/my-app-key
+</code></pre>
+                    <p>All data must be base64-encoded before sending to Vault.</p>
+
+                    <h2 id="evaluation-checklist">Evaluation checklist</h2>
+                    <ul>
+                        <li>Does every tenant have its own encryption key or derived context?</li>
+                        <li>Are Vault policies scoped to prevent cross-tenant key access?</li>
+                        <li>Can keys be rotated without application downtime?</li>
+                        <li>Is every cryptographic operation audited and logged?</li>
+                        <li>Does the application never handle raw encryption keys?</li>
+                        <li>Are ciphertexts stored with version information for rotation?</li>
+                        <li>Can you rewrap old ciphertexts to new key versions?</li>
+                        <li>Is performance acceptable for your throughput requirements?</li>
+                        <li>Does the isolation level match your security and compliance needs?</li>
+                    </ul>
+
+                    <h2 id="sources">Sources</h2>
+                    <ul>
+                        <li><a href="https://developer.hashicorp.com/vault/docs/secrets/transit" rel="noopener noreferrer nofollow">Transit secrets engine — HashiCorp Developer</a></li>
+                        <li><a href="https://docs.hashicorp.com/vault/tutorials/encryption-as-a-service/eaas-transit" rel="noopener noreferrer nofollow">Encrypt data in transit with Vault — HashiCorp tutorials</a></li>
+                        <li><a href="https://www.hashicorp.com/blog/adopting-hashicorp-vaults-transit-engine-high-performance-envelope-encryption-ariso-ai" rel="noopener noreferrer nofollow">High-performance envelope encryption at Ariso.ai with Vault</a></li>
+                        <li><a href="https://developer.hashicorp.com/validated-designs/vault/user-guide/transit-and-transform" rel="noopener noreferrer nofollow">Transit and Transform secrets engines — Validated Designs</a></li>
+                        <li><a href="https://oneuptime.com/blog/post/2026-01-30-vault-transit-encryption" rel="noopener noreferrer nofollow">How to Build Vault Transit Encryption — OneUptime</a></li>
+                    </ul>
+                    <p>OpenTenant transforms the Transit engine from a shared encryption service into a tenant-scoped capability: each tenant gets its own encryption boundary, rotation schedule, and audit trail—all derived from the same tenant declaration that defines the rest of the infrastructure.</p>
+                </div>
+            </article>
+            <aside>
+                <div class="sticky top-28 rounded-xl border border-ploy-border-primary bg-ploy-neutral-primary-s3 p-5">
+                    <div class="mb-2 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-ploy-accent-primary-500">Source check</div>
+                    <p class="mb-5 text-sm leading-relaxed text-ploy-text-secondary">Every published guide must cite upstream documentation and use a tested deployment example.</p>
+                    <a href="https://developer.hashicorp.com/vault/docs/secrets/transit" class="text-sm font-semibold text-ploy-text-primary hover:text-ploy-accent-primary-500">Upstream source →</a>
+                </div>
+            </aside>
+        </div>
+        <section class="border-y border-ploy-border-primary bg-ploy-background-secondary py-16 text-center">
+            <div class="mx-auto max-w-[42rem] px-6">
+                <h2 class="mb-4 text-balance text-3xl font-extrabold">From chart installation to tenant operations.</h2>
+                <p class="mb-7 text-ploy-text-secondary">See how OpenTenant models release, secrets, domain, and lifecycle boundaries.</p>
+                <a href="../../index.html#evaluation" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-button font-button text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ploy-accent-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ploy-background-primary disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-ploy-button-primary-border bg-ploy-button-primary-background text-ploy-button-primary-text hover:bg-ploy-button-primary-background/90 h-10 px-4">Inspect Architecture</a>
+            </div>
+        </section>
+    </main>
+    <footer class="border-solid border-ploy-border-primary text-ploy-text-secondary text-sm min-w-0 min-h-0 py-9 border-t">
+        <div class="min-w-0 min-h-0 max-w-[68.75rem] flex flex-wrap justify-between gap-4 mx-auto px-6 footer-inner w-full">
+            <div>© 2026 OpenTenant — open source under MIT</div>
+            <div><a href="https://github.com/opentenant/platform" class="text-ploy-text-secondary min-w-0 min-h-0 ml-[1.375rem] hover:text-ploy-text-primary">GitHub</a></div>
+        </div>
+    </footer>
+</body>
+</html>
