@@ -2134,7 +2134,7 @@ tenants:
         var cubes = [], rays = [], labs = [], pils = [], racks = [], svc = [];
         var tw = { x: -2.6, y: 1.2, z: 0, w: 1.2, d: 1.2, h: 2.6, c: shared.cf ? '#f6821f' : '#8a96a8', ord: 0 }; cubes.push(tw);
         var from = [tw.x + .6, tw.y + .6, tw.h];
-        labs.push({ x: from[0], y: from[1], z: from[2], t: shared.cf ? 'Cloudflare tunnel' : 'Cloudflare: not connected', l: 'Cloudflare', dy: -36 });
+        labs.push({ x: from[0], y: from[1], z: from[2], t: shared.cf ? 'Cloudflare tunnel' : 'DNS: not connected', l: 'Cloudflare', dy: -36 });
         shared.provs.forEach(function (h, i) {
           var px = i * 2.5, on = shared.order.filter(function (n) { return shared.place[n] === h; }), units = Math.max(2, Math.floor(on.length / 2) + 1), UH = 1.1, base = 1 + i * 100, rk = { h: h, i: i, px: px, top: units * UH, sub: 0, n: on.length };
           on.forEach(function (n, k) {
