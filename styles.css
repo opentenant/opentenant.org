@@ -2370,10 +2370,10 @@ html {
       outline-color: color-mix(in oklab, var(--ring) 50%, transparent);
     }
   }
-  body {
+  /* body {
     background-color: var(--ploy-background-primary);
     color: var(--ploy-text-primary);
-  }
+  } */
   :where(mark) {
     background-color: transparent;
     color: inherit;
