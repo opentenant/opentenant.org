@@ -1671,13 +1671,10 @@
           class="brand-logo inline-flex items-center gap-2 "><img src="/favicon.svg" width="34" /><span
             class="brand-logo__wordmark text-lg font-bold tracking-[-0.02em] text-base">OpenTenant</span></span></a>
       <div class="flex items-center gap-6 nav-links text-black"><a href="./articles/index.html"
-          class="text-base text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Articles</a><a
-          href="#cases"
-          class="text-base text-sm max-[641px]:hidden min-[641px]:block hover:text-ploy-text-primary max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto]">Use
-          Cases</a><a href="https://github.com/opentenant/platform"
-          class="border-solid border-ploy-border-primary text-base font-semibold text-sm block transition-[transform,translate,scale,rotate,box-shadow] px-[1.375rem] py-2.5 rounded-lg hover:text-ploy-text-primary border">GitHub</a><a
+          class="text-base text-sm max-[641px]:hidden min-[641px]:block max-md:min-w-0 max-md:min-h-0 md:min-w-[auto] md:min-h-[auto] text-ploy-button-primary-text">Articles</a><a href="https://github.com/opentenant/platform"
+          class="border-solid border-ploy-border-primary text-ploy-button-primary-text text-base font-semibold text-sm block transition-[transform,translate,scale,rotate,box-shadow] px-[1.375rem] py-2.5 rounded-lg border text-ploy-button-primary-text">GitHub</a><a
           href="/login"
-          class="bg-ploy-button-primary-background text-ploy-button-primary-text font-semibold text-sm block transition-shadow px-[1.375rem] py-2.5 rounded-lg hover:shadow-lg">Login</a>
+          class="border-solid border-ploy-border-primary text-ploy-button-primary-text font-semibold text-sm block border transition-shadow px-[1.375rem] py-2.5 rounded-lg">Login</a>
       </div>
     </div>
   </nav>
@@ -2503,7 +2500,7 @@ tenants:
       var cat = [
         // H(124,'Connect Cloudflare','Let us update your DNS records directly, so every service is live without copy-pasting.','Step 1 of 3'),
         //  {k:'cf',w0:440,h0:220},
-        H(124, 'Build your infrastructure', 'Connect a server provider, then drag apps from the marketplace menu onto its rack.', 'Step 2 of 3'),
+        // H(124, 'Build your infrastructure', 'Connect a server provider, then drag apps from the marketplace menu onto its rack.', 'Step 2 of 3'),
         { k: 'ws', w0: 1080, h0: 440 },
         // H(124,'Every piece of software, costed','Share the numbers anonymously and forecasts get sharper for everyone.','Step 3 of 3'),
         // {k:'cost',w0:1080,h0:440}
@@ -2680,8 +2677,10 @@ tenants:
       /* one button, always in the same place: jumps to the next screen. Scrolling works too. */
       function curIdx() { var i = 0, y = sT + window.innerHeight * .35; for (var j = 0; j < anchors.length; j++)if (anchors[j] <= y) i = j; return i; }
       nextBtn.addEventListener('click', function () {
-        var i = curIdx();
-        window.scrollTo({ top: i >= anchors.length - 1 ? 0 : anchors[i + 1], behavior: reduce ? 'auto' : 'smooth' });
+        window.scrollTo(0, document.documentElement.scrollHeight || document.body.scrollHeight);    
+        nextBtn.style.opacity = 0;
+            // var i = 1;
+        // window.scrollTo({ top: i >= anchors.length - 1 ? 0 : anchors[i + 1], behavior: reduce ? 'auto' : 'smooth' });
       });
 
       var mx = 0, my = 0, cx = 0, cy = 0;
@@ -2707,7 +2706,7 @@ tenants:
         if (idx !== lastIdx) {
           lastIdx = idx; nl.textContent = LBL[Math.min(idx, LBL.length - 1)];
           // np.textContent = (idx + 1) + ' / ' + anchors.length;
-          nextBtn.classList.toggle('end', idx >= anchors.length - 1);
+          // nextBtn.classList.toggle('end', idx >= anchors.length - 1);
         }
         if (!TM.broken) { try { wsStep(dt); costStep(); } catch (err) { TM.broken = true; TM.on = false; body.classList.remove('tfon'); if (window.console) console.error(err); } }
         var k = open ? .35 : 1;
