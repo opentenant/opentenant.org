@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <title>Helm chart: deploy with OpenTenant</title>
+  <meta name="description"
+    content="Read about a Helm chart from Artifact Hub and deploy it as an isolated per-tenant release with OpenTenant.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="./builder.css">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://opentenant.org/chart.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="OpenTenant">
+  <meta property="og:title" content="Helm chart: deploy with OpenTenant">
+  <meta property="og:description"
+    content="Read about a Helm chart from Artifact Hub and deploy it as an isolated per-tenant release with OpenTenant.">
+  <meta property="og:image" content="https://opentenant.org/og-opentenant.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <style>
+    .stack { display: grid; gap: 16px; min-width: 0 }
+    .glass .cmd { margin: 0; box-shadow: none }
+    .glass .cmd pre { font-size: .74rem }
+    .readme:focus-visible { outline: 3px solid #fff; outline-offset: 4px; border-radius: 6px }
+    .ex { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px }
+    .ex a { padding: 8px 16px; border-radius: 999px; background: #fff; color: #0b2fb8; font-weight: 800; text-decoration: none }
+    .ex a:focus-visible { outline: 3px solid #fff; outline-offset: 3px }
+    .dep .cmd { max-width: 720px }
+    #builder { margin-top: 8px }
+  </style>
+</head>
+
+<body>
+  <nav class="onav" aria-label="Main">
+    <div class="onav-in">
+      <a href="/" class="onav-brand" aria-label="OpenTenant home"><img src="/favicon.svg" width="34" height="34" alt="">OpenTenant</a>
+      <div class="onav-links">
+        <a href="./articles/index.html" class="opt">Articles</a>
+        <a href="https://github.com/opentenant/platform" class="btnlike">GitHub</a>
+        <a href="/login" class="btnlike">Login</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="page" id="page">
+    <nav class="crumb" id="crumb" aria-label="Breadcrumb"></nav>
+    <header id="hd">
+      <div class="chero"><div><h1>Loading chart…</h1></div></div>
+    </header>
+    <noscript><p class="lede">This page needs JavaScript to load chart details from Artifact Hub.</p></noscript>
+
+    <div class="cols" id="cols" hidden>
+      <section class="glass" aria-labelledby="h-about">
+        <h2 id="h-about">About this chart</h2>
+        <div class="readme" id="readme" tabindex="0"></div>
+      </section>
+      <div class="stack">
+        <aside class="glass" aria-labelledby="h-det">
+          <h2 id="h-det">Details</h2>
+          <dl class="kv" id="kv"></dl>
+          <div class="tags" id="tags"></div>
+        </aside>
+        <aside class="glass" id="helmcard" hidden aria-labelledby="h-helm">
+          <h2 id="h-helm">Install with plain Helm</h2>
+          <div class="cmd"><pre id="helmcmd"></pre><button type="button" class="pl" id="helmcopy">Copy</button></div>
+        </aside>
+      </div>
+    </div>
+
+    <section class="dep" id="deploy" hidden aria-labelledby="h-dep">
+      <h2 id="h-dep">Deploy with OpenTenant</h2>
+      <p id="depp"></p>
+      <ol class="steps" id="steps"></ol>
+      <div class="cmd"><pre id="otcmd"></pre><button type="button" class="pl" id="otcopy">Copy</button></div>
+      <div id="builder"></div>
+    </section>
+  </main>
+
+  <div class="dock" id="dock" hidden></div>
+  <button class="nxt" id="next" type="button" hidden><span id="nl">Deploy with OpenTenant</span><svg viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"
+      aria-hidden="true">
+      <path d="M6 9l6 6 6-6" />
+    </svg></button>
+
+  <script src="./builder.js"></script>
+  <script>
+    (function () {
+      var OT = window.OpenTenantBuilder;
+      var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+      function $(id) { return document.getElementById(id); }
+      function E(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null && txt !== '') e.textContent = txt; return e; }
+      var ID = /^[A-Za-z0-9._-]{1,100}$/;
+      var qs = new URLSearchParams(location.search), repo = qs.get('repo') || '', name = qs.get('name') || '';
+
+      function setCrumb(last) {
+        var c = $('crumb'); c.innerHTML = '';
+        var a = E('a', '', 'OpenTenant'); a.href = '/'; c.appendChild(a); c.appendChild(E('span', '', '/'));
+        var b = E('a', '', 'Marketplace'); b.href = './#build'; c.appendChild(b);
+        if (last) { c.appendChild(E('span', '', '/')); c.appendChild(E('span', '', last)); }
+      }
+      function copy(btn, getText) {
+        btn.addEventListener('click', function () {
+          var text = getText();
+          function done() { btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = 'Copy'; }, 1600); }
+          if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(done, function () { }); return; }
+          var ta = E('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select();
+          try { document.execCommand('copy'); done(); } catch (e) { } document.body.removeChild(ta);
+        });
+      }
+      function setMeta(sel, attr, val) { var el = document.querySelector(sel); if (el) el.setAttribute(attr, val); }
+
+      /* ---- a message instead of a chart: missing params, unknown chart, no network ---- */
+      function message(title, text) {
+        setCrumb('');
+        var hd = $('hd'); hd.innerHTML = '';
+        hd.appendChild(E('h1', '', title)); hd.appendChild(E('p', 'lede', text));
+        var ex = E('div', 'ex');
+        [['kube-prometheus-stack', 'prometheus-community'], ['redis', 'bitnami'], ['postgresql', 'bitnami'], ['cert-manager', 'cert-manager']].forEach(function (c) {
+          var a = E('a', '', c[0]); a.href = 'chart.html?repo=' + encodeURIComponent(c[1]) + '&name=' + encodeURIComponent(c[0]); ex.appendChild(a);
+        });
+        hd.appendChild(ex);
+        OT.init({ mode: 'inline', mount: '#builder' });
+      }
+
+      /* ---- the chart ---- */
+      function render(c) {
+        document.title = c.n + ' Helm chart: deploy with OpenTenant';
+        var desc = (c.d ? c.d + ' ' : '') + 'Deploy ' + c.n + ' as an isolated per-tenant release with OpenTenant.';
+        setMeta('meta[name="description"]', 'content', desc);
+        setMeta('meta[property="og:title"]', 'content', document.title);
+        setMeta('meta[property="og:description"]', 'content', desc);
+        setMeta('link[rel="canonical"]', 'href', 'https://opentenant.org/chart.html?repo=' + encodeURIComponent(c.repo) + '&name=' + encodeURIComponent(c.n));
+        setCrumb(c.n);
+
+        var hd = $('hd'); hd.innerHTML = '';
+        var hero = E('div', 'chero'), ti = E('div');
+        hero.appendChild(OT.logo(c.n, 84)); ti.appendChild(E('h1', '', c.n));
+        ti.appendChild(E('p', 'by', 'by ' + (c.pub || c.repo || 'unknown publisher')));
+        hero.appendChild(ti); hd.appendChild(hero);
+        var bd = E('div', 'badges');
+        function badge(t, cls) { bd.appendChild(E('span', 'bdg' + (cls ? ' ' + cls : ''), t)); }
+        badge('Helm chart', 'hc');
+        if (c.st) badge('\u2605 ' + OT.fmtStars(c.st));
+        if (c.ver) badge('v' + c.ver);
+        if (c.appVer) badge('App ' + c.appVer);
+        if (c.license) badge(c.license);
+        if (c.verified) badge('Verified publisher');
+        if (c.official) badge('Official');
+        if (c.deprecated) badge('Deprecated');
+        if (c.offline) badge('Saved snapshot');
+        hd.appendChild(bd);
+        if (c.d) hd.appendChild(E('p', 'lede', c.d));
+
+        var rd = $('readme'); rd.innerHTML = '';
+        if (c.readme) rd.appendChild(OT.renderMarkdown(c.readme));
+        else rd.appendChild(E('p', '', c.offline ? 'The README could not be loaded because Artifact Hub was not reachable. The description above comes from a saved snapshot.' : 'This chart has no README on Artifact Hub.'));
+
+        var kv = $('kv'); kv.innerHTML = '';
+        function row(k, v, href) {
+          if (!v) return;
+          var dd = E('dd'), u = href ? OT.safeUrl(href) : '';
+          if (u) { var a = E('a', '', v); a.href = u; a.target = '_blank'; a.rel = 'noopener noreferrer'; dd.appendChild(a); } else dd.textContent = v;
+          kv.appendChild(E('dt', '', k)); kv.appendChild(dd);
+        }
+        row('Repository', c.repo, c.repoUrl);
+        row('Chart version', c.ver ? 'v' + c.ver : '');
+        row('App version', c.appVer);
+        row('License', c.license);
+        if (c.ts) row('Updated', new Date(c.ts * 1000).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }));
+        row('Maintainers', c.maintainers.join(', '));
+        row('Homepage', c.home ? c.home.replace(/^https?:\/\//i, '').replace(/\/$/, '') : '', c.home);
+        row('Artifact Hub', 'View listing', 'https://artifacthub.io/packages/helm/' + encodeURIComponent(c.repo) + '/' + encodeURIComponent(c.n));
+        c.links.forEach(function (l) { row(l.name || 'Link', (l.name || l.url).slice(0, 40), l.url); });
+        var tg = $('tags'); tg.innerHTML = ''; c.keywords.forEach(function (k) { tg.appendChild(E('span', '', k)); });
+
+        /* plain helm, only when the repository URL is known */
+        var safe = function (s) { return String(s || '').replace(/[^A-Za-z0-9._+-]/g, ''); }, rp = safe(c.repo), nm = safe(c.n), vr = safe(c.ver);
+        var helm = null;
+        if (c.repoUrl && rp && nm) {
+          helm = 'helm repo add ' + rp + " '" + c.repoUrl.replace(/[^\w:\/.\-~%?=&+@#]/g, '') + "'\nhelm repo update\nhelm install " + nm + ' ' + rp + '/' + nm + (vr ? ' --version ' + vr : '');
+          $('helmcmd').textContent = helm; $('helmcard').hidden = false; copy($('helmcopy'), function () { return helm; });
+        }
+
+        /* deploy with OpenTenant */
+        $('h-dep').textContent = 'Deploy ' + c.n + ' with OpenTenant';
+        $('depp').textContent = 'Each tenant gets its own release of this chart, with its own namespace, secrets and domain. The builder below already has ' + c.n + ' on a Hetzner server. Change the host, add apps from the marketplace, then copy the generated files. Providers and prices are samples, and nothing here is sent anywhere.';
+        var steps = $('steps'); steps.innerHTML = '';
+        [['Pick a server', 'Connect Hetzner, OVHcloud or AWS. The builder starts on Hetzner, the cheapest sample rate.'],
+        ['Place the chart', c.n + (c.ver ? ' is pinned at v' + c.ver : ' is pinned') + ' in opentenant.yaml. Drag more apps from the marketplace onto a rack.'],
+        ['Apply', 'Save opentenant.yaml and main.tf from the console, then run the commands below.']].forEach(function (s) {
+          var li = E('li'); li.appendChild(E('b', '', s[0])); li.appendChild(document.createTextNode(s[1])); steps.appendChild(li);
+        });
+        var ot = '# opentenant.yaml and main.tf come from the builder below\nopentenant validate opentenant.yaml\nterraform init && terraform apply';
+        $('otcmd').textContent = ot; copy($('otcopy'), function () { return ot; });
+
+        $('cols').hidden = false; $('deploy').hidden = false;
+        OT.init({ mode: 'inline', mount: '#builder', pin: c });
+
+        /* floating button: jump to the builder, hide once it is on screen */
+        var nx = $('next'), dk = $('dock');
+        nx.hidden = false; dk.hidden = false; nx.style.transition = 'opacity .3s';
+        nx.addEventListener('click', function () { $('deploy').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); });
+        if (window.IntersectionObserver) new IntersectionObserver(function (es) {
+          var on = es[0].isIntersecting; nx.style.opacity = on ? '0' : '1'; nx.style.pointerEvents = on ? 'none' : ''; dk.style.opacity = on ? '0' : '1';
+        }, { threshold: .25 }).observe($('builder'));
+      }
+
+      if (!repo || !name) { message('Pick a Helm chart', 'Open a chart from the marketplace, or try one of these.'); return; }
+      if (!ID.test(repo) || !ID.test(name)) { message('That chart link is not valid', 'Chart and repository names only use letters, numbers, dots, dashes and underscores.'); return; }
+      setCrumb(name);
+      OT.getChart(repo, name).then(render, function (err) {
+        if (err && err.status === 404) message('Chart not found', 'Artifact Hub has no Helm chart called ' + name + ' in the ' + repo + ' repository.');
+        else message('Could not load this chart', 'Artifact Hub could not be reached. Check your connection and reload, or try one of these.');
+      });
+    })();
+  </script>
+</body>
+
+</html>
