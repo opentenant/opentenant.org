@@ -79,6 +79,70 @@ pub fn valid_id(s: &str) -> bool {
         && s.bytes().all(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'_' | b'-'))
 }
 
+/* ---------------- rate limiting ---------------- */
+
+tokio::task_local! {
+    /// Set for the background mirror: it waits out rate limits. Requests made for visitors never wait.
+    pub static PATIENT: bool;
+}
+
+/// Unix milliseconds until which Artifact Hub asked us to stay away (after a 429 or 503).
+static BACKOFF_UNTIL_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+const MAX_RETRIES: u32 = 6;
+const MAX_BACKOFF_SECS: u64 = 300;
+
+fn now_ms() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or(0)
+}
+
+fn backoff_left_ms() -> u64 {
+    BACKOFF_UNTIL_MS.load(std::sync::atomic::Ordering::Relaxed).saturating_sub(now_ms())
+}
+
+/// GET with Artifact Hub's rate limit in mind.
+/// - 429/503 start a shared back-off, using `Retry-After` when present, else 5s, 10s, 20s, ...
+/// - the mirror (PATIENT) waits and retries; everything else fails fast and does not hit upstream
+///   at all while a back-off is active, so visitors never wait and never add to the pressure.
+async fn send(http: &reqwest::Client, url: &str) -> Result<reqwest::Response, HubError> {
+    let patient = PATIENT.try_with(|p| *p).unwrap_or(false);
+    let mut attempt = 0u32;
+    loop {
+        let left = backoff_left_ms();
+        if left > 0 {
+            if !patient {
+                return Err(HubError::Upstream("rate limited, backing off".into()));
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(left)).await;
+        }
+        let resp = http
+            .get(url)
+            .header(reqwest::header::ACCEPT, "application/json")
+            .send()
+            .await
+            .map_err(|e| HubError::Upstream(e.to_string()))?;
+        let status = resp.status();
+        if status != reqwest::StatusCode::TOO_MANY_REQUESTS && status != reqwest::StatusCode::SERVICE_UNAVAILABLE {
+            return Ok(resp);
+        }
+        let wait = resp
+            .headers()
+            .get(reqwest::header::RETRY_AFTER)
+            .and_then(|v| v.to_str().ok())
+            .and_then(|v| v.trim().parse::<u64>().ok())
+            .unwrap_or_else(|| 5u64 << attempt.min(6))
+            .clamp(1, MAX_BACKOFF_SECS);
+        BACKOFF_UNTIL_MS.fetch_max(now_ms() + wait * 1000, std::sync::atomic::Ordering::Relaxed);
+        if !patient || attempt >= MAX_RETRIES {
+            return Err(HubError::Upstream(format!("HTTP {status}")));
+        }
+        attempt += 1;
+        tracing::warn!("artifact hub says {status}, waiting {wait}s (retry {attempt}/{MAX_RETRIES})");
+    }
+}
+
 /* ---------------- search: repository and marketplace listings ---------------- */
 
 const HUB: &str = "https://artifacthub.io/api/v1";
@@ -164,12 +228,7 @@ async fn search(
         url.push_str("&repo=");
         url.push_str(r);
     }
-    let resp = http
-        .get(&url)
-        .header(reqwest::header::ACCEPT, "application/json")
-        .send()
-        .await
-        .map_err(|e| HubError::Upstream(e.to_string()))?;
+    let resp = send(http, &url).await?;
     if !resp.status().is_success() {
         return Err(HubError::Upstream(format!("HTTP {}", resp.status())));
     }
@@ -238,14 +297,23 @@ pub async fn fetch_repo(http: &reqwest::Client, repo: &str) -> Result<RepoPage, 
     })
 }
 
-/// Repository names ranked by the stars of their charts among the 300 most starred charts.
+/// Deepest search offset we walk to. Artifact Hub only lets a search page this far.
+const MAX_SCAN: usize = 10_000;
+
+/// Repository names ranked by popularity: walks the star-sorted chart search page by page and
+/// collects distinct repositories until `n` are found or the results run out. A repository's rank is
+/// the summed stars of its charts seen so far, so the most starred repositories come first.
 pub async fn top_repos(http: &reqwest::Client, n: usize) -> Result<Vec<String>, HubError> {
     let mut stars: std::collections::BTreeMap<String, i64> = std::collections::BTreeMap::new();
-    for page in 0..5 {
-        let items = match search(http, None, page * PAGE, PAGE).await {
+    let mut offset = 0usize;
+    while offset < MAX_SCAN && stars.len() < n {
+        let items = match search(http, None, offset, PAGE).await {
             Ok((items, _)) => items,
-            Err(e) if page == 0 => return Err(e),
-            Err(_) => break, // keep what we have
+            Err(e) if offset == 0 => return Err(e),
+            Err(e) => {
+                tracing::warn!("top_repos: stopped at offset {offset}: {e:?}");
+                break; // keep what we have
+            }
         };
         if items.is_empty() {
             break;
@@ -253,8 +321,10 @@ pub async fn top_repos(http: &reqwest::Client, n: usize) -> Result<Vec<String>, 
         for c in items {
             *stars.entry(c.repo).or_default() += c.stars;
         }
-        tokio::time::sleep(std::time::Duration::from_millis(300)).await;
+        offset += PAGE;
+        tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
     }
+    tracing::info!("top_repos: {} repositories found after scanning {offset} charts", stars.len());
     let mut v: Vec<(String, i64)> = stars.into_iter().collect();
     v.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
     Ok(v.into_iter().take(n).map(|(r, _)| r).collect())
@@ -305,12 +375,7 @@ fn non_empty(s: Option<String>) -> Option<String> {
 pub async fn fetch_chart(http: &reqwest::Client, repo: &str, name: &str) -> Result<Chart, HubError> {
     // `repo` and `name` are validated by the caller (letters, digits, . _ -), so no encoding is needed.
     let url = format!("https://artifacthub.io/api/v1/packages/helm/{repo}/{name}");
-    let resp = http
-        .get(&url)
-        .header(reqwest::header::ACCEPT, "application/json")
-        .send()
-        .await
-        .map_err(|e| HubError::Upstream(e.to_string()))?;
+    let resp = send(http, &url).await?;
 
     let status = resp.status();
     if status == reqwest::StatusCode::NOT_FOUND {
