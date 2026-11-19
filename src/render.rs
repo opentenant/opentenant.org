@@ -153,7 +153,7 @@ fn script_json(v: &serde_json::Value) -> String {
 pub fn page(c: &Chart, base_url: &str) -> String {
     let base = base_url.trim_end_matches('/');
     let canonical = format!("{base}/helm/{}/{}", c.repo, c.name);
-    let title = format!("{} Helm chart: deploy & self-host with OpenTenant", c.name);
+    let title = format!("{} by {} Helm chart: deploy & self-host with OpenTenant", c.name, c.repo);
     let short_desc: String = c.description.chars().take(200).collect();
     let desc = format!(
         "{}Deploy {} as an isolated per-tenant release with OpenTenant.",
