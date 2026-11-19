@@ -153,7 +153,7 @@ fn script_json(v: &serde_json::Value) -> String {
 pub fn page(c: &Chart, base_url: &str) -> String {
     let base = base_url.trim_end_matches('/');
     let canonical = format!("{base}/helm/{}/{}", c.repo, c.name);
-    let title = format!("{} Helm chart: deploy with OpenTenant", c.name);
+    let title = format!("{} Helm chart: deploy & self-host with OpenTenant", c.name);
     let short_desc: String = c.description.chars().take(200).collect();
     let desc = format!(
         "{}Deploy {} as an isolated per-tenant release with OpenTenant.",
@@ -422,7 +422,7 @@ pub fn repo_page(r: &RepoPage, base_url: &str) -> String {
     body.push_str(&format!(r#"<p class="note">{note}</p></section>"#));
 
     list_page(ListPage {
-        title: format!("{} Helm charts: deploy with OpenTenant", r.publisher),
+        title: format!("{} Helm charts: deploy & self-host with OpenTenant", r.publisher),
         desc: format!(
             "Browse {total} Helm charts from {} and deploy any of them as an isolated per-tenant release with OpenTenant.",
             r.publisher
@@ -467,7 +467,7 @@ pub fn market_page(m: &Market, base_url: &str) -> String {
 
     let total = m.total.max(m.charts.len());
     list_page(ListPage {
-        title: "Helm chart marketplace: deploy with OpenTenant".to_string(),
+        title: "Helm chart marketplace: deploy & self-host with OpenTenant".to_string(),
         desc: format!(
             "Browse {total} Helm charts from Artifact Hub, from Bitnami to HashiCorp, and deploy any of them as an isolated per-tenant release with OpenTenant."
         ),
