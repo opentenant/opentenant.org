@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+  <link rel="icon" type="image/svg+xml" href="https://opentenant.org/favicon.svg">
+  <title>{{TITLE}}</title>
+  <meta name="description" content="{{DESC}}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/builder.css">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="{{CANON}}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="OpenTenant">
+  <meta property="og:title" content="{{TITLE}}">
+  <meta property="og:description" content="{{DESC}}">
+  <meta property="og:url" content="{{CANON}}">
+  <meta property="og:image" content="https://opentenant.org/og-opentenant.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <style>
+    .stack { display: grid; gap: 16px; min-width: 0 }
+    .glass .cmd { margin: 0; box-shadow: none }
+    .glass .cmd pre { font-size: .74rem }
+    .readme:focus-visible { outline: 3px solid #fff; outline-offset: 4px; border-radius: 6px }
+    .readme table { border-collapse: collapse; margin: 0 0 12px; font-size: .85rem; display: block; overflow: auto }
+    .readme th, .readme td { padding: 4px 10px; border: 1px solid var(--glass-line); text-align: left }
+    .readme a { text-decoration: underline; text-underline-offset: 3px }
+    .dep .cmd { max-width: 720px }
+    #builder { margin-top: 8px }
+    #logo-slot { display: inline-block; width: 84px; height: 84px; flex: none }
+  </style>
+</head>
+
+<body>
+  <nav class="onav" aria-label="Main">
+    <div class="onav-in">
+      <a href="/" class="onav-brand" aria-label="OpenTenant home"><img src="https://opentenant.org/favicon.svg" width="34" height="34" alt="">OpenTenant</a>
+      <div class="onav-links">
+        <a href="/articles/index.html" class="opt">Articles</a>
+        <a href="https://github.com/opentenant/platform" class="btnlike">GitHub</a>
+        <a href="/login" class="btnlike">Login</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="page" id="page">
+    <nav class="crumb" id="crumb" aria-label="Breadcrumb">
+      <a href="/">OpenTenant</a><span>/</span><a href="/#build">Marketplace</a><span>/</span><span>{{NAME}}</span>
+    </nav>
+    <header id="hd">
+      <div class="chero">
+        <span id="logo-slot" aria-hidden="true"></span>
+        <div><h1>{{NAME}}</h1><p class="by">by {{PUB}}</p></div>
+      </div>
+      <div class="badges">{{BADGES}}</div>
+      {{LEDE}}
+    </header>
+
+    <div class="cols" id="cols">
+      <section class="glass" aria-labelledby="h-about">
+        <h2 id="h-about">About this chart</h2>
+        <div class="readme" id="readme" tabindex="0">{{README}}</div>
+      </section>
+      <div class="stack">
+        <aside class="glass" aria-labelledby="h-det">
+          <h2 id="h-det">Details</h2>
+          <dl class="kv" id="kv">{{DETAILS}}</dl>
+          <div class="tags" id="tags">{{TAGS}}</div>
+        </aside>
+      </div>
+      <div class="stack">
+      {{HELMCARD}}
+      </div>
+    </div>
+
+    <section class="dep" id="deploy" aria-labelledby="h-dep">
+      <h2 id="h-dep">Deploy {{NAME}} with OpenTenant</h2>
+      <p id="depp">{{DEPLOY_P}}</p>
+      <ol class="steps" id="steps">{{STEPS}}</ol>
+      <div class="cmd"><pre id="otcmd"># opentenant.yaml and main.tf come from the builder below
+opentenant validate opentenant.yaml
+terraform init &amp;&amp; terraform apply</pre><button type="button" class="pl" id="otcopy">Copy</button></div>
+      <div id="builder"></div>
+    </section>
+  </main>
+
+  <div class="dock" id="dock" hidden></div>
+  <button class="nxt" id="next" type="button" hidden><span id="nl">Deploy with OpenTenant</span><svg viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"
+      aria-hidden="true">
+      <path d="M6 9l6 6 6-6" />
+    </svg></button>
+
+  <script type="application/json" id="chart-data">{{JSON}}</script>
+  <script src="/builder.js"></script>
+  <script>
+    (function () {
+      var OT = window.OpenTenantBuilder;
+      var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+      function $(id) { return document.getElementById(id); }
+      var chart;
+      try { chart = JSON.parse($('chart-data').textContent); } catch (e) { return; }
+
+      var slot = $('logo-slot');
+      if (slot) slot.replaceWith(OT.logo(chart.n, 84));
+
+      function copy(btn, getText) {
+        if (!btn) return;
+        btn.addEventListener('click', function () {
+          var text = getText();
+          function done() { btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = 'Copy'; }, 1600); }
+          if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(done, function () { }); return; }
+          var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select();
+          try { document.execCommand('copy'); done(); } catch (e) { } document.body.removeChild(ta);
+        });
+      }
+      copy($('helmcopy'), function () { return $('helmcmd').textContent; });
+      copy($('otcopy'), function () { return $('otcmd').textContent; });
+
+      OT.init({ mode: 'inline', mount: '#builder', pin: chart, chartUrl: '/chart.html' });
+
+      /* floating button: jump to the builder, hide once it is on screen */
+      var nx = $('next'), dk = $('dock');
+      nx.hidden = false; dk.hidden = false; nx.style.transition = 'opacity .3s';
+      nx.addEventListener('click', function () { $('deploy').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); });
+      if (window.IntersectionObserver) new IntersectionObserver(function (es) {
+        var on = es[0].isIntersecting; nx.style.opacity = on ? '0' : '1'; nx.style.pointerEvents = on ? 'none' : ''; dk.style.opacity = on ? '0' : '1';
+      }, { threshold: .25 }).observe($('builder'));
+    })();
+  </script>
+</body>
+
+</html>
