@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <title>{{TITLE}}</title>
+  <meta name="description" content="{{DESC}}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/builder.css">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="{{CANON}}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="OpenTenant">
+  <meta property="og:title" content="{{TITLE}}">
+  <meta property="og:description" content="{{DESC}}">
+  <meta property="og:url" content="{{CANON}}">
+  <meta property="og:image" content="https://opentenant.org/og-opentenant.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <script type="application/ld+json">{{JSONLD}}</script>
+  <style>
+    [data-logo] { display: inline-block; width: 40px; height: 40px; flex: none }
+    .sec h2 { margin: 40px 0 0; font-size: clamp(1.4rem, 3.5vw, 2.1rem); font-weight: 800; letter-spacing: -.03em; text-shadow: 0 4px 30px rgba(2,16,92,.45) }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-top: 18px }
+    .card { display: flex; gap: 12px; align-items: flex-start; min-width: 0; padding: 16px; border-radius: 14px; text-decoration: none;
+      background: var(--glass); border: 1px solid var(--glass-line); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px) }
+    .card:hover { border-color: #fff }
+    .card:focus-visible, .pub:focus-visible, .note a:focus-visible { outline: 3px solid #fff; outline-offset: 3px }
+    .ct { display: grid; gap: 3px; min-width: 0 }
+    .ct b { font-weight: 800; overflow-wrap: anywhere }
+    .ct em { font-style: normal; font-size: .8rem; color: var(--muted) }
+    .ct span { font-size: .88rem; line-height: 1.4; color: var(--muted) }
+    .pubs { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px }
+    .pub { display: inline-flex; align-items: center; gap: 10px; padding: 8px 16px 8px 8px; border-radius: 999px; text-decoration: none;
+      background: var(--glass); border: 1px solid var(--glass-line) }
+    .pub:hover { border-color: #fff }
+    .pub b { font-weight: 800 }
+    .pub em { font-style: normal; font-size: .8rem; color: var(--muted) }
+    .note { margin: 22px 0 0; line-height: 1.55; font-weight: 500; color: var(--muted) }
+    .note a { text-decoration: underline; text-underline-offset: 3px }
+  </style>
+</head>
+
+<body>
+  <nav class="onav" aria-label="Main">
+    <div class="onav-in">
+      <a href="/" class="onav-brand" aria-label="OpenTenant home"><img src="/favicon.svg" width="34" height="34" alt="">OpenTenant</a>
+      <div class="onav-links">
+        <a href="/marketplace" class="opt">Marketplace</a>
+        <a href="/articles/index.html" class="opt">Articles</a>
+        <a href="https://github.com/opentenant/platform" class="btnlike">GitHub</a>
+        <a href="/login" class="btnlike">Login</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="page">
+    <nav class="crumb" aria-label="Breadcrumb">{{CRUMB}}</nav>
+    <header>
+      <div class="chero"><div><h1>{{H1}}</h1><p class="by">{{BY}}</p></div></div>
+      <div class="badges">{{BADGES}}</div>
+      <p class="lede">{{LEDE}}</p>
+    </header>
+    {{BODY}}
+  </main>
+
+  <script src="/builder.js"></script>
+  <script>
+    (function () {
+      var OT = window.OpenTenantBuilder;
+      if (!OT) return;
+      document.querySelectorAll('[data-logo]').forEach(function (e) {
+        e.replaceWith(OT.logo(e.getAttribute('data-logo'), 40));
+      });
+    })();
+  </script>
+</body>
+
+</html>

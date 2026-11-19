@@ -262,7 +262,7 @@ tenants:
     opts = opts || {};
     if (OT._ready) return; OT._ready = true;
     var mode = opts.mode === 'inline' ? 'inline' : 'overlay';
-    var chartUrl = opts.chartUrl || 'chart.html';
+    var chartUrl = '/helm';
     var body = document.body;
     var pin = opts.pin && opts.pin.n ? opts.pin : null;
     if (pin) META[pin.n] = { repo: pin.repo, ver: pin.ver, pub: pin.pub, d: pin.d };
@@ -684,7 +684,7 @@ tenants:
 
     /* ---------- marketplace drawer ---------- */
     function setDrawer(v) { WS.drawer = v; drawerHost.classList.toggle('drawer', v); }
-    function chartHref(it) { return chartUrl + '?repo=' + encodeURIComponent(it.repo) + '&name=' + encodeURIComponent(it.n); }
+    function chartHref(it) { return chartUrl + '/' + encodeURIComponent(it.repo) + '/' + encodeURIComponent(it.n); }
     function cardEl(it) {
       var el = E('div', 'mc' + (pin && it.n === pin.n ? ' pin' : '')), tx = E('div', 'mt2'), host = shared.place[it.n];
       el.appendChild(E('span', 'grip', '\u22EE\u22EE'));
