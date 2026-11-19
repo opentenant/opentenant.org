@@ -262,7 +262,7 @@ tenants:
     opts = opts || {};
     if (OT._ready) return; OT._ready = true;
     var mode = opts.mode === 'inline' ? 'inline' : 'overlay';
-    var chartUrl = opts.chartUrl || 'helm';
+    var chartUrl = '/helm';
     var body = document.body;
     var pin = opts.pin && opts.pin.n ? opts.pin : null;
     if (pin) META[pin.n] = { repo: pin.repo, ver: pin.ver, pub: pin.pub, d: pin.d };

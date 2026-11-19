@@ -72,6 +72,203 @@ pub enum HubError {
     Upstream(String),
 }
 
+pub fn valid_id(s: &str) -> bool {
+    !s.is_empty()
+        && s.len() <= 100
+        && !s.starts_with('.')
+        && s.bytes().all(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'_' | b'-'))
+}
+
+/* ---------------- search: repository and marketplace listings ---------------- */
+
+const HUB: &str = "https://artifacthub.io/api/v1";
+const PAGE: usize = 60; // Artifact Hub's maximum page size
+const MAX_REPO_CHARTS: usize = 300;
+
+#[derive(Debug, Deserialize, Default)]
+struct SearchResp {
+    packages: Option<Vec<SearchPkg>>,
+}
+
+#[derive(Debug, Deserialize, Default)]
+struct SearchPkg {
+    name: Option<String>,
+    version: Option<String>,
+    stars: Option<i64>,
+    description: Option<String>,
+    repository: Option<Repository>,
+}
+
+/// One chart in a listing.
+#[derive(Debug, Clone)]
+pub struct Summary {
+    pub name: String,
+    pub repo: String,
+    pub repo_url: String,
+    pub publisher: String,
+    pub verified: bool,
+    pub official: bool,
+    pub version: String,
+    pub stars: i64,
+    pub description: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct RepoPage {
+    pub repo: String,
+    pub publisher: String,
+    pub repo_url: String,
+    pub verified: bool,
+    pub official: bool,
+    /// Total charts in the repository (may exceed `charts.len()`).
+    pub total: usize,
+    pub charts: Vec<Summary>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Publisher {
+    pub repo: String,
+    pub name: String,
+    pub verified: bool,
+    pub official: bool,
+    pub charts: usize,
+    pub stars: i64,
+}
+
+#[derive(Debug, Clone)]
+pub struct Market {
+    pub total: usize,
+    pub charts: Vec<Summary>,
+    pub publishers: Vec<Publisher>,
+}
+
+fn publisher_of(r: &Repository) -> String {
+    [&r.organization_display_name, &r.user_alias, &r.display_name, &r.name]
+        .into_iter()
+        .filter_map(|s| s.as_ref())
+        .find(|s| !s.is_empty())
+        .cloned()
+        .unwrap_or_default()
+}
+
+/// Most starred Helm charts, optionally limited to one repository.
+/// `repo` must already be validated. Returns the page and the total match count.
+async fn search(
+    http: &reqwest::Client,
+    repo: Option<&str>,
+    offset: usize,
+    limit: usize,
+) -> Result<(Vec<Summary>, usize), HubError> {
+    let mut url = format!("{HUB}/packages/search?kind=0&sort=stars&limit={limit}&offset={offset}");
+    if let Some(r) = repo {
+        url.push_str("&repo=");
+        url.push_str(r);
+    }
+    let resp = http
+        .get(&url)
+        .header(reqwest::header::ACCEPT, "application/json")
+        .send()
+        .await
+        .map_err(|e| HubError::Upstream(e.to_string()))?;
+    if !resp.status().is_success() {
+        return Err(HubError::Upstream(format!("HTTP {}", resp.status())));
+    }
+    let total = resp
+        .headers()
+        .get("pagination-total-count")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|s| s.trim().parse::<usize>().ok())
+        .unwrap_or(0);
+    let body: SearchResp = resp.json().await.map_err(|e| HubError::Upstream(e.to_string()))?;
+
+    let items = body
+        .packages
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|p| {
+            let name = p.name?;
+            let r = p.repository?;
+            let repo = r.name.clone()?;
+            // only list charts we can route to
+            if !valid_id(&name) || !valid_id(&repo) {
+                return None;
+            }
+            Some(Summary {
+                publisher: publisher_of(&r),
+                repo_url: http_url(r.url.clone()),
+                verified: r.verified_publisher.unwrap_or(false),
+                official: r.official.unwrap_or(false),
+                name,
+                repo,
+                version: p.version.unwrap_or_default(),
+                stars: p.stars.unwrap_or(0),
+                description: p.description.unwrap_or_default(),
+            })
+        })
+        .collect();
+    Ok((items, total))
+}
+
+/// All (up to 300) Helm charts of one repository, most starred first.
+pub async fn fetch_repo(http: &reqwest::Client, repo: &str) -> Result<RepoPage, HubError> {
+    let mut charts: Vec<Summary> = Vec::new();
+    let mut total = 0usize;
+    let mut offset = 0usize;
+    loop {
+        let (items, t) = search(http, Some(repo), offset, PAGE).await?;
+        if offset == 0 {
+            total = t;
+        }
+        let empty = items.is_empty();
+        charts.extend(items.into_iter().filter(|c| c.repo == repo));
+        offset += PAGE;
+        if empty || offset >= total || offset >= MAX_REPO_CHARTS {
+            break;
+        }
+    }
+    let first = charts.first().cloned().ok_or(HubError::NotFound)?;
+    Ok(RepoPage {
+        repo: repo.to_string(),
+        publisher: if first.publisher.is_empty() { repo.to_string() } else { first.publisher },
+        repo_url: first.repo_url,
+        verified: first.verified,
+        official: first.official,
+        total: total.max(charts.len()),
+        charts,
+    })
+}
+
+/// Top charts and the publishers behind the 120 most starred charts.
+pub async fn fetch_market(http: &reqwest::Client) -> Result<Market, HubError> {
+    let (mut charts, total) = search(http, None, 0, PAGE).await?;
+    if charts.is_empty() {
+        return Err(HubError::Upstream("empty search result".into()));
+    }
+    // a failed second page only shrinks the publisher list
+    let more = search(http, None, PAGE, PAGE).await.map(|x| x.0).unwrap_or_default();
+
+    let mut by_repo: std::collections::BTreeMap<String, Publisher> = std::collections::BTreeMap::new();
+    for c in charts.iter().chain(more.iter()) {
+        let p = by_repo.entry(c.repo.clone()).or_insert_with(|| Publisher {
+            repo: c.repo.clone(),
+            name: if c.publisher.is_empty() { c.repo.clone() } else { c.publisher.clone() },
+            verified: false,
+            official: false,
+            charts: 0,
+            stars: 0,
+        });
+        p.verified |= c.verified;
+        p.official |= c.official;
+        p.charts += 1;
+        p.stars += c.stars;
+    }
+    let mut publishers: Vec<Publisher> = by_repo.into_values().collect();
+    publishers.sort_by(|a, b| b.stars.cmp(&a.stars).then_with(|| a.repo.cmp(&b.repo)));
+    publishers.truncate(24);
+    charts.truncate(PAGE);
+    Ok(Market { total: total.max(charts.len()), charts, publishers })
+}
+
 fn http_url(u: Option<String>) -> String {
     match u {
         Some(u) if u.to_ascii_lowercase().starts_with("http://") || u.to_ascii_lowercase().starts_with("https://") => u,

@@ -1,10 +1,11 @@
 //! Static HTML rendering for a chart page.
 
-use crate::hub::Chart;
+use crate::hub::{Chart, Market, RepoPage, Summary};
 use chrono::DateTime;
 use pulldown_cmark::{html, CowStr, Event, HeadingLevel, Options, Parser, Tag, TagEnd};
 
 const TEMPLATE: &str = include_str!("../templates/chart.html");
+const LIST_TEMPLATE: &str = include_str!("../templates/list.html");
 
 pub fn esc(s: &str) -> String {
     let mut o = String::with_capacity(s.len() + 8);
@@ -293,6 +294,7 @@ pub fn page(c: &Chart, base_url: &str) -> String {
             ("DESC", esc(&desc)),
             ("CANON", esc(&canonical)),
             ("NAME", esc(&c.name)),
+            ("REPO", esc(&c.repo)),
             ("PUB", esc(publisher)),
             ("BADGES", badges),
             ("LEDE", lede),
@@ -305,6 +307,180 @@ pub fn page(c: &Chart, base_url: &str) -> String {
             ("JSON", json),
         ],
     )
+}
+
+/* ---------------- listing pages ---------------- */
+
+fn card(c: &Summary) -> String {
+    let mut meta = vec![];
+    if !c.publisher.is_empty() {
+        meta.push(c.publisher.clone());
+    }
+    if c.stars > 0 {
+        meta.push(format!("\u{2605} {}", fmt_stars(c.stars)));
+    }
+    if !c.version.is_empty() {
+        meta.push(format!("v{}", c.version));
+    }
+    let mut desc: String = c.description.chars().take(140).collect();
+    if c.description.chars().count() > 140 {
+        desc.push('\u{2026}');
+    }
+    format!(
+        r#"<a class="card" href="/helm/{r}/{n}"><span data-logo="{n}"></span><span class="ct"><b>{n}</b><em>{m}</em><span>{d}</span></span></a>"#,
+        r = esc(&c.repo),
+        n = esc(&c.name),
+        m = esc(&meta.join(" \u{b7} ")),
+        d = esc(&desc)
+    )
+}
+
+fn badge(t: &str) -> String {
+    format!(r#"<span class="bdg">{}</span>"#, esc(t))
+}
+
+struct ListPage<'a> {
+    title: String,
+    desc: String,
+    canon: String,
+    crumb: String,
+    h1: &'a str,
+    by: String,
+    badges: String,
+    lede: String,
+    body: String,
+    item_urls: Vec<String>,
+    name: String,
+}
+
+fn list_page(p: ListPage) -> String {
+    let jsonld = script_json(&serde_json::json!({
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": p.name,
+        "url": p.canon,
+        "description": p.desc,
+        "mainEntity": {
+            "@type": "ItemList",
+            "itemListElement": p.item_urls.iter().enumerate().map(|(i, u)| serde_json::json!({
+                "@type": "ListItem", "position": i + 1, "url": u
+            })).collect::<Vec<_>>()
+        }
+    }));
+    fill(
+        LIST_TEMPLATE,
+        &[
+            ("TITLE", esc(&p.title)),
+            ("DESC", esc(&p.desc)),
+            ("CANON", esc(&p.canon)),
+            ("JSONLD", jsonld),
+            ("CRUMB", p.crumb),
+            ("H1", esc(p.h1)),
+            ("BY", esc(&p.by)),
+            ("BADGES", p.badges),
+            ("LEDE", esc(&p.lede)),
+            ("BODY", p.body),
+        ],
+    )
+}
+
+const CRUMB_HOME: &str = r#"<a href="/">OpenTenant</a><span>/</span>"#;
+
+/// Page for one repository (bitnami, hashicorp, ...).
+pub fn repo_page(r: &RepoPage, base_url: &str) -> String {
+    let base = base_url.trim_end_matches('/');
+    let total = r.total.max(r.charts.len());
+    let canon = format!("{base}/helm/{}", r.repo);
+
+    let mut badges = badge("Helm repository");
+    badges.push_str(&badge(&format!("{total} chart{}", if total == 1 { "" } else { "s" })));
+    if r.verified {
+        badges.push_str(&badge("Verified publisher"));
+    }
+    if r.official {
+        badges.push_str(&badge("Official"));
+    }
+
+    let mut body = String::from(r#"<section class="sec"><h2>Charts</h2><div class="grid">"#);
+    for c in &r.charts {
+        body.push_str(&card(c));
+    }
+    body.push_str("</div>");
+    let hub = format!("https://artifacthub.io/packages/search?repo={}", r.repo);
+    let mut note = String::new();
+    if total > r.charts.len() {
+        note.push_str(&format!("Showing the {} most starred of {} charts. ", r.charts.len(), total));
+    }
+    note.push_str(&format!(r#"See the full listing on <a href="{}" target="_blank" rel="noopener noreferrer">Artifact Hub</a>"#, esc(&hub)));
+    if safe_url(&r.repo_url) {
+        note.push_str(&format!(
+            r#" or browse the <a href="{}" target="_blank" rel="noopener noreferrer">chart repository</a>"#,
+            esc(&r.repo_url)
+        ));
+    }
+    note.push('.');
+    body.push_str(&format!(r#"<p class="note">{note}</p></section>"#));
+
+    list_page(ListPage {
+        title: format!("{} Helm charts: deploy with OpenTenant", r.publisher),
+        desc: format!(
+            "Browse {total} Helm charts from {} and deploy any of them as an isolated per-tenant release with OpenTenant.",
+            r.publisher
+        ),
+        canon,
+        crumb: format!(
+            r#"{CRUMB_HOME}<a href="/marketplace">Marketplace</a><span>/</span><span>{}</span>"#,
+            esc(&r.repo)
+        ),
+        h1: &r.publisher,
+        by: format!("Helm repository {}", r.repo),
+        badges,
+        lede: format!(
+            "{total} Helm charts from {} on Artifact Hub. Pick one to read about it and deploy it as its own release for every tenant.",
+            r.publisher
+        ),
+        body,
+        item_urls: r.charts.iter().map(|c| format!("{base}/helm/{}/{}", c.repo, c.name)).collect(),
+        name: format!("{} Helm charts", r.publisher),
+    })
+}
+
+/// Page for the whole marketplace: popular publishers and charts.
+pub fn market_page(m: &Market, base_url: &str) -> String {
+    let base = base_url.trim_end_matches('/');
+
+    let mut body = String::from(r#"<section class="sec"><h2>Popular publishers</h2><div class="pubs">"#);
+    for p in &m.publishers {
+        body.push_str(&format!(
+            r#"<a class="pub" href="/helm/{r}"><span data-logo="{n}"></span><b>{n}</b><em>{c} top chart{s}</em></a>"#,
+            r = esc(&p.repo),
+            n = esc(&p.name),
+            c = p.charts,
+            s = if p.charts == 1 { "" } else { "s" }
+        ));
+    }
+    body.push_str(r#"</div></section><section class="sec"><h2>Popular charts</h2><div class="grid">"#);
+    for c in &m.charts {
+        body.push_str(&card(c));
+    }
+    body.push_str("</div></section>");
+
+    let total = m.total.max(m.charts.len());
+    list_page(ListPage {
+        title: "Helm chart marketplace: deploy with OpenTenant".to_string(),
+        desc: format!(
+            "Browse {total} Helm charts from Artifact Hub, from Bitnami to HashiCorp, and deploy any of them as an isolated per-tenant release with OpenTenant."
+        ),
+        canon: format!("{base}/marketplace"),
+        crumb: format!("{CRUMB_HOME}<span>Marketplace</span>"),
+        h1: "Marketplace",
+        by: "Helm charts from Artifact Hub".to_string(),
+        badges: badge(&format!("{total} charts")),
+        lede: "Pick a chart, read what it does and deploy it as its own release for every tenant. The most starred charts and publishers are listed here.".to_string(),
+        body,
+        item_urls: m.charts.iter().map(|c| format!("{base}/helm/{}/{}", c.repo, c.name)).collect(),
+        name: "OpenTenant Helm chart marketplace".to_string(),
+    })
 }
 
 /// Small standalone page for 404 / 502 / invalid links.
