@@ -238,6 +238,28 @@ pub async fn fetch_repo(http: &reqwest::Client, repo: &str) -> Result<RepoPage, 
     })
 }
 
+/// Repository names ranked by the stars of their charts among the 300 most starred charts.
+pub async fn top_repos(http: &reqwest::Client, n: usize) -> Result<Vec<String>, HubError> {
+    let mut stars: std::collections::BTreeMap<String, i64> = std::collections::BTreeMap::new();
+    for page in 0..5 {
+        let items = match search(http, None, page * PAGE, PAGE).await {
+            Ok((items, _)) => items,
+            Err(e) if page == 0 => return Err(e),
+            Err(_) => break, // keep what we have
+        };
+        if items.is_empty() {
+            break;
+        }
+        for c in items {
+            *stars.entry(c.repo).or_default() += c.stars;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(300)).await;
+    }
+    let mut v: Vec<(String, i64)> = stars.into_iter().collect();
+    v.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
+    Ok(v.into_iter().take(n).map(|(r, _)| r).collect())
+}
+
 /// Top charts and the publishers behind the 120 most starred charts.
 pub async fn fetch_market(http: &reqwest::Client) -> Result<Market, HubError> {
     let (mut charts, total) = search(http, None, 0, PAGE).await?;

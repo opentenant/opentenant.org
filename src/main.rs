@@ -10,8 +10,13 @@
 //! - `GET /sitemap.xml`             rebuilt from the cached pages and `public/articles`
 //! - `/` and `/articles/...`        static files from `PUBLIC_DIR`; everything else in `PUBLIC_DIR` is the fallback
 //!
+//! Background mirror: every MIRROR_INTERVAL_SECS it crawls the marketplace and all charts of the most
+//! popular repositories, so their pages are cached before anyone asks. Progress: `GET /mirror/status`.
+//!
 //! Env: BIND (0.0.0.0:8080), PUBLIC_DIR (public), CACHE_DIR (cache),
-//!      BASE_URL (https://opentenant.org), CACHE_TTL_SECS (86400)
+//!      BASE_URL (https://opentenant.org), CACHE_TTL_SECS (86400),
+//!      MIRROR (1), MIRROR_TOP_REPOS (25), MIRROR_REPOS (comma list, always mirrored, e.g. bitnami,hashicorp),
+//!      MIRROR_INTERVAL_SECS (21600), MIRROR_DELAY_MS (700)
 
 mod hub;
 mod render;
@@ -20,7 +25,10 @@ use std::{
     collections::{BTreeMap, HashMap},
     net::SocketAddr,
     path::{Path as FsPath, PathBuf},
-    sync::{Arc, Mutex, RwLock},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc, Mutex, RwLock,
+    },
     time::{Duration, Instant, SystemTime},
 };
 
@@ -76,6 +84,15 @@ struct Config {
     cache_dir: PathBuf,
     base_url: String,
     ttl: Duration,
+    /// Background mirror of the most popular repositories.
+    mirror: bool,
+    /// How many of the most popular repositories to mirror.
+    mirror_top: usize,
+    /// Repositories that are always mirrored (bitnami, hashicorp, ...).
+    mirror_extra: Vec<String>,
+    mirror_interval: Duration,
+    /// Pause after every upstream request, to stay polite to Artifact Hub.
+    mirror_delay: Duration,
 }
 
 impl Config {
@@ -87,6 +104,19 @@ impl Config {
             cache_dir: PathBuf::from(get("CACHE_DIR", "cache")),
             base_url: get("BASE_URL", "https://opentenant.org").trim_end_matches('/').to_string(),
             ttl: Duration::from_secs(get("CACHE_TTL_SECS", "86400").parse().expect("CACHE_TTL_SECS must be a number")),
+            mirror: !matches!(get("MIRROR", "1").to_ascii_lowercase().as_str(), "0" | "false" | "off"),
+            mirror_top: get("MIRROR_TOP_REPOS", "25").parse().expect("MIRROR_TOP_REPOS must be a number"),
+            mirror_extra: get("MIRROR_REPOS", "")
+                .split(',')
+                .map(|s| s.trim().to_string())
+                .filter(|s| valid_id(s))
+                .collect(),
+            mirror_interval: Duration::from_secs(
+                get("MIRROR_INTERVAL_SECS", "21600").parse().expect("MIRROR_INTERVAL_SECS must be a number"),
+            ),
+            mirror_delay: Duration::from_millis(
+                get("MIRROR_DELAY_MS", "700").parse().expect("MIRROR_DELAY_MS must be a number"),
+            ),
         }
     }
 }
@@ -110,8 +140,25 @@ enum Outcome {
     Upstream,
 }
 
+/// Progress of the background mirror, served at /mirror/status.
+#[derive(Default, serde::Serialize)]
+struct MirrorStats {
+    running: bool,
+    cycles: u64,
+    last_started: Option<String>,
+    last_finished: Option<String>,
+    repos_last_cycle: usize,
+    /// upstream requests that returned data
+    fetched: u64,
+    /// pages skipped because their cache entry was still fresh
+    skipped: u64,
+    failed: u64,
+}
+
 struct App {
     cfg: Config,
+    sitemap_scheduled: AtomicBool,
+    mirror_stats: Mutex<MirrorStats>,
     http: reqwest::Client,
     index: RwLock<BTreeMap<Page, Entry>>,
     locks: Mutex<HashMap<Page, Arc<tokio::sync::Mutex<()>>>>,
@@ -378,9 +425,17 @@ impl App {
         }
     }
 
+    /// Debounced: a burst of cache writes (the mirror) results in one sitemap rewrite.
     fn spawn_sitemap(self: &Arc<Self>) {
+        if self.sitemap_scheduled.swap(true, Ordering::SeqCst) {
+            return; // a rewrite is already queued and will see this change
+        }
         let st = self.clone();
-        tokio::spawn(async move { st.write_sitemap().await });
+        tokio::spawn(async move {
+            tokio::time::sleep(Duration::from_secs(2)).await;
+            st.sitemap_scheduled.store(false, Ordering::SeqCst);
+            st.write_sitemap().await;
+        });
     }
 
     /// Fetches the data for a page and renders it.
@@ -446,29 +501,52 @@ impl App {
         }
         let st = self.clone();
         let page = page.clone();
-        tokio::spawn(async move { st.refresh(&page).await });
+        tokio::spawn(async move {
+            st.refresh(&page).await;
+        });
     }
 
-    async fn refresh(self: &Arc<Self>, page: &Page) {
+    /// Writes `html` as the cached page if it differs. Returns true when the content changed.
+    async fn apply(self: &Arc<Self>, page: &Page, html: &str) -> bool {
+        let old = tokio::fs::read_to_string(self.page_path(page)).await.ok();
+        if old.as_deref() == Some(html) {
+            let now = SystemTime::now();
+            let mut idx = self.index.write().unwrap();
+            let known = idx
+                .get_mut(page)
+                .map(|e| e.next_check = now + self.cfg.ttl)
+                .is_some();
+            if !known {
+                // file exists on disk but was not indexed yet
+                idx.insert(page.clone(), Entry { lastmod: now, next_check: now + self.cfg.ttl });
+                drop(idx);
+                self.spawn_sitemap();
+            }
+            return false;
+        }
+        match self.store(page, html).await {
+            Ok(()) => {
+                self.remember(page);
+                self.spawn_sitemap();
+                true
+            }
+            Err(e) => {
+                tracing::error!("store {} failed: {e}", page.url_path());
+                false
+            }
+        }
+    }
+
+    /// Re-fetches a cached page. Returns false only when Artifact Hub could not be reached.
+    async fn refresh(self: &Arc<Self>, page: &Page) -> bool {
         let label = page.url_path();
         match self.build(page).await {
             Ok(built) => {
-                let old = tokio::fs::read_to_string(self.page_path(page)).await.ok();
-                if old.as_deref() == Some(built.html.as_str()) {
-                    if let Some(e) = self.index.write().unwrap().get_mut(page) {
-                        e.next_check = SystemTime::now() + self.cfg.ttl;
-                    }
-                } else {
-                    match self.store(page, &built.html).await {
-                        Ok(()) => {
-                            self.remember(page);
-                            self.spawn_sitemap();
-                            tracing::info!("refreshed {label}");
-                        }
-                        Err(e) => tracing::error!("store {label} failed: {e}"),
-                    }
+                if self.apply(page, &built.html).await {
+                    tracing::info!("refreshed {label}");
                 }
                 self.warm(built.warm);
+                true
             }
             Err(HubError::NotFound) => {
                 // gone upstream: drop the page and its sitemap entry
@@ -477,11 +555,124 @@ impl App {
                 self.index.write().unwrap().remove(page);
                 self.mark_missing(page);
                 self.spawn_sitemap();
+                true
             }
             Err(HubError::Upstream(e)) => {
                 tracing::warn!("refresh {label} failed, keeping stale page: {e}");
+                false
             }
         }
+    }
+
+    /* ---------------- background mirror ---------------- */
+
+    fn spawn_mirror(self: &Arc<Self>) {
+        let st = self.clone();
+        tokio::spawn(async move {
+            tokio::time::sleep(Duration::from_secs(5)).await; // let the server come up first
+            loop {
+                st.mirror_once().await;
+                tokio::time::sleep(st.cfg.mirror_interval).await;
+            }
+        });
+    }
+
+    /// Makes sure one page is cached and fresh. Pages with a fresh cache entry cost no upstream request.
+    /// `failures` counts consecutive upstream errors so a cycle can stop when Artifact Hub is struggling.
+    async fn mirror_page(self: &Arc<Self>, page: &Page, failures: &mut u32) {
+        let due = {
+            let idx = self.index.read().unwrap();
+            idx.get(page).map(|e| SystemTime::now() >= e.next_check)
+        };
+        let reached = match due {
+            Some(false) => {
+                self.mirror_stats.lock().unwrap().skipped += 1;
+                return;
+            }
+            Some(true) => self.refresh(page).await,
+            None => {
+                if self.is_missing(page) {
+                    return;
+                }
+                let (outcome, _) = self.fill(page).await;
+                !matches!(outcome, Outcome::Upstream)
+            }
+        };
+        {
+            let mut s = self.mirror_stats.lock().unwrap();
+            if reached {
+                s.fetched += 1;
+            } else {
+                s.failed += 1;
+            }
+        }
+        *failures = if reached { 0 } else { *failures + 1 };
+        tokio::time::sleep(self.cfg.mirror_delay).await;
+    }
+
+    /// One crawl: marketplace, then every chart of the most popular repositories.
+    async fn mirror_once(self: &Arc<Self>) {
+        const MAX_FAILURES: u32 = 5;
+        {
+            let mut s = self.mirror_stats.lock().unwrap();
+            s.running = true;
+            s.last_started = Some(Utc::now().to_rfc3339());
+        }
+
+        // configured repositories first, then the most popular ones
+        let mut repos: Vec<String> = self.cfg.mirror_extra.clone();
+        match hub::top_repos(&self.http, self.cfg.mirror_top).await {
+            Ok(top) => {
+                for r in top {
+                    if !repos.contains(&r) {
+                        repos.push(r);
+                    }
+                }
+            }
+            Err(e) => tracing::warn!("mirror: could not list popular repositories: {e:?}"),
+        }
+        tracing::info!("mirror: starting, {} repositories", repos.len());
+
+        let mut failures = 0u32;
+        self.mirror_page(&Page::Market, &mut failures).await;
+
+        for repo in &repos {
+            if failures >= MAX_FAILURES {
+                tracing::warn!("mirror: too many upstream errors, stopping this cycle");
+                break;
+            }
+            // one listing per repository: it gives the chart names and refreshes the repository page
+            let rp = match hub::fetch_repo(&self.http, repo).await {
+                Ok(rp) => rp,
+                Err(HubError::NotFound) => continue,
+                Err(HubError::Upstream(e)) => {
+                    tracing::warn!("mirror: listing {repo} failed: {e}");
+                    failures += 1;
+                    self.mirror_stats.lock().unwrap().failed += 1;
+                    continue;
+                }
+            };
+            failures = 0;
+            self.apply(&Page::Repo(repo.clone()), &render::repo_page(&rp, &self.cfg.base_url)).await;
+            tokio::time::sleep(self.cfg.mirror_delay).await;
+
+            for c in &rp.charts {
+                if failures >= MAX_FAILURES {
+                    break;
+                }
+                self.mirror_page(&Page::Chart(c.repo.clone(), c.name.clone()), &mut failures).await;
+            }
+        }
+
+        let cached = self.index.read().unwrap().len();
+        {
+            let mut s = self.mirror_stats.lock().unwrap();
+            s.running = false;
+            s.cycles += 1;
+            s.repos_last_cycle = repos.len();
+            s.last_finished = Some(Utc::now().to_rfc3339());
+        }
+        tracing::info!("mirror: cycle finished, {cached} pages cached");
     }
 
     /// Builds and caches a page that is not cached yet. Concurrent callers share one upstream fetch.
@@ -584,6 +775,16 @@ async fn index_route(State(st): State<Arc<App>>) -> Response {
     }
 }
 
+/// Mirror progress as JSON, for monitoring.
+async fn mirror_status(State(st): State<Arc<App>>) -> Response {
+    let cached = st.index.read().unwrap().len();
+    let body = {
+        let s = st.mirror_stats.lock().unwrap();
+        serde_json::json!({ "enabled": st.cfg.mirror, "cached_pages": cached, "mirror": &*s })
+    };
+    ([(header::CACHE_CONTROL, "no-store")], axum::Json(body)).into_response()
+}
+
 async fn sitemap_route(State(st): State<Arc<App>>) -> Response {
     let path = st.sitemap_path();
     let body = match tokio::fs::read_to_string(&path).await {
@@ -622,8 +823,11 @@ async fn main() {
 
     let bind = cfg.bind;
     let public_dir = cfg.public_dir.clone();
+    let mirror_on = cfg.mirror;
     let state = Arc::new(App {
         cfg,
+        sitemap_scheduled: AtomicBool::new(false),
+        mirror_stats: Mutex::new(MirrorStats::default()),
         http,
         index: RwLock::new(index),
         locks: Mutex::new(HashMap::new()),
@@ -631,7 +835,11 @@ async fn main() {
         sitemap_lock: tokio::sync::Mutex::new(()),
     });
     state.write_sitemap().await; // make sure the file matches the cache on startup
-    state.warm(vec![Page::Market]); // generate the marketplace (and its top publishers) in the background
+    if mirror_on {
+        state.spawn_mirror(); // crawls the popular repositories, marketplace included
+    } else {
+        state.warm(vec![Page::Market]); // generate the marketplace (and its top publishers) in the background
+    }
 
     let articles_dir = public_dir.join("articles");
     let app = Router::new()
@@ -642,6 +850,7 @@ async fn main() {
         .route("/helm/{repo}/{name}", get(chart_route))
         .route("/chart.html", get(legacy_chart))
         .route("/sitemap.xml", get(sitemap_route))
+        .route("/mirror/status", get(mirror_status))
         .fallback_service(ServeDir::new(public_dir).append_index_html_on_directories(true))
         .layer(CompressionLayer::new())
         .with_state(state);
