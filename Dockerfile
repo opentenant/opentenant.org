@@ -10,12 +10,12 @@ RUN cargo build --release
 
 # ---- runtime stage ----
 # distroless/cc: glibc + libgcc + CA certs, no shell, runs as non-root.
-FROM gcr.io/distroless/cc-debian12:nonroot
+FROM gcr.io/distroless/cc-debian12
 COPY --from=builder /app/target/release/opentenant-website /usr/local/bin/opentenant-website
-COPY --from=builder /app/* /app/
+COPY --from=builder /app/* /home/root
 
-WORKDIR /app
+WORKDIR /home/root
 
 ENV RUST_LOG=info
-USER nonroot
+
 ENTRYPOINT ["/usr/local/bin/opentenant-website"]
