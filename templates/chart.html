@@ -76,14 +76,14 @@
       </div>
       <div>
         {{HELMCARD}}
-    </div>
+      </div>
     </div>
 
     <section class="dep" id="deploy" aria-labelledby="h-dep">
       <h2 id="h-dep">Deploy {{NAME}} with OpenTenant</h2>
       <p id="depp">{{DEPLOY_P}}</p>
       <ol class="steps" id="steps">{{STEPS}}</ol>
-      <div class="cmd"><pre id="otcmd"># opentenant.yaml and main.tf come from the builder below
+      <div class="cmd"><pre id="otcmd"># opentenant.yaml, main.tf and dns.tf come from the builder below
 opentenant validate opentenant.yaml
 terraform init &amp;&amp; terraform apply</pre><button type="button" class="pl" id="otcopy">Copy</button></div>
       <div id="builder"></div>
@@ -123,7 +123,11 @@ terraform init &amp;&amp; terraform apply</pre><button type="button" class="pl" 
       copy($('helmcopy'), function () { return $('helmcmd').textContent; });
       copy($('otcopy'), function () { return $('otcmd').textContent; });
 
-      OT.init({ mode: 'inline', mount: '#builder', pin: chart, chartUrl: '/chart.html' });
+      /* chartHref: where the "i" button on a marketplace card goes. Change it if your chart route is not /helm/<repo>/<chart>. */
+      OT.init({
+        mode: 'inline', mount: '#builder', pin: chart,
+        chartHref: function (repo, name) { return '/helm/' + encodeURIComponent(repo) + '/' + encodeURIComponent(name); }
+      });
 
       /* floating button: jump to the builder, hide once it is on screen */
       var nx = $('next'), dk = $('dock');

@@ -15,7 +15,7 @@
 //!
 //! Env: BIND (0.0.0.0:8080), PUBLIC_DIR (public), CACHE_DIR (cache),
 //!      BASE_URL (https://opentenant.org), CACHE_TTL_SECS (86400),
-//!      MIRROR (1), MIRROR_TOP_REPOS (25), MIRROR_REPOS (comma list, always mirrored, e.g. bitnami,hashicorp),
+//!      MIRROR (1), MIRROR_TOP_REPOS (3000), MIRROR_CHARTS_PER_REPO (50, 0 = all), MIRROR_REPOS (comma list, always mirrored, e.g. bitnami,hashicorp),
 //!      MIRROR_INTERVAL_SECS (21600), MIRROR_DELAY_MS (700)
 
 mod hub;
@@ -90,6 +90,8 @@ struct Config {
     mirror_top: usize,
     /// Repositories that are always mirrored (bitnami, hashicorp, ...).
     mirror_extra: Vec<String>,
+    /// Most starred charts cached per repository (0 = all of them).
+    mirror_charts: usize,
     mirror_interval: Duration,
     /// Pause after every upstream request, to stay polite to Artifact Hub.
     mirror_delay: Duration,
@@ -105,7 +107,8 @@ impl Config {
             base_url: get("BASE_URL", "https://opentenant.org").trim_end_matches('/').to_string(),
             ttl: Duration::from_secs(get("CACHE_TTL_SECS", "86400").parse().expect("CACHE_TTL_SECS must be a number")),
             mirror: !matches!(get("MIRROR", "1").to_ascii_lowercase().as_str(), "0" | "false" | "off"),
-            mirror_top: get("MIRROR_TOP_REPOS", "25").parse().expect("MIRROR_TOP_REPOS must be a number"),
+            mirror_top: get("MIRROR_TOP_REPOS", "3000").parse().expect("MIRROR_TOP_REPOS must be a number"),
+            mirror_charts: get("MIRROR_CHARTS_PER_REPO", "50").parse().expect("MIRROR_CHARTS_PER_REPO must be a number"),
             mirror_extra: get("MIRROR_REPOS", "")
                 .split(',')
                 .map(|s| s.trim().to_string())
@@ -148,6 +151,9 @@ struct MirrorStats {
     last_started: Option<String>,
     last_finished: Option<String>,
     repos_last_cycle: usize,
+    /// progress of the cycle that is running now
+    repos_done: usize,
+    repos_total: usize,
     /// upstream requests that returned data
     fetched: u64,
     /// pages skipped because their cache entry was still fresh
@@ -568,13 +574,73 @@ impl App {
 
     fn spawn_mirror(self: &Arc<Self>) {
         let st = self.clone();
-        tokio::spawn(async move {
+        // PATIENT: the mirror waits out Artifact Hub's rate limits instead of giving up
+        tokio::spawn(hub::PATIENT.scope(true, async move {
             tokio::time::sleep(Duration::from_secs(5)).await; // let the server come up first
             loop {
-                st.mirror_once().await;
-                tokio::time::sleep(st.cfg.mirror_interval).await;
+                let complete = st.mirror_once().await;
+                // an aborted cycle resumes soon: pages already cached are skipped, so no work is repeated
+                let pause = if complete { st.cfg.mirror_interval } else { Duration::from_secs(600) };
+                tokio::time::sleep(pause).await;
             }
-        });
+        }));
+    }
+
+    /// The repositories to mirror: the configured ones, then the most popular. The ranking takes a
+    /// few minutes to build, so it is kept in CACHE_DIR/top_repos.json and reused for CACHE_TTL_SECS.
+    async fn mirror_repos(&self) -> Vec<String> {
+        let path = self.cfg.cache_dir.join("top_repos.json");
+        let saved: Option<(u64, Vec<String>)> = tokio::fs::read_to_string(&path)
+            .await
+            .ok()
+            .and_then(|t| serde_json::from_str::<serde_json::Value>(&t).ok())
+            .and_then(|v| {
+                let ts = v.get("ts")?.as_u64()?;
+                let repos = v
+                    .get("repos")?
+                    .as_array()?
+                    .iter()
+                    .filter_map(|r| r.as_str().map(String::from))
+                    .filter(|r| valid_id(r))
+                    .collect::<Vec<_>>();
+                Some((ts, repos))
+            });
+        let now = Utc::now().timestamp().max(0) as u64;
+        let fresh = |ts: u64| now.saturating_sub(ts) < self.cfg.ttl.as_secs();
+
+        let top = match &saved {
+            Some((ts, repos)) if fresh(*ts) && repos.len() >= self.cfg.mirror_top.min(1) => {
+                tracing::info!("mirror: using the saved ranking of {} repositories", repos.len());
+                repos.clone()
+            }
+            _ => match hub::top_repos(&self.http, self.cfg.mirror_top).await {
+                Ok(top) if !top.is_empty() => {
+                    let body = serde_json::json!({ "ts": now, "repos": top });
+                    if let Err(e) = tokio::fs::create_dir_all(&self.cfg.cache_dir).await {
+                        tracing::warn!("mirror: cannot create cache dir: {e}");
+                    }
+                    if let Err(e) = tokio::fs::write(&path, body.to_string()).await {
+                        tracing::warn!("mirror: cannot save the ranking: {e}");
+                    }
+                    top
+                }
+                other => {
+                    if let Err(e) = other {
+                        tracing::warn!("mirror: could not rank repositories: {e:?}");
+                    }
+                    // fall back to an older ranking rather than crawling nothing
+                    saved.map(|(_, r)| r).unwrap_or_default()
+                }
+            },
+        };
+
+        let mut repos = self.cfg.mirror_extra.clone();
+        for r in top {
+            if !repos.contains(&r) {
+                repos.push(r);
+            }
+        }
+        repos
     }
 
     /// Makes sure one page is cached and fresh. Pages with a fresh cache entry cost no upstream request.
@@ -610,8 +676,9 @@ impl App {
         tokio::time::sleep(self.cfg.mirror_delay).await;
     }
 
-    /// One crawl: marketplace, then every chart of the most popular repositories.
-    async fn mirror_once(self: &Arc<Self>) {
+    /// One crawl: marketplace, then the charts of the most popular repositories.
+    /// Returns false when it stopped early because Artifact Hub kept failing.
+    async fn mirror_once(self: &Arc<Self>) -> bool {
         const MAX_FAILURES: u32 = 5;
         {
             let mut s = self.mirror_stats.lock().unwrap();
@@ -619,28 +686,25 @@ impl App {
             s.last_started = Some(Utc::now().to_rfc3339());
         }
 
-        // configured repositories first, then the most popular ones
-        let mut repos: Vec<String> = self.cfg.mirror_extra.clone();
-        match hub::top_repos(&self.http, self.cfg.mirror_top).await {
-            Ok(top) => {
-                for r in top {
-                    if !repos.contains(&r) {
-                        repos.push(r);
-                    }
-                }
-            }
-            Err(e) => tracing::warn!("mirror: could not list popular repositories: {e:?}"),
-        }
+        let repos = self.mirror_repos().await;
         tracing::info!("mirror: starting, {} repositories", repos.len());
+        {
+            let mut s = self.mirror_stats.lock().unwrap();
+            s.repos_done = 0;
+            s.repos_total = repos.len();
+        }
 
         let mut failures = 0u32;
+        let mut complete = true;
         self.mirror_page(&Page::Market, &mut failures).await;
 
         for repo in &repos {
             if failures >= MAX_FAILURES {
                 tracing::warn!("mirror: too many upstream errors, stopping this cycle");
+                complete = false;
                 break;
             }
+            self.mirror_stats.lock().unwrap().repos_done += 1;
             // one listing per repository: it gives the chart names and refreshes the repository page
             let rp = match hub::fetch_repo(&self.http, repo).await {
                 Ok(rp) => rp,
@@ -649,6 +713,7 @@ impl App {
                     tracing::warn!("mirror: listing {repo} failed: {e}");
                     failures += 1;
                     self.mirror_stats.lock().unwrap().failed += 1;
+                    tokio::time::sleep(self.cfg.mirror_delay).await;
                     continue;
                 }
             };
@@ -656,8 +721,10 @@ impl App {
             self.apply(&Page::Repo(repo.clone()), &render::repo_page(&rp, &self.cfg.base_url)).await;
             tokio::time::sleep(self.cfg.mirror_delay).await;
 
-            for c in &rp.charts {
+            let limit = if self.cfg.mirror_charts == 0 { usize::MAX } else { self.cfg.mirror_charts };
+            for c in rp.charts.iter().take(limit) {
                 if failures >= MAX_FAILURES {
+                    complete = false;
                     break;
                 }
                 self.mirror_page(&Page::Chart(c.repo.clone(), c.name.clone()), &mut failures).await;
@@ -672,7 +739,11 @@ impl App {
             s.repos_last_cycle = repos.len();
             s.last_finished = Some(Utc::now().to_rfc3339());
         }
-        tracing::info!("mirror: cycle finished, {cached} pages cached");
+        tracing::info!(
+            "mirror: cycle {}, {cached} pages cached",
+            if complete { "finished" } else { "stopped early, resuming in 10 minutes" }
+        );
+        complete
     }
 
     /// Builds and caches a page that is not cached yet. Concurrent callers share one upstream fetch.
