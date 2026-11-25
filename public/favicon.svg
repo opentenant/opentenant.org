@@ -1,68 +1,94 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" width="100%" height="100%">
 <defs>
-<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-<stop offset="0" stop-color="#29cfa8"/><stop offset="1" stop-color="#22c6a0"/>
-</linearGradient>
-<pattern id="towerWindows" width="0.72" height="0.72" patternUnits="userSpaceOnUse">
-<rect width="0.72" height="0.72" fill="#d4d4d4"/>
-<rect x="0.08" y="0.08" width="0.27" height="0.48" fill="#b9b9b9"/>
-<rect x="0.43" y="0.08" width="0.20" height="0.48" fill="#c5c5c5"/>
-</pattern>
-<pattern id="horizontalWindows" width="1.6" height="0.72" patternUnits="userSpaceOnUse">
-<rect width="1.6" height="0.72" fill="#33383a"/>
-<rect x="0" y="0.11" width="1.6" height="0.18" fill="#85898a"/>
-</pattern>
+  <radialGradient id="pcb" cx="0.5" cy="0.45" r="0.75">
+    <stop offset="0" stop-color="#16308a"/><stop offset="1" stop-color="#081236"/>
+  </radialGradient>
+  <linearGradient id="die" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#ff3ea5"/><stop offset="0.55" stop-color="#ff8a00"/><stop offset="1" stop-color="#ffd60a"/>
+  </linearGradient>
+  <linearGradient id="silver" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#f1f5f9"/><stop offset="1" stop-color="#94a3b8"/>
+  </linearGradient>
+  <pattern id="pins" width="1" height="1" patternUnits="userSpaceOnUse">
+    <circle cx="0.5" cy="0.5" r="0.17" fill="#5b7bff"/>
+  </pattern>
+  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+    <feGaussianBlur stdDeviation="0.5" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
 </defs>
 
-<rect x="0.35" y="0.35" width="43.3" height="43.3" rx="8.5" fill="url(#bg)"/>
+<rect x="0.35" y="0.35" width="43.3" height="43.3" rx="8.5" fill="url(#pcb)"/>
+
+<!-- SIGNAL TRACES -->
+<g fill="none" stroke-width="0.55" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
+  <!-- memory bus -->
+  <path d="M28 16.5 H32" stroke="#22d3ee"/>
+  <path d="M28 19 H32" stroke="#22d3ee"/>
+  <path d="M28 21.5 H32" stroke="#22d3ee"/>
+  <!-- I/O data -->
+  <path d="M16.5 14 V10.5 L13.5 7.5 H11.5" stroke="#ff3ea5"/>
+  <path d="M19 14 V9.5 L15.5 6 H11.5" stroke="#ff3ea5"/>
+  <!-- PCIe lanes -->
+  <path d="M17 28 V31.5" stroke="#ffd60a"/>
+  <path d="M20 28 V31.5" stroke="#ffd60a"/>
+  <path d="M23 28 V31.5" stroke="#ffd60a"/>
+  <!-- power delivery -->
+  <path d="M14 18 H10" stroke="#ff8a00"/>
+  <path d="M14 21 H10" stroke="#ff8a00"/>
+  <path d="M14 24 H10" stroke="#ff8a00"/>
+  <!-- chipset -->
+  <path d="M31 36.9 H25.6" stroke="#a3e635"/>
+</g>
+
+<!-- I/O PORTS -->
+<rect x="5" y="5" width="6.5" height="3" rx="0.5" fill="#ff3ea5"/>
+<rect x="5" y="8.8" width="6.5" height="3" rx="0.5" fill="#c026d3"/>
+<rect x="6" y="5.9" width="4.5" height="1.2" rx="0.3" fill="#3b0a24"/>
+<rect x="6" y="9.7" width="4.5" height="1.2" rx="0.3" fill="#3b0a24"/>
+
+<!-- VRMs -->
+<g fill="#ff8a00">
+  <rect x="6.5" y="16.6" width="3.2" height="2.8" rx="0.4"/>
+  <rect x="6.5" y="19.6" width="3.2" height="2.8" rx="0.4"/>
+  <rect x="6.5" y="22.6" width="3.2" height="2.8" rx="0.4"/>
+</g>
+<g fill="#4a2300" opacity="0.45">
+  <rect x="7.2" y="17.3" width="1.8" height="1.4" rx="0.2"/>
+  <rect x="7.2" y="20.3" width="1.8" height="1.4" rx="0.2"/>
+  <rect x="7.2" y="23.3" width="1.8" height="1.4" rx="0.2"/>
+</g>
 
 
-<!-- LEFT MAIN TOWER: narrower -->
-<polygon points="15.45,10.75 17.65,10.75 18.45,11.0 18.45,38.25 7,37.75" fill="#35393b"/>
-<polygon points="8.0,11.25 15.45,10.75 15.45,38.0 8.0,37.25" fill="#eeeeee"/>
-<polygon points="8.35,12.0 15.0,11.6 15.0,37.2 8.35,36.55" fill="url(#towerWindows)"/>
-<polygon points="8.35,23.0 15.0,29.0 15.0,34.0 8.35,28.0" fill="#858585" opacity="0.24"/>
-<polygon points="8.0,11.25 15.45,10.75 15.85,11.25 8.1,11.85" fill="#fafafa"/>
-<polygon points="8.25,11.35 15.25,10.9 15.25,11.7 8.25,12.1" fill="#363b3d"/>
+<!-- CPU SOCKET -->
+<rect x="14" y="14" width="14" height="14" rx="1.4" fill="#0e1f5c" stroke="#3b5bdb" stroke-width="0.3"/>
+<rect x="14.5" y="14.5" width="13" height="13" rx="1" fill="url(#pins)"/>
+<rect x="16" y="16" width="10" height="10" rx="1.1" fill="url(#die)" filter="url(#glow)"/>
+<rect x="16.6" y="16.6" width="8.8" height="3" rx="0.7" fill="#ffffff" opacity="0.18"/>
+<polygon points="16.6,25.4 16.6,24 18,25.4" fill="#fff7cc"/>
 
-<!-- RIGHT MAIN TOWER: narrower -->
-<polygon points="24.85,10.25 27.0,10.95 27.7,12.15 27.7,39.0 24.85,38.1" fill="#303537"/>
-<polygon points="17.25,10.9 24.85,10.25 24.85,38.35 17.25,37.8" fill="#f1f1f1"/>
-<polygon points="17.6,11.7 24.35,11.2 24.35,37.55 17.6,37.0" fill="url(#towerWindows)"/>
-<polygon points="17.6,22.3 24.35,28.4 24.35,34.2 17.6,28.1" fill="#7e7e7e" opacity="0.23"/>
-<polygon points="17.25,10.9 24.85,10.25 25.25,10.8 17.35,11.5" fill="#fafafa"/>
-<polygon points="17.5,11.0 24.6,10.4 24.6,11.25 17.5,11.75" fill="#3b4041"/>
+<!-- RAM SLOTS -->
+<rect x="32" y="6" width="1.4" height="24" rx="0.4" fill="#22d3ee"/>
+<rect x="34.5" y="6" width="1.4" height="24" rx="0.4" fill="#ff3ea5"/>
+<rect x="37" y="6" width="1.4" height="24" rx="0.4" fill="#22d3ee"/>
+<g fill="#081236" opacity="0.55">
+  <rect x="32.5" y="7.2" width="0.4" height="21.6"/>
+  <rect x="35" y="7.2" width="0.4" height="21.6"/>
+  <rect x="37.5" y="7.2" width="0.4" height="21.6"/>
+</g>
+<g fill="#f1f5f9">
+  <rect x="31.9" y="5.6" width="1.6" height="0.8" rx="0.2"/>
+  <rect x="34.4" y="5.6" width="1.6" height="0.8" rx="0.2"/>
+  <rect x="36.9" y="5.6" width="1.6" height="0.8" rx="0.2"/>
+</g>
 
-<!-- LEFT FOREGROUND -->
-<polygon points="3.45,29.8 7.15,28.65 7.15,37.9 3.45,37.9" fill="#353a3c"/>
-<polygon points="7.15,28.65 8.55,29.75 8.55,37.9 7.15,37.9" fill="#202527"/>
-<path d="M4.05 30.65 L6.8 29.95 M4.05 31.55 L6.8 30.9 M4.05 32.45 L6.8 31.8 M4.05 33.35 L6.8 32.7 M4.05 34.25 L6.8 33.6"
-stroke="#aeb1b1" stroke-width="0.25"/>
+<!-- PCIe SLOTS -->
+<rect x="5" y="32" width="24" height="1.8" rx="0.4" fill="#0b1440" stroke="#ffd60a" stroke-width="0.45"/>
+<rect x="5" y="36" width="20.6" height="1.8" rx="0.4" fill="#0b1440" stroke="#a3e635" stroke-width="0.45"/>
+<rect x="11" y="31.8" width="0.5" height="2.2" fill="#081236"/>
+<rect x="11" y="35.8" width="0.5" height="2.2" fill="#081236"/>
 
-<!-- SMALL BUILDING LEFT FRONT -->
-<polygon points="9.0,33.25 12.3,32.55 12.3,38.0 9.0,38.0" fill="#353a3c"/>
-<polygon points="12.3,32.55 13.2,33.1 13.2,38.0 12.3,38.0" fill="#252a2c"/>
-
-<!-- CENTRAL LOW BUILDING -->
-<polygon points="12.9,34.6 16.25,33.75 16.25,38.0 12.9,38.0" fill="#353a3c"/>
-<polygon points="16.25,33.75 17.05,34.25 17.05,38.0 16.25,38.0" fill="#292e30"/>
-
-<!-- RIGHT FRONT BUILDING -->
-<polygon points="20.9,33.35 24.35,32.25 24.35,38.0 20.9,38.0" fill="#353a3c"/>
-<polygon points="24.35,32.25 25.65,33.0 25.65,38.0 24.35,38.0" fill="#252a2c"/>
-
-<!-- TALL RIGHT -->
-<polygon points="26.55,30.0 30.55,28.35 30.55,38.2 26.55,38.2" fill="#34393b"/>
-<polygon points="30.55,28.35 32.0,29.45 32.0,38.2 30.55,38.2" fill="#1f2426"/>
-<path d="M26.85 31.0 L30.3 29.75 M26.85 32.0 L30.3 30.75 M26.85 33.0 L30.3 31.75 M26.85 34.0 L30.3 32.75 M26.85 35.0 L30.3 33.75"
-stroke="#6f7475" stroke-width="0.38"/>
-
-<!-- FAR RIGHT -->
-<polygon points="32.0,32.0 34.35,31.05 34.35,38.2 32.0,38.2" fill="#34393b"/>
-<polygon points="34.35,31.05 35.0,31.65 35.0,38.2 34.35,38.2" fill="#202527"/>
-<polygon points="35.05,34.0 36.45,33.35 36.45,38.2 35.05,38.2" fill="#24292b"/>
-
-<!-- BASE: flatter, narrower trapezoid like reference -->
-<polygon points="3,37.9 36.7,37.55 39.0,40.0 29.0,41.0 8.2,38.5" fill="#252a2c"/>
-<polygon points="21.0,37.55 39.0,39.8 39.0,40.4 29.0,41.0" fill="#252a2c" opacity="0.55"/>
+<!-- CHIPSET -->
+<rect x="31" y="33" width="6" height="6" rx="0.9" fill="#a78bfa"/>
+<rect x="32.2" y="34.2" width="3.6" height="3.6" rx="0.5" fill="#5b21b6"/>
 </svg>

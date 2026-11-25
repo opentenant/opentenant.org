@@ -463,3 +463,38 @@ body:not(.tfon) #warn{display:none}
   .builder:not(.drawer) #drawer{display:none}
   .builder #dtog{display:none}
 }
+
+
+.cols {
+  display: flex;
+  grid-template-columns: minmax(0,1.5fr) minmax(0,1fr);
+  gap: 16px;
+  margin-top: 32px;
+  align-items: start;
+  flex-direction: column;
+  width: calc(100% - 40px);
+}
+
+.cols div {
+  width: 100%;
+}
+
+section.glass {
+  width:100%
+}
+
+aside.glass {
+  width: 100%
+}
+.stack {
+  width: 100%;
+}
+
+.builder.live {
+  width: 100%;
+}
+
+main.lw {
+  display: flex;
+  width: 100%;
+}

@@ -58,10 +58,18 @@
     .lsb:hover { background: rgba(0, 0, 40, .4) }
     .lsb:focus-visible { outline: 3px solid #fff; outline-offset: 3px }
     .lsb img { display: block; width: 240px; max-width: 100%; height: auto; box-shadow: 0 10px 22px rgba(33, 27, 58, .25) }
-
+    .lbrand-mobile {
+      display: none;;
+    }
     @media (max-width: 900px) {
-      .lw { grid-template-columns: 1fr; gap: 32px; padding-top: 24px; min-height: 0 }
+      .lw { flex-direction: column; }
       .lbrand { margin-bottom: 28px }
+      .lintro {
+        display: none;
+      }
+      .lbrand-mobile {
+        display: flex;
+      }
     }
     @media (max-width: 560px) {
       .feats { grid-template-columns: 1fr }
@@ -107,6 +115,8 @@
     </section>
 
     <section class="glass lcard" aria-labelledby="h-login">
+      <a href="/" class="onav-brand lbrand lbrand-mobile" aria-label="OpenTenant home">
+        <img src="/favicon.svg" width="34" height="34" alt="">OpenTenant</a>
       <h2 id="h-login">Enter your control plane</h2>
       <p class="sub">Authenticate with your source-control identity or email.</p>
 
